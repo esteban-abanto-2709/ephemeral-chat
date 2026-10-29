@@ -9,6 +9,17 @@ Ephemeral Chat: real-time chat where **nothing is stored**. No database, no
 accounts: everything lives in the server's memory and disappears with it.
 Ephemerality is a design feature, not a limitation.
 
+**Product certainties (judge every change against them):**
+
+1. **No accounts, no database.** A name per room, nothing else.
+2. **The server never stores messages**: it relays them to whoever is
+   connected. Late joiners see nothing from before.
+3. **The link is the key**: anyone with it gets in.
+4. **Private by nature**: no global or public rooms.
+
+The full reasoning, limits, versions and what was decided against are in
+`docs/product-vision.md`.
+
 It is also a learning project: the owner's main stack is Next.js + NestJS, and
 this one is built with **Angular and Go** to learn both properly. Explain the
 Angular and Go concepts behind a change when they are new, and prefer the
@@ -17,10 +28,12 @@ idiomatic, standard way over clever shortcuts.
 ## Current state (2026-10)
 
 - Both apps are freshly scaffolded: the Angular CLI default page and a Go
-  server with `GET /health`. No chat logic yet; the product scope is still
-  being defined.
-- Docker images build and run locally. Deployment target is Render (free
-  tier), not set up yet.
+  server with `GET /health`. No chat logic yet.
+- Working toward **v0.1**: `docs/logbook/roadmap.md` is ordered by priority,
+  one entry per commit. Deployment target is Render (free tier), done first
+  (`RM-001`) so every later commit lands on a real production.
+- **No commit breaks production**: each one leaves the Docker images building
+  and the deployed app working.
 
 ## Repository layout
 
@@ -29,7 +42,8 @@ idiomatic, standard way over clever shortcuts.
 | `apps/web` | Angular 22 SPA (no SSR), Tailwind 4, Vitest | [`apps/web/README.md`](./apps/web/README.md) |
 | `apps/api` | Go 1.27 HTTP API, standard library only | [`apps/api/README.md`](./apps/api/README.md) |
 | `apps/docker` | `compose.yaml` for both images | [`apps/docker/README.md`](./apps/docker/README.md) |
-| `docs/` | Project guides (Angular conventions) | |
+| `docs/` | Product vision, Angular conventions | |
+| `docs/logbook/` | Roadmap, wishlist, technical debt, changelog | |
 
 The two apps are **independent**: each has its own dependencies and is run
 from inside its own folder. No workspace.
@@ -67,3 +81,57 @@ To verify a change, prefer commands that finish on their own: builds, tests,
   the code: a single `main.go` until it asks for `cmd/` and `internal/`.
 - **No persistence**, ever: no database, no files, no browser storage for chat
   data. If a feature needs to remember something, it lives in memory.
+
+<!-- logbook:start — written by the logbook skill (init); replaced whole when it runs again -->
+## Logbook (`docs/logbook/`)
+
+Logbook language: English
+
+Every project records its work in four git-versioned files under
+`docs/logbook/`. `docs/` itself stays for conceptual material (vision,
+definition); the operational record lives under `docs/logbook/`.
+
+| File | Prefix | Holds |
+|---|---|---|
+| `technical-debt.md` | `TD-###` | Something **wrong now** in existing code. |
+| `roadmap.md` | `RM-###` | **Committed** work that will be done. |
+| `wishlist.md` | `WL-###` | Ideas, **maybe never**. |
+| `changelog.md` | — | **Permanent** record of everything finished. |
+
+**Passive rules (always on, no command):**
+
+- **Language:** logbook entries are written in the logbook language above; the
+  conversation stays in the user's language. Code, product text and quotes stay
+  literal. If the existing files are in another language, keep theirs (never
+  mix) and mention that `init` can translate them.
+- **Technical debt:** if you notice it while working, record it in
+  `technical-debt.md` (never as a code comment). Entry format:
+
+  ```markdown
+  ## [TD-001] Short title
+  - **Location:** `path/to/file.ext:line`
+  - **Risk:** N/10  (1-3 cosmetic · 4-6 slows down/moderate · 7-9 latent bug or security · 10 critical)
+  - **Problem:** what's wrong, condensed.
+  - **Future impact:** what it can cause if left alone.
+  - **Date:** YYYY-MM-DD · **Status:** Open
+  ```
+
+- **Task lifecycle:** when **starting** a task (`RM`, `TD` or `WL`) mark it
+  `In progress (YYYY-MM-DD)` in its file; when **finishing**, move it to
+  `changelog.md` keeping its prefix and delete it from its file. Changelog
+  format (reverse order): `## [CODE] Title (YYYY-MM-DD HH:MM)` + summary in ≤2
+  lines. **The date/time is the local clock at finish; never query git for
+  it.**
+- **Codes:** one counter per prefix, starting at `001`; the next one = highest
+  code with the **same prefix** +1, looking at its open file + changelog (other
+  prefixes don't count). Never reused. Executing a task doesn't change its code: a `WL` is worked
+  on directly and goes into the changelog as `WL`. Promoting `WL → RM` is only
+  a priority decision the user asks for, never a prior step.
+- **Files on demand:** don't create empty files; each one is born the first
+  time there is something real to put in it.
+
+**Heavy mechanics → `logbook` skill:** to set up or migrate the system
+(`init`), recommend a task (`next`) or audit debt (`audit`), use the skill. It
+holds the full formats, special cases (WL→RM promotion, wontfix) and
+procedures.
+<!-- logbook:end -->
