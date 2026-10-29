@@ -1,59 +1,50 @@
-# Web
+# Ephemeral Chat — Web
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.2.5.
+Ephemeral Chat's interface. An Angular single-page app: it compiles to static
+files that any web server can serve. It talks to the [API](../api/README.md).
 
-## Development server
+## Stack
 
-To start a local development server, run:
+| Piece           | Version                                       |
+| --------------- | --------------------------------------------- |
+| Runtime         | Node.js 24 (build only)                       |
+| Framework       | Angular 22 (standalone, zoneless, no SSR)     |
+| UI              | Tailwind CSS 4                                |
+| Tests           | Vitest on jsdom                               |
+| Package manager | pnpm (pinned in `package.json`, via corepack) |
 
-```bash
-ng serve
-```
-
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## Getting started
 
 ```bash
-ng generate --help
+corepack enable
+pnpm install
+pnpm start          # http://localhost:4200
 ```
 
-## Building
-
-To build the project run:
+## Commands
 
 ```bash
-ng build
+pnpm start                 # dev server with reload
+pnpm run build             # production build to dist/web/browser
+pnpm test                  # Vitest in watch mode
+pnpm test --watch=false    # single run
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+## Conventions
 
-## Running unit tests
+Read [`docs/angular.md`](../../docs/angular.md) before writing any component, service or
+template.
 
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+## Dependency build scripts
 
-```bash
-ng test
-```
+pnpm 11 blocks dependency install scripts unless they are listed in
+`pnpm-workspace.yaml` (`allowBuilds`). In Docker an unlisted one fails the
+install. When a new dependency needs one, decide it there: `true` to run it,
+`false` if the package ships prebuilt binaries.
 
-## Running end-to-end tests
+## Docker
 
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Two stages: `node:24-alpine` builds the app, and
+`nginxinc/nginx-unprivileged:alpine` serves `dist/web/browser` on port `8080`.
+`nginx.conf` sends every unknown path to `index.html`, so reloading on an app
+route (e.g. `/room/abc`) works.
