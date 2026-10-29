@@ -1,0 +1,7 @@
+.env
+.git
+.vscode
+Dockerfile
+.dockerignore
+/api
+/api.exe

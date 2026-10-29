@@ -1,0 +1,35 @@
+name: ephemeral-chat
+
+services:
+  # Go API
+  api:
+    build: ../api
+    container_name: ephemeral-chat-api
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -qO /dev/null http://127.0.0.1:4000/health || exit 1" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+      start_interval: 2s
+
+  # Angular Frontend
+  web:
+    build: ../web
+    container_name: ephemeral-chat-web
+    restart: unless-stopped
+    ports:
+      - "3000:8080"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -qO /dev/null http://127.0.0.1:8080/ || exit 1" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+      start_interval: 2s
