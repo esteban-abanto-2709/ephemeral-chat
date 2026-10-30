@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/coder/websocket"
+	"github.com/coder/websocket/wsjson"
 
 	"github.com/esteban-abanto-2709/ephemeral-chat/apps/api/internal/room"
 )
@@ -32,6 +33,7 @@ func newMux(staticDir string) *http.ServeMux {
 		w.Write([]byte("ok"))
 	})
 	mux.HandleFunc("POST /api/rooms", createRoom(rooms))
+	mux.HandleFunc("GET /api/rooms/{id}/ws", joinRoom(rooms))
 	mux.HandleFunc("GET /api/ws", echo)
 	mux.HandleFunc("GET /api/", http.NotFound)
 
@@ -48,6 +50,49 @@ func createRoom(rooms *room.Registry) http.HandlerFunc {
 		json.NewEncoder(w).Encode(struct {
 			ID string `json:"id"`
 		}{rooms.Create()})
+	}
+}
+
+func joinRoom(rooms *room.Registry) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		chat, ok := rooms.Get(r.PathValue("id"))
+		if !ok {
+			http.NotFound(w, r)
+			return
+		}
+		name := strings.TrimSpace(r.URL.Query().Get("name"))
+		if !room.ValidName(name) {
+			http.Error(w, "name must be 1 to 24 characters", http.StatusBadRequest)
+			return
+		}
+
+		conn, err := websocket.Accept(w, r, nil)
+		if err != nil {
+			return
+		}
+		defer conn.CloseNow()
+
+		member := chat.Join(name)
+		defer chat.Leave(member)
+
+		go func() {
+			for message := range member.Messages() {
+				if err := wsjson.Write(r.Context(), conn, message); err != nil {
+					return
+				}
+			}
+			conn.CloseNow()
+		}()
+
+		for {
+			var incoming struct {
+				Text string `json:"text"`
+			}
+			if err := wsjson.Read(r.Context(), conn, &incoming); err != nil {
+				return
+			}
+			chat.Send(member, incoming.Text)
+		}
 	}
 }
 

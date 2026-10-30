@@ -14,13 +14,13 @@ changelog and is deleted from here.
 ---
 
 Everything below is **v0.1** (see [product vision](../product-vision.md)).
-Each entry is one commit, and no commit breaks production.
+Each entry is one commit, or a few when it spans both apps; no commit breaks production.
 
 ## [RM-005] Text messages in a room
 - **Goal:** everyone in a room exchanges text messages in real time.
 - **Scope:** the server relays to the room's connections and **stores nothing**; whoever joins late sees only what arrives after.
 - **Done when:** two browsers in the same room see each other's messages with the sender's name, and a third that joins later sees only new ones.
-- **Date:** 2026-10-29 · **Status:** Open
+- **Date:** 2026-10-29 · **Status:** In progress (2026-10-29)
 
 ## [RM-006] Presence: who joined, who left, who is here
 - **Goal:** the room announces "X joined" and "X left" and shows the list of people connected.

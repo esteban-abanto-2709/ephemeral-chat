@@ -44,14 +44,29 @@ Every API route lives under `/api/`, so it never collides with a web route.
 | ------ | ------------- | ------------------- |
 | `GET`  | `/api/health` | `ok` (health check) |
 | `POST` | `/api/rooms`  | `201` with `{"id": "..."}`: creates a room in memory |
+| `GET`  | `/api/rooms/{id}/ws?name=…` | WebSocket: joins the room as `name` (see below) |
 | `GET`  | `/api/ws`     | WebSocket: sends every message back as is (echo) |
 | `GET`  | `/api/*`      | `404` for any other |
 
 A room id is 16 random bytes from `crypto/rand`, base64url-encoded: 22
 characters, safe in a URL and not guessable. The link is the room's key.
 
-The WebSocket only accepts connections from its own origin (the library's
+WebSockets only accept connections from their own origin (the library's
 default), which holds both in production and behind the `ng serve` proxy.
+
+### Room chat
+
+Joining needs an existing room (`404` otherwise) and a name of 1 to 24
+characters once trimmed (`400` otherwise). Then, as JSON text frames:
+
+```
+client → server:   {"text": "hola"}
+server → clients:  {"name": "Juan", "text": "hola"}
+```
+
+Every message goes to everyone connected to the room at that moment, sender
+included. Nothing is stored: whoever joins later sees only what comes after.
+Blank messages are dropped.
 
 ## Code layout
 
@@ -65,6 +80,18 @@ WebSockets, so they're tested without a server. `main.go` translates requests
 into calls to it. The registry is shared by every request (each one runs in
 its own goroutine), so its map is guarded by a mutex.
 
+How a room relays messages:
+
+- Each member has a **mailbox**: a buffered channel of 16 messages.
+- `Room.Send` drops a copy in every member's mailbox, without waiting. A
+  mailbox that is full means a client that can't keep up: that member is
+  removed and its mailbox closed, so one slow connection never holds up the
+  room.
+- Each WebSocket runs two goroutines: the handler **reads** frames and calls
+  `Send`; a second one **writes** whatever lands in the mailbox. When the
+  mailbox closes (the member left or was too slow), the writer closes the
+  socket.
+
 ## Serving the web
 
 With `STATIC_DIR` set, every path outside `/api/` is served from that folder,
@@ -76,5 +103,16 @@ Angular build (see [`apps/docker`](../docker/README.md)).
 ## Tests
 
 ```bash
-go test ./...   # every package: routing, rooms endpoint, echo and internal/room
+go test ./...   # every package: routing, rooms, room chat, echo and internal/room
 ```
+
+State is shared between goroutines, so run the race detector after touching
+`internal/room` or a handler. It needs cgo, which the Windows setup lacks; the
+official Go image has it:
+
+```bash
+docker run --rm -v "$(pwd):/src" -w /src golang:1.27 go test -race ./...
+```
+
+(From Git Bash on Windows, prefix it with `MSYS_NO_PATHCONV=1` and use
+`$(pwd -W)`.)

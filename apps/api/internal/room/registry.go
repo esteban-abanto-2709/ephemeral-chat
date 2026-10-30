@@ -8,11 +8,11 @@ import (
 
 type Registry struct {
 	mu    sync.Mutex
-	rooms map[string]struct{}
+	rooms map[string]*Room
 }
 
 func NewRegistry() *Registry {
-	return &Registry{rooms: make(map[string]struct{})}
+	return &Registry{rooms: make(map[string]*Room)}
 }
 
 func (r *Registry) Create() string {
@@ -20,8 +20,15 @@ func (r *Registry) Create() string {
 
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	r.rooms[id] = struct{}{}
+	r.rooms[id] = newRoom()
 	return id
+}
+
+func (r *Registry) Get(id string) (*Room, bool) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	room, ok := r.rooms[id]
+	return room, ok
 }
 
 func newID() string {
