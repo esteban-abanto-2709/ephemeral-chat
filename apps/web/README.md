@@ -22,9 +22,17 @@ pnpm start          # http://localhost:4200
 ```
 
 `ng serve` proxies `/api` to the API on `http://localhost:8080`
-(`proxy.conf.json`), so the web always calls its own origin, as it does in
-production. Run the API with `go run .` in `apps/api` for anything that needs
-it.
+(`proxy.conf.json`, WebSockets included), so the web always calls its own
+origin, as it does in production. Run the API with `go run .` in `apps/api`:
+the page connects to it on load.
+
+## Real-time connection
+
+`src/app/echo-socket.ts` opens one WebSocket to `/api/ws` on the page's own
+host (`ws://` or `wss://` to match the page) and exposes its state as signals:
+`status` (`connecting`, `open`, `closed`) and the `messages` received. The home
+page sends what you type and lists what comes back. For now the API only
+echoes; rooms and real messages come with the roadmap.
 
 ## Commands
 

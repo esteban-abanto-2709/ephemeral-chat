@@ -16,13 +16,6 @@ changelog and is deleted from here.
 Everything below is **v0.1** (see [product vision](../product-vision.md)).
 Each entry is one commit, and no commit breaks production.
 
-## [RM-002] Real-time connection between web and API
-- **Goal:** the browser opens a WebSocket to the API and gets messages back (echo), in development and in production.
-- **Scope:** first Go dependency (WebSocket library, `go.sum` appears); the socket under `/api/` (e.g. `/api/ws`), with `ws: true` in the `ng serve` proxy; the same path working in the Docker image and on Render.
-- **Open questions:** `coder/websocket` (recommended) or `gorilla/websocket`.
-- **Done when:** a message typed in the web comes back from the API, locally and on the production URL.
-- **Date:** 2026-10-29 · **Status:** In progress (2026-10-29)
-
 ## [RM-003] Create a room and share its link
 - **Goal:** from the home page, **Create room** gives a room with its own link, and the room page shows a banner to copy and share it.
 - **Scope:** the API creates rooms in memory with an unguessable id; Angular routes for home and room. Out: names and messages.
