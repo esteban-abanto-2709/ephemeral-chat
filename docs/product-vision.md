@@ -39,6 +39,7 @@ The link can reach anyone, so the server protects itself from day one:
 |---|---|
 | Message length | 1000 characters |
 | Messages per person | 5 per second |
+| Name length | 24 characters |
 | People per room | 50 |
 | Grace period for an empty room | 1 minute |
 

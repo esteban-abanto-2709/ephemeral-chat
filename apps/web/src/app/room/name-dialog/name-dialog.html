@@ -1,0 +1,24 @@
+<dialog
+  #dialog
+  class="m-auto w-full max-w-sm rounded p-6 backdrop:bg-black/50"
+  aria-labelledby="name-title"
+  (cancel)="$event.preventDefault()"
+>
+  <form class="flex flex-col gap-3" [formRoot]="nameForm">
+    <h2 id="name-title" class="text-lg font-semibold">What's your name?</h2>
+    <p class="text-sm text-gray-600">It's how others will see you in this room.</p>
+
+    <label for="name" class="text-sm font-medium">Name</label>
+    <input
+      id="name"
+      class="rounded border border-gray-400 px-3 py-2"
+      autocomplete="off"
+      [formField]="nameForm.name"
+    />
+    @if (nameForm.name().touched() && nameForm.name().invalid()) {
+      <p class="text-sm text-red-700" role="alert">Enter a name, up to {{ maxLength }} characters.</p>
+    }
+
+    <button type="submit" class="rounded bg-gray-900 px-4 py-2 text-white">Join</button>
+  </form>
+</dialog>

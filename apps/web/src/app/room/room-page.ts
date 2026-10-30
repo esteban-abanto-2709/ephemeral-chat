@@ -1,5 +1,6 @@
 import { Component, DOCUMENT, computed, inject, input, signal } from '@angular/core';
 import { EchoSocket } from './echo-socket';
+import { NameDialog } from './name-dialog/name-dialog';
 
 const statusLabels = {
   connecting: 'Connecting…',
@@ -8,11 +9,14 @@ const statusLabels = {
 };
 
 @Component({
+  imports: [NameDialog],
   selector: 'app-room-page',
   templateUrl: './room-page.html',
 })
 export class RoomPage {
   readonly id = input.required<string>();
+
+  protected readonly name = signal<string | null>(null);
 
   protected readonly socket = inject(EchoSocket);
   protected readonly statusLabel = computed(() => statusLabels[this.socket.status()]);

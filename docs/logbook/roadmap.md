@@ -16,12 +16,6 @@ changelog and is deleted from here.
 Everything below is **v0.1** (see [product vision](../product-vision.md)).
 Each entry is one commit, and no commit breaks production.
 
-## [RM-004] Name modal on entering a room
-- **Goal:** every time someone enters a room (creator or guest), a modal asks for the name they will appear with.
-- **Scope:** the name lives only in memory in the browser; reloading asks again.
-- **Done when:** no one can be in a room without having entered a name, and the name is shown as theirs inside the room.
-- **Date:** 2026-10-29 · **Status:** Open
-
 ## [RM-005] Text messages in a room
 - **Goal:** everyone in a room exchanges text messages in real time.
 - **Scope:** the server relays to the room's connections and **stores nothing**; whoever joins late sees only what arrives after.
@@ -30,6 +24,7 @@ Each entry is one commit, and no commit breaks production.
 
 ## [RM-006] Presence: who joined, who left, who is here
 - **Goal:** the room announces "X joined" and "X left" and shows the list of people connected.
+- **Open questions:** two people with the same name in one room: allow it, reject it, or tell them apart (e.g. "Juan (2)")? Once the server knows the names it can enforce any of them.
 - **Done when:** opening and closing a tab updates the list and the notices in every other browser in the room.
 - **Date:** 2026-10-29 · **Status:** Open
 

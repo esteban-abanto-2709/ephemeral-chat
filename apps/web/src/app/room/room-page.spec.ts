@@ -26,8 +26,32 @@ describe('RoomPage', () => {
     const fixture = TestBed.createComponent(RoomPage);
     fixture.componentRef.setInput('id', 'abc');
     await fixture.whenStable();
-    return { fixture, page: fixture.nativeElement as HTMLElement };
+    const page = fixture.nativeElement as HTMLElement;
+
+    const name = page.querySelector('#name') as HTMLInputElement;
+    name.value = 'Juan';
+    name.dispatchEvent(new Event('input'));
+    page.querySelector('form')?.dispatchEvent(new Event('submit', { cancelable: true }));
+    await fixture.whenStable();
+
+    return { fixture, page };
   }
+
+  it('asks for a name before showing the room', async () => {
+    const fixture = TestBed.createComponent(RoomPage);
+    fixture.componentRef.setInput('id', 'abc');
+    await fixture.whenStable();
+    const page = fixture.nativeElement as HTMLElement;
+
+    expect(page.querySelector('dialog')?.open).toBe(true);
+    expect(page.querySelector('#message')).toBeNull();
+  });
+
+  it('shows the chosen name once inside', async () => {
+    const { page } = await render();
+    expect(page.querySelector('dialog')).toBeNull();
+    expect(page.textContent).toContain('You are Juan');
+  });
 
   it('shows the room link and copies it', async () => {
     const { fixture, page } = await render();

@@ -31,11 +31,19 @@ the page connects to it on load.
 | Route       | Page                  | What it does |
 | ----------- | --------------------- | ------------ |
 | `/`         | `home/home-page`      | **Create room**: asks the API for a room (`POST /api/rooms`) and goes to it |
-| `/room/:id` | `room/room-page`      | The room: a banner to copy its link, and the chat |
+| `/room/:id` | `room/room-page`      | The room: asks for your name, then a banner to copy its link, and the chat |
 
 Both pages are lazy-loaded. The router binds `:id` straight to the page's
 `id` input (`withComponentInputBinding`). Any id shows a room for now; a room
 that doesn't exist will say so later in the roadmap.
+
+## Your name
+
+Entering a room opens `room/name-dialog`: a native `<dialog>` (`showModal()`,
+`Esc` blocked) with a Signal Forms form (`@angular/forms/signals`) that
+requires a non-blank name of up to 24 characters. It emits the name through
+an `output()`, and the room page keeps it in a signal: it lives only in memory,
+so reloading asks again. The room shows nothing else until there is a name.
 
 ## Real-time connection
 
@@ -53,6 +61,9 @@ pnpm run build             # production build to dist/web/browser
 pnpm test                  # Vitest in watch mode
 pnpm test --watch=false    # single run
 ```
+
+Tests run on jsdom, which lacks `<dialog>`'s `showModal()` and `close()`;
+`src/test-setup.ts` (the test builder's `setupFiles`) fills them in.
 
 ## Conventions
 
