@@ -56,7 +56,10 @@ Two independent applications and the orchestration that ties them together:
 |---|---|
 | [`apps/web`](./apps/web/README.md) | The interface: Angular and Tailwind |
 | [`apps/api`](./apps/api/README.md) | The server: Go, standard library |
-| [`apps/docker`](./apps/docker/README.md) | Docker Compose to run both together |
+| [`apps/docker`](./apps/docker/README.md) | One Docker image with both, as it runs in production |
+
+In production a single container does everything: the Go server answers the
+API under `/api/` and serves the interface for every other path.
 
 Each folder has its own README with the technical detail.
 

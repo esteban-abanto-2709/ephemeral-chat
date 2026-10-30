@@ -1,0 +1,7 @@
+.git
+**/node_modules
+**/dist
+**/.angular
+**/.env
+apps/api/api
+apps/api/api.exe

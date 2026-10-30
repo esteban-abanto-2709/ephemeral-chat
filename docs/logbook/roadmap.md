@@ -16,16 +16,9 @@ changelog and is deleted from here.
 Everything below is **v0.1** (see [product vision](../product-vision.md)).
 Each entry is one commit, and no commit breaks production.
 
-## [RM-001] Deploy to Render
-- **Goal:** the current scaffold (Angular default page + Go `/health`) live on Render, so every later commit lands on a real production.
-- **Scope:** both Docker images, free tier. In: the setup to deploy on every push to `main`. Out: custom domain.
-- **Open questions:** one service or two (Go serving the Angular build vs. a static site + the API; cold starts and the 750 free hours a month weigh in); how the web reaches the API in production; whether to add an external keep-alive ping.
-- **Done when:** the public URL serves the web and `/health` answers `ok`, and a push to `main` redeploys.
-- **Date:** 2026-10-29 · **Status:** Open
-
 ## [RM-002] Real-time connection between web and API
 - **Goal:** the browser opens a WebSocket to the API and gets messages back (echo), in development and in production.
-- **Scope:** first Go dependency (WebSocket library, `go.sum` appears); dev proxy in `ng serve`; the same path working in the Docker setup and on Render.
+- **Scope:** first Go dependency (WebSocket library, `go.sum` appears); the socket under `/api/` (e.g. `/api/ws`), with `ws: true` in the `ng serve` proxy; the same path working in the Docker image and on Render.
 - **Open questions:** `coder/websocket` (recommended) or `gorilla/websocket`.
 - **Done when:** a message typed in the web comes back from the API, locally and on the production URL.
 - **Date:** 2026-10-29 · **Status:** Open

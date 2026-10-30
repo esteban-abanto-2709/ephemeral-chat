@@ -28,12 +28,12 @@ idiomatic, standard way over clever shortcuts.
 ## Current state (2026-10)
 
 - Both apps are freshly scaffolded: the Angular CLI default page and a Go
-  server with `GET /health`. No chat logic yet.
+  server with `GET /api/health`. No chat logic yet.
 - Working toward **v0.1**: `docs/logbook/roadmap.md` is ordered by priority,
-  one entry per commit. Deployment target is Render (free tier), done first
-  (`RM-001`) so every later commit lands on a real production.
-- **No commit breaks production**: each one leaves the Docker images building
-  and the deployed app working.
+  one entry per commit.
+- **Deployment:** one free Render Web Service built from
+  `apps/docker/Dockerfile`; every push to `main` deploys. **No commit breaks
+  production**: each one leaves the image building and the app working.
 
 ## Repository layout
 
@@ -41,12 +41,23 @@ idiomatic, standard way over clever shortcuts.
 |---|---|---|
 | `apps/web` | Angular 22 SPA (no SSR), Tailwind 4, Vitest | [`apps/web/README.md`](./apps/web/README.md) |
 | `apps/api` | Go 1.27 HTTP API, standard library only | [`apps/api/README.md`](./apps/api/README.md) |
-| `apps/docker` | `compose.yaml` for both images | [`apps/docker/README.md`](./apps/docker/README.md) |
+| `apps/docker` | The single production image (Dockerfile, its ignore file, compose) | [`apps/docker/README.md`](./apps/docker/README.md) |
 | `docs/` | Product vision, Angular conventions | |
 | `docs/logbook/` | Roadmap, wishlist, technical debt, changelog | |
 
 The two apps are **independent**: each has its own dependencies and is run
-from inside its own folder. No workspace.
+from inside its own folder. No workspace. All Docker files live in
+`apps/docker`, never at the repository root or inside an app.
+
+## How it fits together
+
+```
+production:  browser ──▶ Go (one container) ──┬─ /api/*  → API
+                                              └─ else    → Angular build (index.html fallback)
+development: browser ──▶ ng serve :4200 ──/api──▶ go run . :8080
+```
+
+The browser only ever calls its own origin: no API URL in the web, no CORS.
 
 ## Commands
 
@@ -60,10 +71,11 @@ pnpm test --watch=false    # Vitest, single run
 go run .                   # API on :8080 (PORT overrides it)
 go build ./...
 go vet ./...
+go test ./...
 gofmt -l .                 # must print nothing
 
 # apps/docker
-docker compose up -d --build   # web on :3000, api on :4000
+docker compose up -d --build   # production image on :3000
 docker compose down
 ```
 

@@ -14,14 +14,15 @@ database. All state lives in memory.
 ## Getting started
 
 ```bash
-go run .            # http://localhost:8080
+go run .            # http://localhost:8080/api/health
 ```
 
 ## Environment variables
 
 | Variable | Required | Purpose                          |
 | -------- | -------- | -------------------------------- |
-| `PORT`   | No       | HTTP port (defaults to `8080`)   |
+| `PORT`       | No       | HTTP port (defaults to `8080`)                 |
+| `STATIC_DIR` | No       | Folder with the web build to serve (see below) |
 
 ## Commands
 
@@ -34,13 +35,23 @@ gofmt -l .      # lists unformatted files; must print nothing
 
 ## Endpoints
 
-| Method | Path      | Response            |
-| ------ | --------- | ------------------- |
-| `GET`  | `/health` | `ok` (health check) |
+Every API route lives under `/api/`, so it never collides with a web route.
 
-## Docker
+| Method | Path          | Response            |
+| ------ | ------------- | ------------------- |
+| `GET`  | `/api/health` | `ok` (health check) |
+| `GET`  | `/api/*`      | `404` for any other |
 
-Two stages: `golang:1.27-alpine` compiles a static binary
-(`CGO_ENABLED=0`, `-ldflags="-s -w"`), and `alpine` runs only that binary as a
-non-root user, on port `4000`. Alpine instead of `scratch` so the healthcheck
-has `wget`.
+## Serving the web
+
+With `STATIC_DIR` set, every path outside `/api/` is served from that folder,
+and a path with no file behind it gets `index.html`, so Angular resolves its
+own routes (`/room/abc`). Without it, the server is an API only: that's how it
+runs in development, next to `ng serve`. In the Docker image it points to the
+Angular build (see [`apps/docker`](../docker/README.md)).
+
+## Tests
+
+```bash
+go test ./...   # routing: API, static files and the index.html fallback
+```

@@ -21,6 +21,11 @@ pnpm install
 pnpm start          # http://localhost:4200
 ```
 
+`ng serve` proxies `/api` to the API on `http://localhost:8080`
+(`proxy.conf.json`), so the web always calls its own origin, as it does in
+production. Run the API with `go run .` in `apps/api` for anything that needs
+it.
+
 ## Commands
 
 ```bash
@@ -42,9 +47,7 @@ pnpm 11 blocks dependency install scripts unless they are listed in
 install. When a new dependency needs one, decide it there: `true` to run it,
 `false` if the package ships prebuilt binaries.
 
-## Docker
+## In production
 
-Two stages: `node:24-alpine` builds the app, and
-`nginxinc/nginx-unprivileged:alpine` serves `dist/web/browser` on port `8080`.
-`nginx.conf` sends every unknown path to `index.html`, so reloading on an app
-route (e.g. `/room/abc`) works.
+There is no web server of its own: the build in `dist/web/browser` is served
+by the Go API from the single image in [`apps/docker`](../docker/README.md).
