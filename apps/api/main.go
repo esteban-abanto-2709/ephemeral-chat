@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"io/fs"
 	"log"
 	"net/http"
@@ -9,6 +10,8 @@ import (
 	"strings"
 
 	"github.com/coder/websocket"
+
+	"github.com/esteban-abanto-2709/ephemeral-chat/apps/api/internal/room"
 )
 
 func main() {
@@ -22,10 +25,13 @@ func main() {
 }
 
 func newMux(staticDir string) *http.ServeMux {
+	rooms := room.NewRegistry()
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /api/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("ok"))
 	})
+	mux.HandleFunc("POST /api/rooms", createRoom(rooms))
 	mux.HandleFunc("GET /api/ws", echo)
 	mux.HandleFunc("GET /api/", http.NotFound)
 
@@ -33,6 +39,16 @@ func newMux(staticDir string) *http.ServeMux {
 		mux.Handle("GET /", spa(os.DirFS(staticDir)))
 	}
 	return mux
+}
+
+func createRoom(rooms *room.Registry) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusCreated)
+		json.NewEncoder(w).Encode(struct {
+			ID string `json:"id"`
+		}{rooms.Create()})
+	}
 }
 
 func echo(w http.ResponseWriter, r *http.Request) {

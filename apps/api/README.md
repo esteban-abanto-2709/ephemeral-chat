@@ -43,11 +43,27 @@ Every API route lives under `/api/`, so it never collides with a web route.
 | Method | Path          | Response            |
 | ------ | ------------- | ------------------- |
 | `GET`  | `/api/health` | `ok` (health check) |
+| `POST` | `/api/rooms`  | `201` with `{"id": "..."}`: creates a room in memory |
 | `GET`  | `/api/ws`     | WebSocket: sends every message back as is (echo) |
 | `GET`  | `/api/*`      | `404` for any other |
 
+A room id is 16 random bytes from `crypto/rand`, base64url-encoded: 22
+characters, safe in a URL and not guessable. The link is the room's key.
+
 The WebSocket only accepts connections from its own origin (the library's
 default), which holds both in production and behind the `ng serve` proxy.
+
+## Code layout
+
+```
+main.go            config, routes and HTTP handlers
+internal/room/     the domain: rooms in memory, no HTTP inside
+```
+
+Business rules live in `internal/room` and know nothing about HTTP or
+WebSockets, so they're tested without a server. `main.go` translates requests
+into calls to it. The registry is shared by every request (each one runs in
+its own goroutine), so its map is guarded by a mutex.
 
 ## Serving the web
 
@@ -60,5 +76,5 @@ Angular build (see [`apps/docker`](../docker/README.md)).
 ## Tests
 
 ```bash
-go test ./...   # routing (API, static files, index.html fallback) and the echo
+go test ./...   # every package: routing, rooms endpoint, echo and internal/room
 ```

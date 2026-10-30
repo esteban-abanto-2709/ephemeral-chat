@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -38,6 +39,25 @@ func TestRouting(t *testing.T) {
 		if rec.Code != c.status || !strings.Contains(rec.Body.String(), c.body) {
 			t.Errorf("%s %s = %d %q, want %d containing %q", c.method, c.path, rec.Code, rec.Body.String(), c.status, c.body)
 		}
+	}
+}
+
+func TestCreateRoom(t *testing.T) {
+	rec := httptest.NewRecorder()
+	newMux("").ServeHTTP(rec, httptest.NewRequest("POST", "/api/rooms", nil))
+
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("POST /api/rooms = %d, want 201", rec.Code)
+	}
+	if got := rec.Header().Get("Content-Type"); got != "application/json" {
+		t.Errorf("Content-Type = %q, want application/json", got)
+	}
+	var body struct{ ID string }
+	if err := json.NewDecoder(rec.Body).Decode(&body); err != nil {
+		t.Fatal(err)
+	}
+	if len(body.ID) != 22 {
+		t.Errorf("id = %q, want 22 characters", body.ID)
 	}
 }
 
