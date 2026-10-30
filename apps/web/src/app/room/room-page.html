@@ -1,0 +1,40 @@
+<main class="mx-auto flex h-dvh max-w-xl flex-col gap-4 p-4">
+  <header class="flex items-center justify-between">
+    <h1 class="text-xl font-semibold">Ephemeral Chat</h1>
+    <p class="text-sm text-gray-600" role="status">{{ statusLabel() }}</p>
+  </header>
+
+  <section class="flex flex-col gap-2 rounded border border-gray-300 p-3" aria-labelledby="share-title">
+    <h2 id="share-title" class="text-sm font-semibold">Share this link to invite someone</h2>
+    <div class="flex gap-2">
+      <label for="room-link" class="sr-only">Room link</label>
+      <input
+        id="room-link"
+        class="flex-1 rounded border border-gray-400 px-3 py-2 text-sm"
+        [value]="link()"
+        readonly
+      />
+      <button type="button" class="rounded bg-gray-900 px-4 py-2 text-white" (click)="copyLink()">
+        {{ copied() ? 'Copied' : 'Copy' }}
+      </button>
+    </div>
+  </section>
+
+  <ul class="flex-1 space-y-2 overflow-y-auto" aria-live="polite">
+    @for (message of socket.messages(); track $index) {
+      <li class="rounded bg-gray-100 px-3 py-2">{{ message }}</li>
+    }
+  </ul>
+
+  <form class="flex gap-2" (submit)="send($event, input)">
+    <label for="message" class="sr-only">Message</label>
+    <input #input id="message" class="flex-1 rounded border border-gray-400 px-3 py-2" autocomplete="off" />
+    <button
+      type="submit"
+      class="rounded bg-gray-900 px-4 py-2 text-white disabled:opacity-50"
+      [disabled]="socket.status() !== 'open'"
+    >
+      Send
+    </button>
+  </form>
+</main>

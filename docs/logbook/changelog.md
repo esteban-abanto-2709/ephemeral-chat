@@ -12,6 +12,9 @@ Summary in ≤2 lines of what was done.
 
 ---
 
+## [RM-003] Create a room and share its link (2026-10-29 21:33)
+`POST /api/rooms` creates a room in memory (`internal/room`, 22-character unguessable id); the web gets a router with a home page (**Create room**) and `/room/:id` with a banner to copy the link and the echo chat.
+
 ## [RM-002] Real-time connection between web and API (2026-10-29 19:39)
 The API echoes WebSocket messages on `/api/ws` (`coder/websocket`, first dependency); the home page connects to its own origin, sends what you type and lists what comes back, with the connection status.
 

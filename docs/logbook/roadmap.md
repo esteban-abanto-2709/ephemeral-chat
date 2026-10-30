@@ -16,12 +16,6 @@ changelog and is deleted from here.
 Everything below is **v0.1** (see [product vision](../product-vision.md)).
 Each entry is one commit, and no commit breaks production.
 
-## [RM-003] Create a room and share its link
-- **Goal:** from the home page, **Create room** gives a room with its own link, and the room page shows a banner to copy and share it.
-- **Scope:** the API creates rooms in memory with an unguessable id; Angular routes for home and room. Out: names and messages.
-- **Done when:** clicking **Create room** lands on `/room/<id>`, the banner copies that URL, and opening it in another browser reaches the same room.
-- **Date:** 2026-10-29 · **Status:** In progress (2026-10-29)
-
 ## [RM-004] Name modal on entering a room
 - **Goal:** every time someone enters a room (creator or guest), a modal asks for the name they will appear with.
 - **Scope:** the name lives only in memory in the browser; reloading asks again.

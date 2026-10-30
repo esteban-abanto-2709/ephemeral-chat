@@ -26,13 +26,24 @@ pnpm start          # http://localhost:4200
 origin, as it does in production. Run the API with `go run .` in `apps/api`:
 the page connects to it on load.
 
+## Pages
+
+| Route       | Page                  | What it does |
+| ----------- | --------------------- | ------------ |
+| `/`         | `home/home-page`      | **Create room**: asks the API for a room (`POST /api/rooms`) and goes to it |
+| `/room/:id` | `room/room-page`      | The room: a banner to copy its link, and the chat |
+
+Both pages are lazy-loaded. The router binds `:id` straight to the page's
+`id` input (`withComponentInputBinding`). Any id shows a room for now; a room
+that doesn't exist will say so later in the roadmap.
+
 ## Real-time connection
 
-`src/app/echo-socket.ts` opens one WebSocket to `/api/ws` on the page's own
-host (`ws://` or `wss://` to match the page) and exposes its state as signals:
-`status` (`connecting`, `open`, `closed`) and the `messages` received. The home
-page sends what you type and lists what comes back. For now the API only
-echoes; rooms and real messages come with the roadmap.
+`src/app/room/echo-socket.ts` opens one WebSocket to `/api/ws` on the page's
+own host (`ws://` or `wss://` to match the page) and exposes its state as
+signals: `status` (`connecting`, `open`, `closed`) and the `messages`
+received. The room page sends what you type and lists what comes back. For
+now the API only echoes: each tab sees its own messages, not the room's.
 
 ## Commands
 

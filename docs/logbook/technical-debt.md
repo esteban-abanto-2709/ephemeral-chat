@@ -15,7 +15,7 @@ and is deleted from here.
 ---
 
 ## [TD-001] Socket signals are writable from outside the service
-- **Location:** `apps/web/src/app/echo-socket.ts:7`
+- **Location:** `apps/web/src/app/room/echo-socket.ts:7`
 - **Risk:** 2/10
 - **Problem:** `status` and `messages` are exposed as writable signals; `readonly` only stops replacing them, so any component can still call `.set()` or `.update()` on them.
 - **Future impact:** a component could change the connection state or the message list by mistake, and the bug would look like it came from the socket.
