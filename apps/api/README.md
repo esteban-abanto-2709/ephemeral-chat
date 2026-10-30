@@ -45,7 +45,6 @@ Every API route lives under `/api/`, so it never collides with a web route.
 | `GET`  | `/api/health` | `ok` (health check) |
 | `POST` | `/api/rooms`  | `201` with `{"id": "..."}`: creates a room in memory |
 | `GET`  | `/api/rooms/{id}/ws?name=…` | WebSocket: joins the room as `name` (see below) |
-| `GET`  | `/api/ws`     | WebSocket: sends every message back as is (echo) |
 | `GET`  | `/api/*`      | `404` for any other |
 
 A room id is 16 random bytes from `crypto/rand`, base64url-encoded: 22
@@ -103,7 +102,7 @@ Angular build (see [`apps/docker`](../docker/README.md)).
 ## Tests
 
 ```bash
-go test ./...   # every package: routing, rooms, room chat, echo and internal/room
+go test ./...   # every package: routing, rooms, room chat and internal/room
 ```
 
 State is shared between goroutines, so run the race detector after touching

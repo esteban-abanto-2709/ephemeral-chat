@@ -31,6 +31,7 @@ func TestRouting(t *testing.T) {
 		{"GET", "/api/health", 200, "ok"},
 		{"GET", "/api/missing", 404, "404"},
 		{"GET", "/api/rooms/unknown/ws?name=Juan", 404, "404"},
+		{"GET", "/api/ws", 404, "404"},
 		{"POST", "/api/health", 405, ""},
 		{"GET", "/", 200, "<app-root>"},
 		{"GET", "/main.js", 200, "console.log"},
@@ -107,34 +108,6 @@ func TestRoomChat(t *testing.T) {
 	luis := join("Luis")
 	wsjson.Write(ctx, ana, map[string]string{"text": "bienvenido"})
 	expect(luis, room.Message{Name: "Ana", Text: "bienvenido"})
-}
-
-func TestEcho(t *testing.T) {
-	server := httptest.NewServer(newMux(""))
-	defer server.Close()
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	conn, _, err := websocket.Dial(ctx, server.URL+"/api/ws", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer conn.CloseNow()
-
-	for _, text := range []string{"hola", "segundo mensaje"} {
-		if err := conn.Write(ctx, websocket.MessageText, []byte(text)); err != nil {
-			t.Fatal(err)
-		}
-		_, got, err := conn.Read(ctx)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if string(got) != text {
-			t.Errorf("echo = %q, want %q", got, text)
-		}
-	}
-	conn.Close(websocket.StatusNormalClosure, "")
 }
 
 func TestAPIOnlyWithoutStaticDir(t *testing.T) {

@@ -34,7 +34,6 @@ func newMux(staticDir string) *http.ServeMux {
 	})
 	mux.HandleFunc("POST /api/rooms", createRoom(rooms))
 	mux.HandleFunc("GET /api/rooms/{id}/ws", joinRoom(rooms))
-	mux.HandleFunc("GET /api/ws", echo)
 	mux.HandleFunc("GET /api/", http.NotFound)
 
 	if staticDir != "" {
@@ -92,24 +91,6 @@ func joinRoom(rooms *room.Registry) http.HandlerFunc {
 				return
 			}
 			chat.Send(member, incoming.Text)
-		}
-	}
-}
-
-func echo(w http.ResponseWriter, r *http.Request) {
-	conn, err := websocket.Accept(w, r, nil)
-	if err != nil {
-		return
-	}
-	defer conn.CloseNow()
-
-	for {
-		kind, msg, err := conn.Read(r.Context())
-		if err != nil {
-			return
-		}
-		if err := conn.Write(r.Context(), kind, msg); err != nil {
-			return
 		}
 	}
 }

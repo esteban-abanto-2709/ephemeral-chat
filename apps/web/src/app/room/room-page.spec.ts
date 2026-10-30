@@ -1,25 +1,31 @@
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { RoomPage } from './room-page';
-import { EchoSocket, SocketStatus } from './echo-socket';
+import { ChatMessage, RoomSocket, SocketStatus } from './room-socket';
 
 describe('RoomPage', () => {
   const sent: string[] = [];
   const fakeSocket = {
     status: signal<SocketStatus>('open'),
-    messages: signal(['hola', 'segundo']),
+    messages: signal<ChatMessage[]>([
+      { name: 'Ana', text: 'hola' },
+      { name: 'Juan', text: 'segundo' },
+    ]),
+    connect: vi.fn(),
     send: (text: string) => sent.push(text),
   };
   const writeText = vi.fn().mockResolvedValue(undefined);
 
   beforeEach(async () => {
     sent.length = 0;
+    fakeSocket.connect.mockClear();
     writeText.mockClear();
     Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
-    await TestBed.configureTestingModule({
-      imports: [RoomPage],
-      providers: [{ provide: EchoSocket, useValue: fakeSocket }],
-    }).compileComponents();
+    await TestBed.configureTestingModule({ imports: [RoomPage] })
+      .overrideComponent(RoomPage, {
+        set: { providers: [{ provide: RoomSocket, useValue: fakeSocket }] },
+      })
+      .compileComponents();
   });
 
   async function render() {
@@ -45,12 +51,14 @@ describe('RoomPage', () => {
 
     expect(page.querySelector('dialog')?.open).toBe(true);
     expect(page.querySelector('#message')).toBeNull();
+    expect(fakeSocket.connect).not.toHaveBeenCalled();
   });
 
-  it('shows the chosen name once inside', async () => {
+  it('joins the room with the chosen name', async () => {
     const { page } = await render();
     expect(page.querySelector('dialog')).toBeNull();
     expect(page.textContent).toContain('You are Juan');
+    expect(fakeSocket.connect).toHaveBeenCalledWith('abc', 'Juan');
   });
 
   it('shows the room link and copies it', async () => {
@@ -66,12 +74,18 @@ describe('RoomPage', () => {
     expect(copy.textContent).toContain('Copied');
   });
 
-  it('shows the connection status and the received messages', async () => {
+  it('shows the connection status and each message with its sender', async () => {
     const { page } = await render();
 
     expect(page.querySelector('[role="status"]')?.textContent).toContain('Connected');
-    const items = [...page.querySelectorAll('li')].map((li) => li.textContent?.trim());
-    expect(items).toEqual(['hola', 'segundo']);
+    const items = [...page.querySelectorAll('li')].map((li) => [
+      li.querySelector('strong')?.textContent,
+      li.querySelector('span')?.textContent,
+    ]);
+    expect(items).toEqual([
+      ['Ana', 'hola'],
+      ['Juan', 'segundo'],
+    ]);
   });
 
   it('sends the typed text and clears the input', async () => {

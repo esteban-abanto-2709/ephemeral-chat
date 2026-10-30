@@ -14,10 +14,10 @@ and is deleted from here.
 
 ---
 
-## [TD-001] Socket signals are writable from outside the service
-- **Location:** `apps/web/src/app/room/echo-socket.ts:7`
-- **Risk:** 2/10
-- **Problem:** `status` and `messages` are exposed as writable signals; `readonly` only stops replacing them, so any component can still call `.set()` or `.update()` on them.
-- **Future impact:** a component could change the connection state or the message list by mistake, and the bug would look like it came from the socket.
-- **Suggestion:** keep private writable signals (`_status`) and expose `_status.asReadonly()`.
+## [TD-002] Unreadable when the browser uses a dark color scheme
+- **Location:** `apps/web/src/styles.css:1`
+- **Risk:** 3/10
+- **Problem:** the pages set dark text colors but never a background or a `color-scheme`, so a browser in dark mode paints a dark page under dark text (the room header and banner become unreadable).
+- **Future impact:** anyone with a dark system theme sees a broken page on first visit.
+- **Suggestion:** settle it with the visual design: declare `color-scheme` and an explicit background, or style both themes.
 - **Date:** 2026-10-29 · **Status:** Open

@@ -12,6 +12,12 @@ Summary in ≤2 lines of what was done.
 
 ---
 
+## [RM-005] Text messages in a room (2026-10-29 21:50)
+The API relays each message to everyone in the room (per-member mailboxes, slow clients disconnected, nothing stored); the room page joins with your name and shows each message with its sender. The echo is gone.
+
+## [TD-001] Socket signals are writable from outside the service (2026-10-29 21:50)
+The new `RoomSocket` keeps its signals private and exposes them with `asReadonly()`; the old echo socket that had the problem was removed.
+
 ## [RM-004] Name modal on entering a room (2026-10-29 21:40)
 Entering a room opens a native `<dialog>` with a Signal Forms form (non-blank, up to 24 characters); the room shows "You are <name>" and nothing else until there is one. The name lives only in memory.
 

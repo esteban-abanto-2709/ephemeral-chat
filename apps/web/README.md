@@ -47,11 +47,19 @@ so reloading asks again. The room shows nothing else until there is a name.
 
 ## Real-time connection
 
-`src/app/room/echo-socket.ts` opens one WebSocket to `/api/ws` on the page's
-own host (`ws://` or `wss://` to match the page) and exposes its state as
-signals: `status` (`connecting`, `open`, `closed`) and the `messages`
-received. The room page sends what you type and lists what comes back. For
-now the API only echoes: each tab sees its own messages, not the room's.
+`src/app/room/room-socket.ts` joins the room once you've picked a name: one
+WebSocket to `/api/rooms/<id>/ws?name=<name>` on the page's own host (`ws://`
+or `wss://` to match the page). It sends `{"text": …}` and receives
+`{"name": …, "text": …}` from everyone in the room, sender included.
+
+Its state is exposed as read-only signals (`status`: `connecting`, `open`,
+`closed`; `messages`), written only inside the service.
+
+It is provided by the room page itself (`providers: [RoomSocket]`), not at the
+root: each room page gets its own socket, and leaving the page destroys the
+service, which closes the connection (`ngOnDestroy`). Tests replace it with
+`TestBed.overrideComponent`, since a component-level provider wins over the
+test module's.
 
 ## Commands
 
