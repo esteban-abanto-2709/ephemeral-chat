@@ -21,7 +21,7 @@ Each entry is one commit, and no commit breaks production.
 - **Scope:** first Go dependency (WebSocket library, `go.sum` appears); the socket under `/api/` (e.g. `/api/ws`), with `ws: true` in the `ng serve` proxy; the same path working in the Docker image and on Render.
 - **Open questions:** `coder/websocket` (recommended) or `gorilla/websocket`.
 - **Done when:** a message typed in the web comes back from the API, locally and on the production URL.
-- **Date:** 2026-10-29 · **Status:** Open
+- **Date:** 2026-10-29 · **Status:** In progress (2026-10-29)
 
 ## [RM-003] Create a room and share its link
 - **Goal:** from the home page, **Create room** gives a room with its own link, and the room page shows a banner to copy and share it.

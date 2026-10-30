@@ -1,12 +1,16 @@
 package main
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
+
+	"github.com/coder/websocket"
 )
 
 func TestRouting(t *testing.T) {
@@ -35,6 +39,34 @@ func TestRouting(t *testing.T) {
 			t.Errorf("%s %s = %d %q, want %d containing %q", c.method, c.path, rec.Code, rec.Body.String(), c.status, c.body)
 		}
 	}
+}
+
+func TestEcho(t *testing.T) {
+	server := httptest.NewServer(newMux(""))
+	defer server.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	conn, _, err := websocket.Dial(ctx, server.URL+"/api/ws", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer conn.CloseNow()
+
+	for _, text := range []string{"hola", "segundo mensaje"} {
+		if err := conn.Write(ctx, websocket.MessageText, []byte(text)); err != nil {
+			t.Fatal(err)
+		}
+		_, got, err := conn.Read(ctx)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if string(got) != text {
+			t.Errorf("echo = %q, want %q", got, text)
+		}
+	}
+	conn.Close(websocket.StatusNormalClosure, "")
 }
 
 func TestAPIOnlyWithoutStaticDir(t *testing.T) {

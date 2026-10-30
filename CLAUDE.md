@@ -40,7 +40,7 @@ idiomatic, standard way over clever shortcuts.
 | Path | What | Detail |
 |---|---|---|
 | `apps/web` | Angular 22 SPA (no SSR), Tailwind 4, Vitest | [`apps/web/README.md`](./apps/web/README.md) |
-| `apps/api` | Go 1.27 HTTP API, standard library only | [`apps/api/README.md`](./apps/api/README.md) |
+| `apps/api` | Go 1.27 HTTP API, standard library + `coder/websocket` | [`apps/api/README.md`](./apps/api/README.md) |
 | `apps/docker` | The single production image (Dockerfile, its ignore file, compose) | [`apps/docker/README.md`](./apps/docker/README.md) |
 | `docs/` | Product vision, Angular conventions | |
 | `docs/logbook/` | Roadmap, wishlist, technical debt, changelog | |

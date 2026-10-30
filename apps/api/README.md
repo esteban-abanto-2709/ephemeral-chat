@@ -1,15 +1,18 @@
 # Ephemeral Chat — API
 
-Ephemeral Chat's server. Go with the standard library only: no framework, no
-database. All state lives in memory.
+Ephemeral Chat's server. Go with the standard library plus one WebSocket
+library: no framework, no database. All state lives in memory.
 
 ## Stack
 
-| Piece        | Version                                        |
-| ------------ | ---------------------------------------------- |
-| Language     | Go 1.27                                        |
-| HTTP         | `net/http` (method + wildcard route patterns)  |
-| Dependencies | none                                           |
+| Piece      | Version                                       |
+| ---------- | --------------------------------------------- |
+| Language   | Go 1.27                                       |
+| HTTP       | `net/http` (method + wildcard route patterns) |
+| WebSockets | `github.com/coder/websocket`                  |
+
+`go.mod` lists the dependencies and `go.sum` their checksums; both are
+committed.
 
 ## Getting started
 
@@ -40,7 +43,11 @@ Every API route lives under `/api/`, so it never collides with a web route.
 | Method | Path          | Response            |
 | ------ | ------------- | ------------------- |
 | `GET`  | `/api/health` | `ok` (health check) |
+| `GET`  | `/api/ws`     | WebSocket: sends every message back as is (echo) |
 | `GET`  | `/api/*`      | `404` for any other |
+
+The WebSocket only accepts connections from its own origin (the library's
+default), which holds both in production and behind the `ng serve` proxy.
 
 ## Serving the web
 
@@ -53,5 +60,5 @@ Angular build (see [`apps/docker`](../docker/README.md)).
 ## Tests
 
 ```bash
-go test ./...   # routing: API, static files and the index.html fallback
+go test ./...   # routing (API, static files, index.html fallback) and the echo
 ```
