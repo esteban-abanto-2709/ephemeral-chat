@@ -1,9 +1,12 @@
 package room
 
 import (
+	"errors"
 	"regexp"
 	"sync"
 	"testing"
+	"testing/synctest"
+	"time"
 )
 
 var urlSafeID = regexp.MustCompile(`^[A-Za-z0-9_-]{22}$`)
@@ -38,4 +41,64 @@ func TestCreateFromManyGoroutines(t *testing.T) {
 	if len(rooms.rooms) != n {
 		t.Errorf("registry holds %d rooms, want %d", len(rooms.rooms), n)
 	}
+}
+
+func assertExists(t *testing.T, rooms *Registry, id string, want bool) {
+	t.Helper()
+	synctest.Wait()
+	if _, ok := rooms.Get(id); ok != want {
+		t.Fatalf("room exists = %v, want %v", ok, want)
+	}
+}
+
+func TestEmptyRoomIsDroppedAfterAMinute(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		rooms := NewRegistry()
+		id := rooms.Create()
+		room, _ := rooms.Get(id)
+
+		time.Sleep(emptyLifetime - time.Second)
+		assertExists(t, rooms, id, true)
+
+		juan := join(t, room, "Juan")
+		time.Sleep(2 * emptyLifetime)
+		assertExists(t, rooms, id, true)
+
+		room.Leave(juan)
+		time.Sleep(emptyLifetime - time.Second)
+		assertExists(t, rooms, id, true)
+
+		time.Sleep(time.Second)
+		assertExists(t, rooms, id, false)
+		if _, err := room.Join("Ana"); !errors.Is(err, ErrRoomGone) {
+			t.Errorf("joining a dropped room: error = %v, want ErrRoomGone", err)
+		}
+	})
+}
+
+func TestUnusedRoomIsDroppedAfterAMinute(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		rooms := NewRegistry()
+		id := rooms.Create()
+
+		time.Sleep(emptyLifetime)
+		assertExists(t, rooms, id, false)
+	})
+}
+
+func TestRejoiningWithinTheMinuteKeepsTheRoom(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		rooms := NewRegistry()
+		id := rooms.Create()
+		room, _ := rooms.Get(id)
+
+		room.Leave(join(t, room, "Juan"))
+		time.Sleep(emptyLifetime - time.Second)
+		room.Leave(join(t, room, "Juan"))
+
+		time.Sleep(emptyLifetime - time.Second)
+		assertExists(t, rooms, id, true)
+		time.Sleep(time.Second)
+		assertExists(t, rooms, id, false)
+	})
 }

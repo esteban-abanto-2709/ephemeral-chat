@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"io/fs"
 	"log"
 	"net/http"
@@ -15,7 +16,10 @@ import (
 	"github.com/esteban-abanto-2709/ephemeral-chat/apps/api/internal/room"
 )
 
-const statusNameTaken websocket.StatusCode = 4009
+const (
+	statusRoomGone  websocket.StatusCode = 4004
+	statusNameTaken websocket.StatusCode = 4009
+)
 
 func main() {
 	port := os.Getenv("PORT")
@@ -74,8 +78,12 @@ func joinRoom(rooms *room.Registry) http.HandlerFunc {
 		defer conn.CloseNow()
 
 		member, err := chat.Join(name)
-		if err != nil {
+		if errors.Is(err, room.ErrNameTaken) {
 			conn.Close(statusNameTaken, err.Error())
+			return
+		}
+		if err != nil {
+			conn.Close(statusRoomGone, err.Error())
 			return
 		}
 		defer chat.Leave(member)

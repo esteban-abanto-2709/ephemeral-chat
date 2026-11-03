@@ -5,15 +5,20 @@ import (
 	"slices"
 	"strings"
 	"sync"
+	"time"
 	"unicode/utf8"
 )
 
 const (
 	NameMaxLength = 24
 	mailboxSize   = 16
+	emptyLifetime = time.Minute
 )
 
-var ErrNameTaken = errors.New("name already taken in this room")
+var (
+	ErrNameTaken = errors.New("name already taken in this room")
+	ErrRoomGone  = errors.New("room no longer exists")
+)
 
 type Message struct {
 	Type    string   `json:"type"`
@@ -34,10 +39,12 @@ func (m *Member) Messages() <-chan Message {
 type Room struct {
 	mu      sync.Mutex
 	members []*Member
+	closed  bool
+	expiry  *time.Timer
 }
 
-func newRoom() *Room {
-	return &Room{}
+func newRoom(onExpire func()) *Room {
+	return &Room{expiry: time.AfterFunc(emptyLifetime, onExpire)}
 }
 
 func ValidName(name string) bool {
@@ -49,6 +56,9 @@ func (r *Room) Join(name string) (*Member, error) {
 
 	r.mu.Lock()
 	defer r.mu.Unlock()
+	if r.closed {
+		return nil, ErrRoomGone
+	}
 	for _, other := range r.members {
 		if strings.EqualFold(other.Name, name) {
 			return nil, ErrNameTaken
@@ -95,7 +105,20 @@ func (r *Room) remove(member *Member) {
 	}
 	r.members = slices.Delete(r.members, i, i+1)
 	close(member.mailbox)
+	if len(r.members) == 0 {
+		r.expiry.Reset(emptyLifetime)
+	}
 	r.broadcast(Message{Type: "left", Name: member.Name, Members: r.names()})
+}
+
+func (r *Room) close() bool {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if len(r.members) > 0 {
+		return false
+	}
+	r.closed = true
+	return true
 }
 
 func (r *Room) names() []string {

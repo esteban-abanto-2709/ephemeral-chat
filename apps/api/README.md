@@ -59,7 +59,8 @@ Joining needs an existing room (`404` otherwise) and a name of 1 to 24
 characters once trimmed (`400` otherwise). A name already in the room
 (ignoring case) is accepted as a WebSocket and closed right away with status
 `4009`: a browser can't read the HTTP status of a failed handshake, but it can
-read a close code. Then, as JSON text frames:
+read a close code. A room dropped between the lookup and the join (see below)
+closes the same way with `4004`. Then, as JSON text frames:
 
 ```
 client → server:   {"text": "hola"}
@@ -72,6 +73,18 @@ Every event goes to everyone connected to the room at that moment, sender and
 newcomer included. `joined` and `left` carry the full list of who is in, in
 order of arrival, so a client never has to work it out. Nothing is stored:
 whoever joins later sees only what comes after. Blank messages are dropped.
+
+### Room lifecycle
+
+A room lives while someone is in it. Once it is empty, including right after
+it's created, it has one minute (`emptyLifetime`) before it is dropped from the
+registry; anyone joining inside that minute keeps it, so reloading the page
+while alone doesn't lose the room. A dropped room is gone for good: its id
+answers `404` like any unknown one.
+
+Each room carries a `time.AfterFunc` timer, re-armed when the last member
+leaves. When it fires, the registry drops the room only if it's still empty,
+and marks it closed so a join racing with the drop is refused.
 
 ## Code layout
 
@@ -110,6 +123,10 @@ Angular build (see [`apps/docker`](../docker/README.md)).
 ```bash
 go test ./...   # every package: routing, rooms, room chat and internal/room
 ```
+
+The lifecycle tests run inside `synctest.Test` (`testing/synctest`): a bubble
+with a fake clock, where `time.Sleep(time.Minute)` returns at once and timers
+fire in order, so a minute-long rule is tested in milliseconds.
 
 State is shared between goroutines, so run the race detector after touching
 `internal/room` or a handler. It needs cgo, which the Windows setup lacks; the

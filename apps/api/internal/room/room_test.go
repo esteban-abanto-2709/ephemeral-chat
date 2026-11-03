@@ -60,7 +60,7 @@ func drain(member *Member) {
 }
 
 func TestJoinAnnouncesTheNewcomerToEveryone(t *testing.T) {
-	room := newRoom()
+	room := newRoom(func() {})
 	juan := join(t, room, "Juan")
 	expect(t, juan, Message{Type: "joined", Name: "Juan", Members: []string{"Juan"}})
 
@@ -71,7 +71,7 @@ func TestJoinAnnouncesTheNewcomerToEveryone(t *testing.T) {
 }
 
 func TestLeaveAnnouncesWhoIsStillHere(t *testing.T) {
-	room := newRoom()
+	room := newRoom(func() {})
 	juan, ana, luis := join(t, room, "Juan"), join(t, room, "Ana"), join(t, room, "Luis")
 	drain(juan)
 	drain(luis)
@@ -84,7 +84,7 @@ func TestLeaveAnnouncesWhoIsStillHere(t *testing.T) {
 }
 
 func TestJoinRejectsANameAlreadyInTheRoom(t *testing.T) {
-	room := newRoom()
+	room := newRoom(func() {})
 	juan := join(t, room, "Juan")
 	drain(juan)
 
@@ -98,7 +98,7 @@ func TestJoinRejectsANameAlreadyInTheRoom(t *testing.T) {
 }
 
 func TestSendReachesEveryMemberWithTheSenderName(t *testing.T) {
-	room := newRoom()
+	room := newRoom(func() {})
 	juan, ana := join(t, room, "Juan"), join(t, room, "Ana")
 	drain(juan)
 	drain(ana)
@@ -111,7 +111,7 @@ func TestSendReachesEveryMemberWithTheSenderName(t *testing.T) {
 }
 
 func TestLateJoinerSeesNothingFromBefore(t *testing.T) {
-	room := newRoom()
+	room := newRoom(func() {})
 	juan := join(t, room, "Juan")
 	room.Send(juan, "before")
 	drain(juan)
@@ -127,7 +127,7 @@ func TestLateJoinerSeesNothingFromBefore(t *testing.T) {
 }
 
 func TestLeftMemberStopsReceiving(t *testing.T) {
-	room := newRoom()
+	room := newRoom(func() {})
 	juan, ana := join(t, room, "Juan"), join(t, room, "Ana")
 	drain(ana)
 
@@ -140,7 +140,7 @@ func TestLeftMemberStopsReceiving(t *testing.T) {
 }
 
 func TestSlowMemberIsDisconnectedAndAnnounced(t *testing.T) {
-	room := newRoom()
+	room := newRoom(func() {})
 	fast, slow := join(t, room, "Fast"), join(t, room, "Slow")
 	drain(fast)
 	drain(slow)
@@ -160,7 +160,7 @@ func TestSlowMemberIsDisconnectedAndAnnounced(t *testing.T) {
 }
 
 func TestBlankMessagesAreIgnored(t *testing.T) {
-	room := newRoom()
+	room := newRoom(func() {})
 	juan := join(t, room, "Juan")
 	drain(juan)
 

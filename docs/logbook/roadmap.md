@@ -20,7 +20,7 @@ Each entry is one commit, or a few when it spans both apps; no commit breaks pro
 - **Goal:** a room disappears once it has been empty for one minute; a link to a room that no longer exists says so.
 - **Scope:** the grace period is one value in the API, easy to change.
 - **Done when:** a room left empty for over a minute is gone (its link shows "room not found"), and reloading while alone inside the minute keeps it.
-- **Date:** 2026-10-29 · **Status:** Open
+- **Date:** 2026-10-29 · **Status:** In progress (2026-11-02)
 
 ## [RM-008] Limits against abuse
 - **Goal:** the API protects itself: messages up to 1000 characters, 5 messages per second per person, 50 people per room.
