@@ -33,3 +33,6 @@ Each person in a room gets a fixed id from the server and can change their name 
 
 ## [WL-009] Several chats at once
 A list of open rooms beside the chat, as in WhatsApp Web, to talk in more than one at a time; each room still lives only in memory. The v0.2 layout leaves the sidebar ready for it.
+
+## [WL-010] Liquid glass avatars
+Avatars drawn as small glass lenses instead of flat tinted circles. The WebGL layer draws up to 8 lenses and a room holds 50 people, so it needs another approach (one lens for the list, or CSS glass).

@@ -12,6 +12,9 @@ Summary in ≤2 lines of what was done.
 
 ---
 
+## [RM-009] Glass redesign (v0.2) (2026-11-03 13:54)
+WhatsApp Web layout with WebGL liquid glass over an abstract background, light and dark themes from tokens, grouped bubbles, invite card, reconnect and loading states; the page never scrolls. Completes v0.2.
+
 ## [TD-002] Unreadable when the browser uses a dark color scheme (2026-11-03 10:30)
 Light and dark themes with `color-scheme`, an explicit background and theme colors; follows the system until picked by hand, remembered in the browser.
 

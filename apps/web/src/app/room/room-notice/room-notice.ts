@@ -10,7 +10,7 @@ import { Glass } from '../../glass/glass';
     <main class="scroll-glass flex h-dvh items-center justify-center overflow-y-auto p-3">
       <section
         appGlass
-        class="flex w-full max-w-md flex-col items-center gap-5 rounded-[2rem] px-6 py-10 text-center md:px-10"
+        class="flex w-full max-w-md animate-appear flex-col items-center gap-5 rounded-[2rem] motion-reduce:animate-none px-6 py-10 text-center md:px-10"
       >
         <span
           class="grid size-14 place-items-center rounded-2xl border border-edge bg-glass-strong text-accent-ink"

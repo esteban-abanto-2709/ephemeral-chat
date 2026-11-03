@@ -44,7 +44,7 @@
       @if (event.type === 'message') {
         @if (item.own) {
           <li
-            class="max-w-[80%] self-end rounded-2xl rounded-br-md bg-accent px-3.5 py-2 text-on-accent shadow-lift"
+            class="max-w-[80%] animate-rise self-end motion-reduce:animate-none rounded-2xl rounded-br-md bg-accent px-3.5 py-2 text-on-accent shadow-lift"
             [class.mt-2]="item.first"
           >
             <span class="sr-only">You:</span>
@@ -55,7 +55,7 @@
           </li>
         } @else {
           <li
-            class="max-w-[80%] self-start rounded-2xl rounded-bl-md border border-edge bg-glass-strong px-3.5 py-2"
+            class="max-w-[80%] animate-rise self-start motion-reduce:animate-none rounded-2xl rounded-bl-md border border-edge bg-glass-strong px-3.5 py-2"
             [class.mt-2]="item.first"
           >
             <p
@@ -73,14 +73,14 @@
         }
       } @else if (event.type === 'error') {
         <li
-          class="my-2 self-center rounded-full bg-danger-soft px-3 py-1 text-center text-xs text-danger-ink"
+          class="my-2 animate-rise self-center motion-reduce:animate-none rounded-full bg-danger-soft px-3 py-1 text-center text-xs text-danger-ink"
           role="alert"
         >
           {{ event.text }}
         </li>
       } @else {
         <li
-          class="my-2 self-center rounded-full border border-edge bg-glass-strong px-3 py-1 text-xs text-ink-soft"
+          class="my-2 animate-rise self-center motion-reduce:animate-none rounded-full border border-edge bg-glass-strong px-3 py-1 text-xs text-ink-soft"
         >
           {{ event.name }} {{ event.type }}
         </li>

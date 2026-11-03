@@ -123,7 +123,7 @@ background and, under each lens (up to 8), bends it at the edges, blurs it and
 lights the rim. It samples the background image itself, never the page, so it
 works the same on Safari. It redraws only while something moves. Without
 WebGL, with reduced transparency or if the context is lost, lenses stay
-frosted CSS glass (`backdrop-filter`). `/demo` shows the redesign with sample data while it is built.
+frosted CSS glass (`backdrop-filter`).
 
 Icons come from `@lucide/angular`, the font is Inter (`@fontsource-variable/inter`).
 Backgrounds in `public/backdrops`, free under the Unsplash License:

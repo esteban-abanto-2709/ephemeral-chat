@@ -54,7 +54,7 @@ Each version is a milestone. When all its work is done, it gets a git tag
 | Version | Theme | Work |
 |---|---|---|
 | v0.1 | The core | The whole user journey above, deployed |
-| **v0.2** | Glass | Visual redesign: WhatsApp Web layout, liquid glass, light and dark themes. Committed: [roadmap](./logbook/roadmap.md) |
+| v0.2 | Glass | Visual redesign: WhatsApp Web layout, liquid glass, light and dark themes |
 | v0.3 | Comfort | Typing indicator |
 | v0.4 | Media | Images, voice messages, stickers |
 | v0.5 | Privacy | End-to-end encryption |

@@ -44,7 +44,7 @@
           <app-copy-link [link]="link()" />
           <button
             type="button"
-            class="grid size-10 place-items-center rounded-full text-ink-soft md:hidden"
+            class="grid size-10 place-items-center rounded-full text-ink-soft transition hover:bg-glass-strong focus-visible:outline-2 focus-visible:outline-accent-ink md:hidden"
             aria-label="Open room panel"
             (click)="panelOpen.set(true)"
           >
@@ -89,7 +89,7 @@
           }
           <button
             type="submit"
-            class="grid size-12 shrink-0 place-items-center rounded-full bg-accent text-on-accent shadow-lift transition hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
+            class="grid size-12 shrink-0 place-items-center rounded-full bg-accent text-on-accent shadow-lift transition hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink"
             aria-label="Send"
             [disabled]="socket.status() !== 'open'"
           >

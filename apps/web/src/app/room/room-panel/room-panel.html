@@ -1,5 +1,5 @@
 <div class="flex items-center justify-between gap-2">
-  <a routerLink="/" class="flex items-center gap-2 text-base font-semibold">
+  <a routerLink="/" class="flex items-center gap-2 rounded-full text-base font-semibold focus-visible:outline-2 focus-visible:outline-accent-ink focus-visible:outline-offset-4">
     <svg lucideHourglass class="size-5 text-accent-ink" aria-hidden="true"></svg>
     Ephemeral
   </a>
@@ -7,7 +7,7 @@
     <app-theme-toggle />
     <button
       type="button"
-      class="grid size-10 place-items-center rounded-full md:hidden"
+      class="grid size-10 place-items-center rounded-full transition hover:bg-glass-strong focus-visible:outline-2 focus-visible:outline-accent-ink md:hidden"
       aria-label="Close room panel"
       (click)="closed.emit()"
     >
