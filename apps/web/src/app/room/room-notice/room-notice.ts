@@ -13,7 +13,7 @@ import { Glass } from '../../glass/glass';
         class="flex w-full max-w-md flex-col items-center gap-5 rounded-[2rem] px-6 py-10 text-center md:px-10"
       >
         <span
-          class="grid size-14 place-items-center rounded-2xl border border-edge bg-glass-strong text-accent"
+          class="grid size-14 place-items-center rounded-2xl border border-edge bg-glass-strong text-accent-ink"
           aria-hidden="true"
         >
           <ng-content select="[icon]" />
@@ -24,7 +24,7 @@ import { Glass } from '../../glass/glass';
         </div>
         <a
           routerLink="/"
-          class="flex items-center gap-2 rounded-full bg-accent px-6 py-3 font-medium text-on-accent shadow-[0_8px_24px_-8px_var(--accent)] transition hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          class="flex items-center gap-2 rounded-full bg-accent px-6 py-3 font-medium text-on-accent shadow-lift transition hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink"
         >
           <svg lucideArrowLeft class="size-4" aria-hidden="true"></svg>
           Go to the home page

@@ -97,6 +97,11 @@ To verify a change, prefer commands that finish on their own: builds, tests,
   fit), each with the `scroll-glass` scrollbar. Anything positioned absolute
   inside a scroller (such as `sr-only` text) needs a `relative` scroller so it
   can't stretch the page.
+- **Colors come only from theme tokens** in `apps/web/src/styles.css`, each
+  defined for light and dark: no hex, Tailwind palette colors (`red-700`,
+  `white`) or `dark:` color overrides in templates. A person's color is a hue
+  from their name (`room/avatar-hue.ts`); lightness and saturation come from
+  the theme (`avatar`, `person-ink` utilities).
 - **No persistence**, ever: no database, no files, no browser storage for chat
   data. If a feature needs to remember something, it lives in memory.
 

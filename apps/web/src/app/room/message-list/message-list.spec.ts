@@ -9,9 +9,10 @@ describe('MessageList', () => {
     const fixture = TestBed.createComponent(MessageList);
     fixture.componentRef.setInput('events', events);
     fixture.componentRef.setInput('me', 'Juan');
+    fixture.componentRef.setInput('link', 'https://chat.test/room/abc');
     await fixture.whenStable();
     const list = fixture.nativeElement as HTMLElement;
-    return { fixture, list, items: [...list.querySelectorAll('li')] };
+    return { fixture, list, items: [...list.querySelectorAll('[aria-label="Messages"] li')] };
   }
 
   it('shows messages, who joined or left and warnings', async () => {
@@ -31,12 +32,15 @@ describe('MessageList', () => {
     expect(items[3].getAttribute('role')).toBe('alert');
   });
 
-  it('invites you to start while there are no messages', async () => {
-    const { list } = await render([{ type: 'joined', name: 'Juan', members: ['Juan'], at }]);
-    expect(list.textContent).toContain('Start the conversation');
+  it('opens with the room link and a reminder that nothing is stored', async () => {
+    const { list } = await render([]);
+    const about = list.querySelector('[aria-label="About this room"]')!;
 
-    const { list: busy } = await render([{ type: 'message', name: 'Ana', text: 'hola', at }]);
-    expect(busy.textContent).not.toContain('Start the conversation');
+    expect(about.textContent).toContain('Nothing is stored');
+    expect((about.querySelector('#room-link') as HTMLInputElement).value).toBe(
+      'https://chat.test/room/abc',
+    );
+    expect(about.textContent).toContain('Copy link');
   });
 
   it('puts your messages on the right and groups messages in a row', async () => {
@@ -56,7 +60,7 @@ describe('MessageList', () => {
   it('follows new messages unless you are reading above', async () => {
     const first: RoomEvent = { type: 'message', name: 'Ana', text: 'uno', at };
     const { fixture, list } = await render([first]);
-    const scroller = list.querySelector('ul')!;
+    const scroller = list.firstElementChild as HTMLElement;
     Object.defineProperty(scroller, 'scrollHeight', { value: 1000, configurable: true });
     Object.defineProperty(scroller, 'clientHeight', { value: 200, configurable: true });
     Object.defineProperty(scroller, 'scrollTop', { value: 0, writable: true, configurable: true });

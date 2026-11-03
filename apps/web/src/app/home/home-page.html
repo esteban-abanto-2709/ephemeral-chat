@@ -6,7 +6,7 @@
   <main class="flex flex-1 items-center justify-center py-6">
     <section appGlass class="flex w-full max-w-md flex-col items-center gap-6 rounded-[2rem] px-6 py-10 text-center md:px-10">
       <span
-        class="grid size-14 place-items-center rounded-2xl border border-edge bg-glass-strong text-accent"
+        class="grid size-14 place-items-center rounded-2xl border border-edge bg-glass-strong text-accent-ink"
         aria-hidden="true"
       >
         <svg lucideHourglass class="size-7"></svg>
@@ -18,7 +18,7 @@
       <div class="flex flex-col items-center gap-3">
         <button
           type="button"
-          class="flex items-center gap-2 rounded-full bg-accent px-7 py-3 font-medium text-on-accent shadow-[0_8px_24px_-8px_var(--accent)] transition hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:hover:scale-100"
+          class="flex items-center gap-2 rounded-full bg-accent px-7 py-3 font-medium text-on-accent shadow-lift transition hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink disabled:hover:scale-100"
           [disabled]="state() === 'creating'"
           [attr.aria-busy]="state() === 'creating'"
           (click)="createRoom()"
@@ -31,7 +31,7 @@
           }
         </button>
         @if (state() === 'failed') {
-          <p class="text-sm text-red-700 dark:text-red-300" role="alert">
+          <p class="text-sm text-danger-ink" role="alert">
             Couldn't create a room. Check your connection and try again.
           </p>
         }

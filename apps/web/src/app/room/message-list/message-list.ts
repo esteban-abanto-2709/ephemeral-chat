@@ -1,13 +1,14 @@
 import { Component, ElementRef, afterRenderEffect, computed, input, viewChild } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { LucideMessagesSquare } from '@lucide/angular';
-import { avatarColor } from '../avatar-color';
+import { LucideHourglass, LucideShieldCheck } from '@lucide/angular';
+import { CopyLink } from '../copy-link/copy-link';
+import { avatarHue } from '../avatar-hue';
 import { RoomEvent } from '../room-socket';
 
 const stickyDistance = 80;
 
 @Component({
-  imports: [DatePipe, LucideMessagesSquare],
+  imports: [CopyLink, DatePipe, LucideHourglass, LucideShieldCheck],
   selector: 'app-message-list',
   host: { class: 'flex min-h-0 flex-1 flex-col' },
   templateUrl: './message-list.html',
@@ -15,8 +16,9 @@ const stickyDistance = 80;
 export class MessageList {
   readonly events = input.required<RoomEvent[]>();
   readonly me = input.required<string>();
+  readonly link = input.required<string>();
 
-  protected readonly avatarColor = avatarColor;
+  protected readonly avatarHue = avatarHue;
   protected readonly items = computed(() =>
     this.events().map((event, index, events) => {
       const previous = events[index - 1];
@@ -32,8 +34,6 @@ export class MessageList {
       };
     }),
   );
-
-  protected readonly empty = computed(() => this.events().every((event) => event.type !== 'message'));
 
   private readonly list = viewChild.required<ElementRef<HTMLElement>>('list');
   private sticky = true;

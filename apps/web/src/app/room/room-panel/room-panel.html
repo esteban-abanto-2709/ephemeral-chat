@@ -1,6 +1,6 @@
 <div class="flex items-center justify-between gap-2">
   <a routerLink="/" class="flex items-center gap-2 text-base font-semibold">
-    <svg lucideHourglass class="size-5 text-accent" aria-hidden="true"></svg>
+    <svg lucideHourglass class="size-5 text-accent-ink" aria-hidden="true"></svg>
     Ephemeral
   </a>
   <div class="flex items-center gap-2">
@@ -16,39 +16,14 @@
   </div>
 </div>
 
-<section class="flex flex-col gap-1 rounded-2xl border border-edge bg-glass-strong p-3" aria-labelledby="share-title">
-  <h2 id="share-title" class="text-xs text-ink-soft">Invite with this link</h2>
-  <div class="flex items-center gap-2">
-    <label for="room-link" class="sr-only">Room link</label>
-    <input
-      id="room-link"
-      class="min-w-0 flex-1 truncate bg-transparent text-sm outline-none"
-      [value]="link()"
-      readonly
-    />
-    <button
-      type="button"
-      class="grid size-8 shrink-0 place-items-center rounded-full text-accent transition hover:bg-glass-strong focus-visible:outline-2 focus-visible:outline-accent"
-      [attr.aria-label]="copied() ? 'Link copied' : 'Copy link'"
-      (click)="copyLink()"
-    >
-      @if (copied()) {
-        <svg lucideCheck class="size-4" aria-hidden="true"></svg>
-      } @else {
-        <svg lucideCopy class="size-4" aria-hidden="true"></svg>
-      }
-    </button>
-  </div>
-</section>
-
 <section class="flex min-h-0 flex-col gap-3" aria-labelledby="members-title">
   <h2 id="members-title" class="text-xs text-ink-soft">In this room · {{ members().length }}</h2>
   <ul class="scroll-glass flex flex-col gap-3 overflow-y-auto" aria-label="People in the room">
     @for (member of members(); track member) {
       <li class="flex items-center gap-3 text-sm">
         <span
-          class="grid size-8 shrink-0 place-items-center rounded-full text-xs font-semibold text-white"
-          [style.background-color]="avatarColor(member)"
+          class="avatar grid size-8 shrink-0 place-items-center rounded-full text-xs font-semibold"
+          [style.--hue]="avatarHue(member)"
           aria-hidden="true"
           >{{ member[0].toUpperCase() }}</span
         >
@@ -60,8 +35,3 @@
     }
   </ul>
 </section>
-
-<p class="mt-auto flex gap-2 text-xs text-ink-soft">
-  <svg lucideShieldCheck class="size-4 shrink-0" aria-hidden="true"></svg>
-  Nothing is stored. When everyone leaves, it's gone.
-</p>

@@ -18,7 +18,6 @@
         class="min-w-0 flex-1 flex-col gap-5 rounded-3xl p-5 md:flex md:w-72 md:flex-none"
         [class.flex]="panelOpen()"
         [class.hidden]="!panelOpen()"
-        [link]="link()"
         [members]="socket.members()"
         [me]="me"
         (closed)="panelOpen.set(false)"
@@ -36,12 +35,13 @@
             <p class="flex items-center gap-2 text-xs text-ink-soft">
               <span
                 class="size-2 shrink-0 rounded-full"
-                [class]="socket.status() === 'open' ? 'bg-accent shadow-[0_0_8px_var(--accent)]' : 'bg-ink-soft'"
+                [class]="socket.status() === 'open' ? 'bg-accent-ink' : 'bg-ink-soft'"
                 aria-hidden="true"
               ></span>
               <span role="status">{{ statusLabel() }}</span>
             </p>
           </div>
+          <app-copy-link [link]="link()" />
           <button
             type="button"
             class="grid size-10 place-items-center rounded-full text-ink-soft md:hidden"
@@ -52,7 +52,7 @@
           </button>
         </header>
 
-        <app-message-list [events]="socket.events()" [me]="me" />
+        <app-message-list [events]="socket.events()" [me]="me" [link]="link()" />
 
         @if (socket.status() === 'closed') {
           <div
@@ -63,7 +63,7 @@
             <span class="flex-1">You're disconnected from the room.</span>
             <button
               type="button"
-              class="flex items-center gap-2 rounded-full px-3 py-1.5 font-medium text-accent transition hover:bg-glass-strong focus-visible:outline-2 focus-visible:outline-accent"
+              class="flex items-center gap-2 rounded-full px-3 py-1.5 font-medium text-accent-ink transition hover:bg-glass-strong focus-visible:outline-2 focus-visible:outline-accent-ink"
               (click)="reconnect()"
             >
               <svg lucideRefreshCw class="size-4" aria-hidden="true"></svg>
@@ -78,7 +78,7 @@
             #input
             id="message"
             appGlass
-            class="min-w-0 flex-1 rounded-full px-5 py-3 placeholder:text-ink-soft focus-visible:outline-2 focus-visible:outline-accent"
+            class="min-w-0 flex-1 rounded-full px-5 py-3 placeholder:text-ink-soft focus-visible:outline-2 focus-visible:outline-accent-ink"
             placeholder="Write a message"
             autocomplete="off"
             [maxLength]="messageMaxLength"
@@ -89,7 +89,7 @@
           }
           <button
             type="submit"
-            class="grid size-12 shrink-0 place-items-center rounded-full bg-accent text-on-accent shadow-[0_6px_18px_-6px_var(--accent)] transition hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
+            class="grid size-12 shrink-0 place-items-center rounded-full bg-accent text-on-accent shadow-lift transition hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
             aria-label="Send"
             [disabled]="socket.status() !== 'open'"
           >

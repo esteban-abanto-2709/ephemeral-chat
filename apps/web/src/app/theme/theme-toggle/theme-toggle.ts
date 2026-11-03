@@ -11,7 +11,7 @@ import { Theme } from '../theme';
       type="button"
       role="switch"
       appGlass
-      class="relative flex h-10 w-22 items-center rounded-full px-3 text-sm font-medium text-ink-soft focus-visible:outline-2 focus-visible:outline-accent"
+      class="relative flex h-10 w-22 items-center rounded-full px-3 text-sm font-medium text-ink-soft focus-visible:outline-2 focus-visible:outline-accent-ink"
       [class.justify-end]="!dark()"
       aria-label="Dark theme"
       [attr.aria-checked]="dark()"

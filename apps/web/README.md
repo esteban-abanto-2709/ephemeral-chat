@@ -31,7 +31,7 @@ the page connects to it on load.
 | Route       | Page                  | What it does |
 | ----------- | --------------------- | ------------ |
 | `/`         | `home/home-page`      | **Create room**: asks the API for a room (`POST /api/rooms`) and goes to it |
-| `/room/:id` | `room/room-page`      | The room: checks it exists ("Room not found" otherwise), asks for your name, then the room: a side panel (`room/room-panel`: link to copy, who is in, theme) and the chat; on phones the panel replaces the chat |
+| `/room/:id` | `room/room-page`      | The room: checks it exists ("Room not found" otherwise), asks for your name, then the room: a side panel (`room/room-panel`: who is in, theme) and the chat, which opens with a card holding the link to share (`room/copy-link` also sits in its header); on phones the panel replaces the chat |
 
 Both pages are lazy-loaded. The router binds `:id` straight to the page's
 `id` input (`withComponentInputBinding`). Any id shows a room for now; a room

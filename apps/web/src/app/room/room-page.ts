@@ -10,6 +10,7 @@ import {
 } from '@lucide/angular';
 import { Glass } from '../glass/glass';
 import { RoomSocket } from './room-socket';
+import { CopyLink } from './copy-link/copy-link';
 import { MessageList } from './message-list/message-list';
 import { NameDialog } from './name-dialog/name-dialog';
 import { RoomNotice } from './room-notice/room-notice';
@@ -25,6 +26,7 @@ const statusLabels = {
 
 @Component({
   imports: [
+    CopyLink,
     Glass,
     LucideRefreshCw,
     LucideSearchX,
