@@ -15,13 +15,27 @@
         <h1 class="text-3xl font-semibold tracking-tight md:text-4xl">Ephemeral Chat</h1>
         <p class="text-ink-soft">Create a room, share the link, talk. Nothing is kept.</p>
       </div>
-      <button
-        type="button"
-        class="rounded-full bg-accent px-7 py-3 font-medium text-on-accent shadow-[0_8px_24px_-8px_var(--accent)] transition hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-        (click)="createRoom()"
-      >
-        Create room
-      </button>
+      <div class="flex flex-col items-center gap-3">
+        <button
+          type="button"
+          class="flex items-center gap-2 rounded-full bg-accent px-7 py-3 font-medium text-on-accent shadow-[0_8px_24px_-8px_var(--accent)] transition hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:hover:scale-100"
+          [disabled]="state() === 'creating'"
+          [attr.aria-busy]="state() === 'creating'"
+          (click)="createRoom()"
+        >
+          @if (state() === 'creating') {
+            <svg lucideLoaderCircle class="size-4 animate-spin motion-reduce:animate-none" aria-hidden="true"></svg>
+            Creating room…
+          } @else {
+            Create room
+          }
+        </button>
+        @if (state() === 'failed') {
+          <p class="text-sm text-red-700 dark:text-red-300" role="alert">
+            Couldn't create a room. Check your connection and try again.
+          </p>
+        }
+      </div>
       <ul class="flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs text-ink-soft">
         <li class="flex items-center gap-1.5">
           <svg lucideUserX class="size-4" aria-hidden="true"></svg>

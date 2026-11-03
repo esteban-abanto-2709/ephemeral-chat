@@ -1,11 +1,18 @@
 import { Component, DOCUMENT, computed, inject, input, signal } from '@angular/core';
 import { httpResource } from '@angular/common/http';
-import { RouterLink } from '@angular/router';
-import { LucideSendHorizontal, LucideUsers } from '@lucide/angular';
+import {
+  LucideRefreshCw,
+  LucideSearchX,
+  LucideSendHorizontal,
+  LucideUsers,
+  LucideUsersRound,
+  LucideWifiOff,
+} from '@lucide/angular';
 import { Glass } from '../glass/glass';
 import { RoomSocket } from './room-socket';
 import { MessageList } from './message-list/message-list';
 import { NameDialog } from './name-dialog/name-dialog';
+import { RoomNotice } from './room-notice/room-notice';
 import { RoomPanel } from './room-panel/room-panel';
 
 const messageMaxLength = 1000;
@@ -19,12 +26,16 @@ const statusLabels = {
 @Component({
   imports: [
     Glass,
+    LucideRefreshCw,
+    LucideSearchX,
     LucideSendHorizontal,
     LucideUsers,
+    LucideUsersRound,
+    LucideWifiOff,
     MessageList,
     NameDialog,
+    RoomNotice,
     RoomPanel,
-    RouterLink,
   ],
   providers: [RoomSocket],
   selector: 'app-room-page',
@@ -51,6 +62,14 @@ export class RoomPage {
   protected join(name: string): void {
     this.name.set(name);
     this.socket.connect(this.id(), name);
+  }
+
+  protected reconnect(): void {
+    const name = this.name();
+    if (name) {
+      this.room.reload();
+      this.socket.connect(this.id(), name);
+    }
   }
 
   protected send(event: SubmitEvent, input: HTMLInputElement): void {

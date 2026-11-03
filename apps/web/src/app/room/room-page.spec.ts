@@ -22,6 +22,7 @@ describe('RoomPage', () => {
   beforeEach(async () => {
     sent.length = 0;
     fakeSocket.connect.mockClear();
+    fakeSocket.status.set('open');
     fakeSocket.nameTaken.set(false);
     fakeSocket.roomGone.set(false);
     fakeSocket.roomFull.set(false);
@@ -111,6 +112,28 @@ describe('RoomPage', () => {
 
     expect(page.querySelector('[role="status"]')?.textContent).toContain('Connected');
     expect(page.querySelector('[aria-label="Messages"]')?.textContent).toContain('hola');
+  });
+
+  it('offers to reconnect when the connection drops', async () => {
+    const { fixture, page } = await render();
+    expect(page.textContent).not.toContain('Reconnect');
+
+    fakeSocket.status.set('closed');
+    await fixture.whenStable();
+    const reconnect = [...page.querySelectorAll('button')].find((b) =>
+      b.textContent?.includes('Reconnect'),
+    )!;
+    reconnect.click();
+
+    expect(fakeSocket.connect).toHaveBeenLastCalledWith('abc', 'Juan');
+    expect(fakeSocket.connect).toHaveBeenCalledTimes(2);
+
+    TestBed.tick();
+    TestBed.inject(HttpTestingController)
+      .expectOne('/api/rooms/abc')
+      .flush(null, { status: 404, statusText: 'Not Found' });
+    await fixture.whenStable();
+    expect(page.querySelector('h1')?.textContent).toContain('Room not found');
   });
 
   it('shows who is in the room in the panel', async () => {

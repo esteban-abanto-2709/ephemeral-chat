@@ -31,6 +31,14 @@ describe('MessageList', () => {
     expect(items[3].getAttribute('role')).toBe('alert');
   });
 
+  it('invites you to start while there are no messages', async () => {
+    const { list } = await render([{ type: 'joined', name: 'Juan', members: ['Juan'], at }]);
+    expect(list.textContent).toContain('Start the conversation');
+
+    const { list: busy } = await render([{ type: 'message', name: 'Ana', text: 'hola', at }]);
+    expect(busy.textContent).not.toContain('Start the conversation');
+  });
+
   it('puts your messages on the right and groups messages in a row', async () => {
     const { items } = await render([
       { type: 'message', name: 'Ana', text: 'uno', at },

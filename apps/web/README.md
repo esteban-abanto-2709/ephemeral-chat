@@ -65,6 +65,11 @@ time `at`: the server sends none), `members` (who is in the room, taken from the
 messages from one person grouped under one name) and follows new ones unless
 you scrolled up to read; sending always brings you back down.
 
+When the connection drops the room shows a Reconnect button: it looks the
+room up again (the API answers a join to a missing room with a plain 404, not
+`4004`) and joins with the same name, or shows "Room not found". "Room not
+found" and "Room is full" share `room/room-notice`.
+
 The message input stops at 1000 characters (`maxlength`, the API's limit) and
 shows a counter from 900 on.
 

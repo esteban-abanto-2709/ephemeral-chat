@@ -1,16 +1,14 @@
 @if (room.error() || socket.roomGone()) {
-  <main class="mx-auto flex h-dvh max-w-xl flex-col items-center justify-center gap-6 p-4 text-center">
-    <h1 class="text-3xl font-semibold">Room not found</h1>
-    <p class="text-ink-soft">This room doesn't exist. Rooms disappear a minute after everyone leaves.</p>
-    <a routerLink="/" class="rounded bg-accent px-6 py-3 text-on-accent">Go to the home page</a>
-  </main>
+  <app-room-notice heading="Room not found">
+    <svg icon lucideSearchX class="size-7"></svg>
+    This room doesn't exist. Rooms disappear a minute after everyone leaves.
+  </app-room-notice>
 } @else if (socket.roomFull()) {
-  <main class="mx-auto flex h-dvh max-w-xl flex-col items-center justify-center gap-6 p-4 text-center">
-    <h1 class="text-3xl font-semibold">Room is full</h1>
-    <p class="text-ink-soft">This room already has 50 people. Try again when someone leaves.</p>
-    <a routerLink="/" class="rounded bg-accent px-6 py-3 text-on-accent">Go to the home page</a>
-  </main>
-} @else if (room.status() === 'resolved') {
+  <app-room-notice heading="Room is full">
+    <svg icon lucideUsersRound class="size-7"></svg>
+    This room already has 50 people. Try again when someone leaves.
+  </app-room-notice>
+} @else if (room.status() === 'resolved' || room.status() === 'reloading') {
   @if (!socket.nameTaken() && name(); as me) {
     <div class="flex h-dvh gap-3 p-3 md:gap-4 md:p-4">
       <app-room-panel
@@ -55,6 +53,24 @@
         </header>
 
         <app-message-list [events]="socket.events()" [me]="me" />
+
+        @if (socket.status() === 'closed') {
+          <div
+            class="mx-3 flex items-center gap-3 rounded-2xl border border-edge bg-glass-strong py-2 pr-2 pl-4 text-sm md:mx-4"
+            role="alert"
+          >
+            <svg lucideWifiOff class="size-4 shrink-0 text-ink-soft" aria-hidden="true"></svg>
+            <span class="flex-1">You're disconnected from the room.</span>
+            <button
+              type="button"
+              class="flex items-center gap-2 rounded-full px-3 py-1.5 font-medium text-accent transition hover:bg-glass-strong focus-visible:outline-2 focus-visible:outline-accent"
+              (click)="reconnect()"
+            >
+              <svg lucideRefreshCw class="size-4" aria-hidden="true"></svg>
+              Reconnect
+            </button>
+          </div>
+        }
 
         <form class="flex items-center gap-2 p-3 md:p-4" (submit)="send($event, input)">
           <label for="message" class="sr-only">Message</label>

@@ -46,4 +46,11 @@
       </li>
     }
   }
+  @if (empty()) {
+    <li class="my-auto flex max-w-xs flex-col items-center gap-2 self-center py-8 text-center text-sm text-ink-soft">
+      <svg lucideMessagesSquare class="size-6" aria-hidden="true"></svg>
+      <p class="font-medium text-ink">Start the conversation</p>
+      <p>Share the link to invite someone. Messages vanish when everyone leaves.</p>
+    </li>
+  }
 </ul>

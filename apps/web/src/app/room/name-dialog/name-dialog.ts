@@ -1,10 +1,11 @@
 import { Component, ElementRef, afterNextRender, input, output, signal, viewChild } from '@angular/core';
 import { FormField, FormRoot, form, maxLength, requiredError, validate } from '@angular/forms/signals';
+import { Glass } from '../../glass/glass';
 
 export const nameMaxLength = 24;
 
 @Component({
-  imports: [FormField, FormRoot],
+  imports: [FormField, FormRoot, Glass],
   selector: 'app-name-dialog',
   templateUrl: './name-dialog.html',
 })
