@@ -54,8 +54,8 @@ events: messages from everyone (sender included) and who joined or left (see
 the [API](../api/README.md#room-chat)).
 
 Its state is exposed as read-only signals, written only inside the service:
-`status` (`connecting`, `open`, `closed`), `events` (messages and notices, in
-order), `members` (who is in the room, taken from the latest notice), and
+`status` (`connecting`, `open`, `closed`), `events` (messages, notices and
+warnings such as sending too fast, in order), `members` (who is in the room, taken from the latest notice), and
 `nameTaken` / `roomGone` (the API closed with `4009` or `4004`: the room
 page reopens the name dialog, or shows "Room not found").
 

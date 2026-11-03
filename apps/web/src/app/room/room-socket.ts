@@ -7,7 +7,8 @@ const statusNameTaken = 4009;
 
 export type RoomEvent =
   | { type: 'message'; name: string; text: string }
-  | { type: 'joined' | 'left'; name: string; members: string[] };
+  | { type: 'joined' | 'left'; name: string; members: string[] }
+  | { type: 'error'; text: string };
 
 @Service({ autoProvided: false })
 export class RoomSocket implements OnDestroy {
@@ -37,7 +38,7 @@ export class RoomSocket implements OnDestroy {
     };
     socket.onmessage = (message: MessageEvent<string>) => {
       const event = JSON.parse(message.data) as RoomEvent;
-      if (event.type !== 'message') {
+      if (event.type === 'joined' || event.type === 'left') {
         this._members.set(event.members);
       }
       this._events.update((events) => [...events, event]);

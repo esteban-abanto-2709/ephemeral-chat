@@ -16,6 +16,7 @@ describe('RoomPage', () => {
       { type: 'joined', name: 'Juan', members: ['Ana', 'Juan'] },
       { type: 'message', name: 'Juan', text: 'segundo' },
       { type: 'left', name: 'Ana', members: ['Juan'] },
+      { type: 'error', text: 'Slow down: up to 5 messages per second.' },
     ]),
     members: signal(['Juan', 'Luis']),
     nameTaken: signal(false),
@@ -118,7 +119,7 @@ describe('RoomPage', () => {
     expect(copy.textContent).toContain('Copied');
   });
 
-  it('shows the connection status, the messages and who joined or left', async () => {
+  it('shows the connection status, the messages, who joined or left and warnings', async () => {
     const { page } = await render();
 
     expect(page.querySelector('[role="status"]')?.textContent).toContain('Connected');
@@ -127,7 +128,14 @@ describe('RoomPage', () => {
         ? [...li.children].map((part) => part.textContent).join(' ')
         : li.textContent?.trim(),
     );
-    expect(items).toEqual(['Ana joined', 'Ana hola', 'Juan joined', 'Juan segundo', 'Ana left']);
+    expect(items).toEqual([
+      'Ana joined',
+      'Ana hola',
+      'Juan joined',
+      'Juan segundo',
+      'Ana left',
+      'Slow down: up to 5 messages per second.',
+    ]);
   });
 
   it('shows who is in the room', async () => {

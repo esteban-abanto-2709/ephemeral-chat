@@ -7,13 +7,16 @@ import (
 	"sync"
 	"time"
 	"unicode/utf8"
+
+	"golang.org/x/time/rate"
 )
 
 const (
-	NameMaxLength    = 24
-	MessageMaxLength = 1000
-	mailboxSize      = 16
-	emptyLifetime    = time.Minute
+	NameMaxLength     = 24
+	MessageMaxLength  = 1000
+	MessagesPerSecond = 5
+	mailboxSize       = 16
+	emptyLifetime     = time.Minute
 )
 
 var (
@@ -23,7 +26,7 @@ var (
 
 type Message struct {
 	Type    string   `json:"type"`
-	Name    string   `json:"name"`
+	Name    string   `json:"name,omitempty"`
 	Text    string   `json:"text,omitempty"`
 	Members []string `json:"members,omitempty"`
 }
@@ -31,6 +34,7 @@ type Message struct {
 type Member struct {
 	Name    string
 	mailbox chan Message
+	limiter *rate.Limiter
 }
 
 func (m *Member) Messages() <-chan Message {
@@ -53,7 +57,11 @@ func ValidName(name string) bool {
 }
 
 func (r *Room) Join(name string) (*Member, error) {
-	member := &Member{Name: name, mailbox: make(chan Message, mailboxSize)}
+	member := &Member{
+		Name:    name,
+		mailbox: make(chan Message, mailboxSize),
+		limiter: rate.NewLimiter(MessagesPerSecond, MessagesPerSecond),
+	}
 
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -82,7 +90,22 @@ func (r *Room) Send(from *Member, text string) {
 	}
 	r.mu.Lock()
 	defer r.mu.Unlock()
+	if !from.limiter.Allow() {
+		r.deliver(from, Message{Type: "error", Text: "Slow down: up to 5 messages per second."})
+		return
+	}
 	r.broadcast(Message{Type: "message", Name: from.Name, Text: text})
+}
+
+func (r *Room) deliver(member *Member, message Message) {
+	if !slices.Contains(r.members, member) {
+		return
+	}
+	select {
+	case member.mailbox <- message:
+	default:
+		r.remove(member)
+	}
 }
 
 func (r *Room) broadcast(message Message) {

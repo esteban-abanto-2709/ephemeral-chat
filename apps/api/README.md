@@ -10,6 +10,7 @@ library: no framework, no database. All state lives in memory.
 | Language   | Go 1.27                                       |
 | HTTP       | `net/http` (method + wildcard route patterns) |
 | WebSockets | `github.com/coder/websocket`                  |
+| Rate limit | `golang.org/x/time/rate`                      |
 
 `go.mod` lists the dependencies and `go.sum` their checksums; both are
 committed.
@@ -68,6 +69,7 @@ client → server:   {"text": "hola"}
 server → clients:  {"type": "message", "name": "Juan", "text": "hola"}
                    {"type": "joined",  "name": "Ana",  "members": ["Juan", "Ana"]}
                    {"type": "left",    "name": "Ana",  "members": ["Juan"]}
+server → sender:   {"type": "error",   "text": "Slow down: up to 5 messages per second."}
 ```
 
 Every event goes to everyone connected to the room at that moment, sender and
@@ -77,6 +79,10 @@ whoever joins later sees only what comes after. Blank messages and messages
 over 1000 characters (`MessageMaxLength`) are dropped; the web never sends
 those. Any frame over 8 KiB closes the connection with `1009` before it is
 even read, so no client can make the server buffer a huge message.
+
+Each member may send 5 messages per second (`MessagesPerSecond`), with bursts
+of up to 5: a token bucket from `golang.org/x/time/rate`, one per member. A
+message over the limit is dropped and only its sender gets an `error` event.
 
 ### Room lifecycle
 

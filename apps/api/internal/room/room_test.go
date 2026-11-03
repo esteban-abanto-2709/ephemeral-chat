@@ -5,6 +5,8 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"testing/synctest"
+	"time"
 )
 
 func join(t *testing.T, room *Room, name string) *Member {
@@ -140,23 +142,26 @@ func TestLeftMemberStopsReceiving(t *testing.T) {
 }
 
 func TestSlowMemberIsDisconnectedAndAnnounced(t *testing.T) {
-	room := newRoom(func() {})
-	fast, slow := join(t, room, "Fast"), join(t, room, "Slow")
-	drain(fast)
-	drain(slow)
+	synctest.Test(t, func(t *testing.T) {
+		room := newRoom(func() {})
+		fast, slow := join(t, room, "Fast"), join(t, room, "Slow")
+		drain(fast)
+		drain(slow)
 
-	for range mailboxSize + 1 {
-		room.Send(fast, "hola")
-		receive(t, fast)
-	}
-	expect(t, fast, Message{Type: "left", Name: "Slow", Members: []string{"Fast"}})
+		for range mailboxSize + 1 {
+			room.Send(fast, "hola")
+			receive(t, fast)
+			time.Sleep(time.Second / MessagesPerSecond)
+		}
+		expect(t, fast, Message{Type: "left", Name: "Slow", Members: []string{"Fast"}})
 
-	for range mailboxSize {
-		receive(t, slow)
-	}
-	if _, ok := <-slow.Messages(); ok {
-		t.Error("the slow member's mailbox should be closed")
-	}
+		for range mailboxSize {
+			receive(t, slow)
+		}
+		if _, ok := <-slow.Messages(); ok {
+			t.Error("the slow member's mailbox should be closed")
+		}
+	})
 }
 
 func TestBlankMessagesAreIgnored(t *testing.T) {
@@ -180,6 +185,29 @@ func TestMessagesOverTheMaxLengthAreIgnored(t *testing.T) {
 	if got := receive(t, juan); len([]rune(got.Text)) != MessageMaxLength {
 		t.Errorf("got %d characters, want %d", len([]rune(got.Text)), MessageMaxLength)
 	}
+}
+
+func TestSendingTooFastIsRefusedToTheSenderOnly(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		room := newRoom(func() {})
+		juan, ana := join(t, room, "Juan"), join(t, room, "Ana")
+		drain(juan)
+		drain(ana)
+
+		for range MessagesPerSecond {
+			room.Send(juan, "hola")
+			receive(t, juan)
+			receive(t, ana)
+		}
+
+		room.Send(juan, "one too many")
+		expect(t, juan, Message{Type: "error", Text: "Slow down: up to 5 messages per second."})
+		assertEmpty(t, ana)
+
+		time.Sleep(time.Second / MessagesPerSecond)
+		room.Send(juan, "again")
+		expect(t, ana, Message{Type: "message", Name: "Juan", Text: "again"})
+	})
 }
 
 func TestValidName(t *testing.T) {
