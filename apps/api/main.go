@@ -21,6 +21,7 @@ const frameMaxBytes = 8 << 10
 const (
 	statusRoomGone  websocket.StatusCode = 4004
 	statusNameTaken websocket.StatusCode = 4009
+	statusRoomFull  websocket.StatusCode = 4029
 )
 
 func main() {
@@ -92,12 +93,8 @@ func joinRoom(rooms *room.Registry) http.HandlerFunc {
 		conn.SetReadLimit(frameMaxBytes)
 
 		member, err := chat.Join(name)
-		if errors.Is(err, room.ErrNameTaken) {
-			conn.Close(statusNameTaken, err.Error())
-			return
-		}
 		if err != nil {
-			conn.Close(statusRoomGone, err.Error())
+			conn.Close(closeStatus(err), err.Error())
 			return
 		}
 		defer chat.Leave(member)
@@ -120,6 +117,17 @@ func joinRoom(rooms *room.Registry) http.HandlerFunc {
 			}
 			chat.Send(member, incoming.Text)
 		}
+	}
+}
+
+func closeStatus(err error) websocket.StatusCode {
+	switch {
+	case errors.Is(err, room.ErrNameTaken):
+		return statusNameTaken
+	case errors.Is(err, room.ErrRoomFull):
+		return statusRoomFull
+	default:
+		return statusRoomGone
 	}
 }
 

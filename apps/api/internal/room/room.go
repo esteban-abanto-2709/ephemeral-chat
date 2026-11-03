@@ -15,6 +15,7 @@ const (
 	NameMaxLength     = 24
 	MessageMaxLength  = 1000
 	MessagesPerSecond = 5
+	MaxMembers        = 50
 	mailboxSize       = 16
 	emptyLifetime     = time.Minute
 )
@@ -22,6 +23,7 @@ const (
 var (
 	ErrNameTaken = errors.New("name already taken in this room")
 	ErrRoomGone  = errors.New("room no longer exists")
+	ErrRoomFull  = errors.New("room is full")
 )
 
 type Message struct {
@@ -67,6 +69,9 @@ func (r *Room) Join(name string) (*Member, error) {
 	defer r.mu.Unlock()
 	if r.closed {
 		return nil, ErrRoomGone
+	}
+	if len(r.members) >= MaxMembers {
+		return nil, ErrRoomFull
 	}
 	for _, other := range r.members {
 		if strings.EqualFold(other.Name, name) {

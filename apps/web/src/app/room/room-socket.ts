@@ -4,6 +4,7 @@ export type SocketStatus = 'connecting' | 'open' | 'closed';
 
 const statusRoomGone = 4004;
 const statusNameTaken = 4009;
+const statusRoomFull = 4029;
 
 export type RoomEvent =
   | { type: 'message'; name: string; text: string }
@@ -21,6 +22,7 @@ export class RoomSocket implements OnDestroy {
   readonly members = this._members.asReadonly();
   readonly nameTaken = computed(() => this._closeCode() === statusNameTaken);
   readonly roomGone = computed(() => this._closeCode() === statusRoomGone);
+  readonly roomFull = computed(() => this._closeCode() === statusRoomFull);
 
   private readonly location = inject(DOCUMENT).location;
   private socket?: WebSocket;

@@ -21,6 +21,7 @@ describe('RoomPage', () => {
     members: signal(['Juan', 'Luis']),
     nameTaken: signal(false),
     roomGone: signal(false),
+    roomFull: signal(false),
     connect: vi.fn(),
     send: (text: string) => sent.push(text),
   };
@@ -31,6 +32,7 @@ describe('RoomPage', () => {
     fakeSocket.connect.mockClear();
     fakeSocket.nameTaken.set(false);
     fakeSocket.roomGone.set(false);
+    fakeSocket.roomFull.set(false);
     writeText.mockClear();
     Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
     await TestBed.configureTestingModule({
@@ -78,6 +80,14 @@ describe('RoomPage', () => {
     fakeSocket.roomGone.set(true);
     await fixture.whenStable();
     expect(page.querySelector('h1')?.textContent).toContain('Room not found');
+  });
+
+  it('says so when the room is full', async () => {
+    const { fixture, page } = await render();
+    fakeSocket.roomFull.set(true);
+    await fixture.whenStable();
+    expect(page.querySelector('h1')?.textContent).toContain('Room is full');
+    expect(page.querySelector('#message')).toBeNull();
   });
 
   it('asks for a name before showing the room', async () => {

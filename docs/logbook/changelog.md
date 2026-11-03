@@ -12,6 +12,9 @@ Summary in ≤2 lines of what was done.
 
 ---
 
+## [RM-008] Limits against abuse (2026-11-03 09:02)
+Messages up to 1000 characters (frames over 8 KiB close the socket), 5 messages per second per person (`x/time/rate`, warning to the sender only), 50 people per room (`4029`, "Room is full"). Completes v0.1.
+
 ## [RM-007] Room lifecycle (2026-11-02 23:50)
 A room is dropped after one minute empty (`time.AfterFunc`, tested with `testing/synctest`); joining within the minute keeps it. `GET /api/rooms/{id}` lets the room page show "Room not found" before asking for a name.
 

@@ -2,6 +2,7 @@ package room
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"strings"
 	"testing"
@@ -97,6 +98,24 @@ func TestJoinRejectsANameAlreadyInTheRoom(t *testing.T) {
 
 	room.Leave(juan)
 	join(t, room, "Juan")
+}
+
+func TestJoinRejectsOnceTheRoomIsFull(t *testing.T) {
+	room := newRoom(func() {})
+	members := make([]*Member, MaxMembers)
+	for i := range members {
+		members[i] = join(t, room, fmt.Sprint("Member ", i))
+		for _, member := range members[:i+1] {
+			drain(member)
+		}
+	}
+
+	if _, err := room.Join("Late"); !errors.Is(err, ErrRoomFull) {
+		t.Fatalf("Join on a full room: error = %v, want ErrRoomFull", err)
+	}
+
+	room.Leave(members[0])
+	join(t, room, "Late")
 }
 
 func TestSendReachesEveryMemberWithTheSenderName(t *testing.T) {

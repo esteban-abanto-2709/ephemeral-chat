@@ -62,7 +62,8 @@ characters once trimmed (`400` otherwise). A name already in the room
 (ignoring case) is accepted as a WebSocket and closed right away with status
 `4009`: a browser can't read the HTTP status of a failed handshake, but it can
 read a close code. A room dropped between the lookup and the join (see below)
-closes the same way with `4004`. Then, as JSON text frames:
+closes the same way with `4004`, and a room that already has 50 people
+(`MaxMembers`) with `4029`. Then, as JSON text frames:
 
 ```
 client → server:   {"text": "hola"}
