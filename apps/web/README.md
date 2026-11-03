@@ -59,6 +59,9 @@ order), `members` (who is in the room, taken from the latest notice), and
 `nameTaken` / `roomGone` (the API closed with `4009` or `4004`: the room
 page reopens the name dialog, or shows "Room not found").
 
+The message input stops at 1000 characters (`maxlength`, the API's limit) and
+shows a counter from 900 on.
+
 Before asking for a name, the room page looks the room up with `httpResource`
 (`GET /api/rooms/<id>`): a signal-based request that follows the `id` input
 and exposes `status()` and `error()` to the template.

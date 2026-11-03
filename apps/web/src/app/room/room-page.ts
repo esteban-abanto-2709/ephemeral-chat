@@ -4,6 +4,8 @@ import { RouterLink } from '@angular/router';
 import { RoomSocket } from './room-socket';
 import { NameDialog } from './name-dialog/name-dialog';
 
+const messageMaxLength = 1000;
+
 const statusLabels = {
   connecting: 'Connecting…',
   open: 'Connected',
@@ -27,6 +29,10 @@ export class RoomPage {
   protected readonly statusLabel = computed(() => statusLabels[this.socket.status()]);
   protected readonly copied = signal(false);
 
+  protected readonly messageMaxLength = messageMaxLength;
+  protected readonly counterFrom = messageMaxLength - 100;
+  protected readonly length = signal(0);
+
   private readonly document = inject(DOCUMENT);
   protected readonly link = computed(() => `${this.document.location.origin}/room/${this.id()}`);
 
@@ -49,5 +55,6 @@ export class RoomPage {
     }
     this.socket.send(text);
     input.value = '';
+    this.length.set(0);
   }
 }

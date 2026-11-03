@@ -134,6 +134,14 @@ func TestRoomChat(t *testing.T) {
 	ana.Close(websocket.StatusNormalClosure, "")
 	expect(room.Message{Type: "left", Name: "Ana", Members: []string{"Juan", "Luis"}}, juan, luis)
 
+	flooder := join("Flooder")
+	expect(room.Message{Type: "joined", Name: "Flooder", Members: []string{"Juan", "Luis", "Flooder"}}, juan, luis, flooder)
+	wsjson.Write(ctx, flooder, map[string]string{"text": strings.Repeat("x", frameMaxBytes)})
+	if _, _, err := flooder.Read(ctx); websocket.CloseStatus(err) != websocket.StatusMessageTooBig {
+		t.Errorf("sending a frame over %d bytes closed with %v, want %d", frameMaxBytes, err, websocket.StatusMessageTooBig)
+	}
+	expect(room.Message{Type: "left", Name: "Flooder", Members: []string{"Juan", "Luis"}}, juan, luis)
+
 	impostor := join("JUAN")
 	if _, _, err := impostor.Read(ctx); websocket.CloseStatus(err) != statusNameTaken {
 		t.Errorf("joining as JUAN closed with %v, want %d", err, statusNameTaken)

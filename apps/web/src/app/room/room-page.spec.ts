@@ -140,6 +140,26 @@ describe('RoomPage', () => {
     expect(members).toEqual(['Juan', 'Luis']);
   });
 
+  it('caps the message and shows a counter near the limit', async () => {
+    const { fixture, page } = await render();
+    const input = page.querySelector('#message') as HTMLInputElement;
+    expect(input.maxLength).toBe(1000);
+
+    input.value = 'x'.repeat(899);
+    input.dispatchEvent(new Event('input'));
+    await fixture.whenStable();
+    expect(page.querySelector('#message-length')).toBeNull();
+
+    input.value = 'x'.repeat(950);
+    input.dispatchEvent(new Event('input'));
+    await fixture.whenStable();
+    expect(page.querySelector('#message-length')?.textContent).toBe('950 / 1000');
+
+    page.querySelector('form')?.dispatchEvent(new Event('submit'));
+    await fixture.whenStable();
+    expect(page.querySelector('#message-length')).toBeNull();
+  });
+
   it('sends the typed text and clears the input', async () => {
     const { page } = await render();
     const input = page.querySelector('#message') as HTMLInputElement;

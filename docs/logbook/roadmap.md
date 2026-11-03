@@ -20,4 +20,4 @@ Each entry is one commit, or a few when it spans both apps; no commit breaks pro
 - **Goal:** the API protects itself: messages up to 1000 characters, 5 messages per second per person, 50 people per room.
 - **Scope:** enforced in the API (the source of truth), reflected in the web (character counter, a clear message when a room is full or you're sending too fast). Each value lives in one place.
 - **Done when:** exceeding any limit is rejected by the API with a clear message in the web, and normal use is never affected.
-- **Date:** 2026-10-29 · **Status:** Open
+- **Date:** 2026-10-29 · **Status:** In progress (2026-11-03)

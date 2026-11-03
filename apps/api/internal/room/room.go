@@ -10,9 +10,10 @@ import (
 )
 
 const (
-	NameMaxLength = 24
-	mailboxSize   = 16
-	emptyLifetime = time.Minute
+	NameMaxLength    = 24
+	MessageMaxLength = 1000
+	mailboxSize      = 16
+	emptyLifetime    = time.Minute
 )
 
 var (
@@ -76,7 +77,7 @@ func (r *Room) Leave(member *Member) {
 }
 
 func (r *Room) Send(from *Member, text string) {
-	if strings.TrimSpace(text) == "" {
+	if strings.TrimSpace(text) == "" || utf8.RuneCountInString(text) > MessageMaxLength {
 		return
 	}
 	r.mu.Lock()

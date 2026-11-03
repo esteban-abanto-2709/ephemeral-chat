@@ -16,6 +16,8 @@ import (
 	"github.com/esteban-abanto-2709/ephemeral-chat/apps/api/internal/room"
 )
 
+const frameMaxBytes = 8 << 10
+
 const (
 	statusRoomGone  websocket.StatusCode = 4004
 	statusNameTaken websocket.StatusCode = 4009
@@ -87,6 +89,7 @@ func joinRoom(rooms *room.Registry) http.HandlerFunc {
 			return
 		}
 		defer conn.CloseNow()
+		conn.SetReadLimit(frameMaxBytes)
 
 		member, err := chat.Join(name)
 		if errors.Is(err, room.ErrNameTaken) {

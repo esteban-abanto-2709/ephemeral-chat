@@ -168,6 +168,20 @@ func TestBlankMessagesAreIgnored(t *testing.T) {
 	assertEmpty(t, juan)
 }
 
+func TestMessagesOverTheMaxLengthAreIgnored(t *testing.T) {
+	room := newRoom(func() {})
+	juan := join(t, room, "Juan")
+	drain(juan)
+
+	room.Send(juan, strings.Repeat("ñ", MessageMaxLength+1))
+	assertEmpty(t, juan)
+
+	room.Send(juan, strings.Repeat("ñ", MessageMaxLength))
+	if got := receive(t, juan); len([]rune(got.Text)) != MessageMaxLength {
+		t.Errorf("got %d characters, want %d", len([]rune(got.Text)), MessageMaxLength)
+	}
+}
+
 func TestValidName(t *testing.T) {
 	cases := map[string]bool{
 		"Juan":                  true,

@@ -73,7 +73,10 @@ server → clients:  {"type": "message", "name": "Juan", "text": "hola"}
 Every event goes to everyone connected to the room at that moment, sender and
 newcomer included. `joined` and `left` carry the full list of who is in, in
 order of arrival, so a client never has to work it out. Nothing is stored:
-whoever joins later sees only what comes after. Blank messages are dropped.
+whoever joins later sees only what comes after. Blank messages and messages
+over 1000 characters (`MessageMaxLength`) are dropped; the web never sends
+those. Any frame over 8 KiB closes the connection with `1009` before it is
+even read, so no client can make the server buffer a huge message.
 
 ### Room lifecycle
 
