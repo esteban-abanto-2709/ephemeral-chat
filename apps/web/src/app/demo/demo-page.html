@@ -1,6 +1,7 @@
 <div class="flex h-dvh gap-3 p-3 md:gap-4 md:p-4">
   <aside
-    class="glass fixed inset-3 z-10 flex-col gap-5 rounded-3xl p-5 md:static md:flex md:w-72"
+    appGlass
+    class="fixed inset-3 z-10 flex-col gap-5 rounded-3xl p-5 md:static md:flex md:w-72"
     [class.flex]="panelOpen()"
     [class.hidden]="!panelOpen()"
     aria-label="Room"
@@ -59,7 +60,7 @@
     </p>
   </aside>
 
-  <main class="glass flex min-w-0 flex-1 flex-col overflow-hidden rounded-3xl">
+  <main appGlass class="flex min-w-0 flex-1 flex-col overflow-hidden rounded-3xl">
     <header class="flex items-center gap-3 border-b border-edge px-5 py-4">
       <div class="min-w-0 flex-1">
         <h1 class="font-semibold">Room k3f9a</h1>
@@ -111,7 +112,8 @@
       <label for="message" class="sr-only">Message</label>
       <input
         id="message"
-        class="min-w-0 flex-1 rounded-full border border-edge bg-glass-strong px-5 py-3 placeholder:text-ink-soft focus-visible:outline-2 focus-visible:outline-accent"
+        appGlass
+        class="min-w-0 flex-1 rounded-full px-5 py-3 placeholder:text-ink-soft focus-visible:outline-2 focus-visible:outline-accent"
         placeholder="Write a message"
         autocomplete="off"
       />

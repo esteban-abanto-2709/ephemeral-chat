@@ -8,6 +8,7 @@
   --canvas: #e6eaf0;
   --backdrop: url('/backdrops/light.webp');
   --glass: rgb(255 255 255 / 0.5);
+  --glass-tint: rgb(255 255 255 / 0.25);
   --glass-strong: rgb(255 255 255 / 0.72);
   --glass-solid: #f4f6f9;
   --edge: rgb(255 255 255 / 0.7);
@@ -24,6 +25,7 @@
   --canvas: #07080b;
   --backdrop: url('/backdrops/dark.webp');
   --glass: rgb(18 20 27 / 0.45);
+  --glass-tint: rgb(14 16 22 / 0.3);
   --glass-strong: rgb(255 255 255 / 0.09);
   --glass-solid: #16181f;
   --edge: rgb(255 255 255 / 0.12);
@@ -60,6 +62,12 @@
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }
+}
+
+.liquid .lens {
+  background-color: var(--glass-tint);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 body {

@@ -11,14 +11,22 @@ describe('ThemeToggle', () => {
     document.documentElement.dataset['theme'] = 'light';
     const fixture = TestBed.createComponent(ThemeToggle);
     await fixture.whenStable();
-    const button = (fixture.nativeElement as HTMLElement).querySelector('button')!;
-    expect(button.getAttribute('aria-label')).toBe('Switch to dark theme');
+    const toggle = (fixture.nativeElement as HTMLElement).querySelector('[role="switch"]')!;
+    expect(toggle.getAttribute('aria-checked')).toBe('false');
 
-    button.click();
+    (toggle as HTMLElement).click();
     await fixture.whenStable();
 
     expect(document.documentElement.dataset['theme']).toBe('dark');
     expect(localStorage.getItem('theme')).toBe('dark');
-    expect(button.getAttribute('aria-label')).toBe('Switch to light theme');
+    expect(toggle.getAttribute('aria-checked')).toBe('true');
+  });
+
+  it('keeps frosted glass when WebGL is unavailable', async () => {
+    const fixture = TestBed.createComponent(ThemeToggle);
+    await fixture.whenStable();
+
+    expect(document.documentElement.classList.contains('liquid')).toBe(false);
+    expect(document.querySelector('canvas')).toBeNull();
   });
 });

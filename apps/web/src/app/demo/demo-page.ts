@@ -7,6 +7,7 @@ import {
   LucideUsers,
   LucideX,
 } from '@lucide/angular';
+import { Glass } from '../glass/glass';
 import { ThemeToggle } from '../theme/theme-toggle/theme-toggle';
 
 type DemoEvent =
@@ -17,6 +18,7 @@ const colors: Record<string, string> = { Alex: '#12a97f', Ana: '#6a4fe6', Luis: 
 
 @Component({
   imports: [
+    Glass,
     LucideCopy,
     LucideHourglass,
     LucideSendHorizontal,

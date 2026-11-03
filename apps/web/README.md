@@ -105,7 +105,15 @@ Light and dark themes are CSS variables in `src/styles.css` (`data-theme` on
 system's choice until you pick one with the theme toggle, which is remembered
 in the browser (a preference, never chat data). Panels use the `glass`
 utility over a fixed abstract background; with reduced transparency they turn
-solid. `/demo` shows the redesign with sample data while it is built.
+solid.
+
+Liquid glass: elements with the `appGlass` directive (`src/app/glass`) are
+lenses for `LiquidGlass`, one WebGL canvas behind the page that draws the
+background and, under each lens (up to 8), bends it at the edges, blurs it and
+lights the rim. It samples the background image itself, never the page, so it
+works the same on Safari. It redraws only while something moves. Without
+WebGL, with reduced transparency or if the context is lost, lenses stay
+frosted CSS glass (`backdrop-filter`). `/demo` shows the redesign with sample data while it is built.
 
 Icons come from `@lucide/angular`, the font is Inter (`@fontsource-variable/inter`).
 Backgrounds in `public/backdrops`, free under the Unsplash License:
