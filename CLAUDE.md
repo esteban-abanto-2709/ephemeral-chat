@@ -91,6 +91,12 @@ To verify a change, prefer commands that finish on their own: builds, tests,
   `log`, `encoding/json`); add a dependency only when the standard library has
   no answer (e.g. WebSockets). Code is `gofmt`-formatted. Structure grows with
   the code: a single `main.go` until it asks for `cmd/` and `internal/`.
+- **The page never scrolls**, at any size: `html` and `body` are locked to
+  the viewport (`overflow: hidden`, no overscroll bounce). Only inner regions
+  scroll (messages, the member list, a page's own container when it can't
+  fit), each with the `scroll-glass` scrollbar. Anything positioned absolute
+  inside a scroller (such as `sr-only` text) needs a `relative` scroller so it
+  can't stretch the page.
 - **No persistence**, ever: no database, no files, no browser storage for chat
   data. If a feature needs to remember something, it lives in memory.
 

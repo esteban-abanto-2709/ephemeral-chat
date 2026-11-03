@@ -259,8 +259,8 @@ export class LiquidGlass {
       return;
     }
     const scale = Math.min(devicePixelRatio, 2);
-    const width = Math.round(innerWidth * scale);
-    const height = Math.round(innerHeight * scale);
+    const width = Math.round(canvas.clientWidth * scale);
+    const height = Math.round(canvas.clientHeight * scale);
     const rects: number[] = [];
     const radii: number[] = [];
     for (const [element, radius] of this.lenses) {

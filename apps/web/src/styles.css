@@ -18,6 +18,7 @@
   --ink-soft: #4a525e;
   --accent: #0b7a62;
   --on-accent: #ffffff;
+  --scrollbar: rgb(20 24 29 / 0.25);
 }
 
 [data-theme='dark'] {
@@ -35,6 +36,7 @@
   --ink-soft: #a3acb8;
   --accent: #3ddcb4;
   --on-accent: #04221b;
+  --scrollbar: rgb(238 241 245 / 0.25);
 }
 
 @theme inline {
@@ -64,10 +66,42 @@
   }
 }
 
+@utility scroll-glass {
+  @supports not selector(::-webkit-scrollbar) {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar) transparent;
+  }
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-button {
+    display: none;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+    margin-block: 12px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--scrollbar);
+    border-radius: 9999px;
+  }
+}
+
 .liquid .lens {
   background-color: var(--glass-tint);
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
+}
+
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 
 body {

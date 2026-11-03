@@ -43,7 +43,7 @@
 
 <section class="flex min-h-0 flex-col gap-3" aria-labelledby="members-title">
   <h2 id="members-title" class="text-xs text-ink-soft">In this room · {{ members().length }}</h2>
-  <ul class="flex flex-col gap-3 overflow-y-auto" aria-label="People in the room">
+  <ul class="scroll-glass flex flex-col gap-3 overflow-y-auto" aria-label="People in the room">
     @for (member of members(); track member) {
       <li class="flex items-center gap-3 text-sm">
         <span
