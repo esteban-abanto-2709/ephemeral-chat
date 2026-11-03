@@ -20,7 +20,7 @@ import { Theme } from '../theme';
       <span aria-hidden="true">{{ dark() ? 'Dark' : 'Light' }}</span>
       <span
         appGlass
-        class="absolute top-0.5 left-0.5 grid size-9 place-items-center rounded-full text-ink transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] motion-reduce:transition-none"
+        class="absolute top-px left-px grid size-9 place-items-center rounded-full text-ink transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] motion-reduce:transition-none"
         [class.translate-x-12]="dark()"
         aria-hidden="true"
       >

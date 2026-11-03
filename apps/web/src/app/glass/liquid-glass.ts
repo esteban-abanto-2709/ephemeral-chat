@@ -56,7 +56,8 @@ void main() {
     vec2 local = p - u_rects[i].xy - extent;
     float r = min(u_radii[i], min(extent.x, extent.y));
     float d = box(local, extent, r);
-    if (d > 0.0) continue;
+    float coverage = clamp(0.5 - d / u_scale, 0.0, 1.0);
+    if (coverage <= 0.0) continue;
     vec2 e = vec2(1.0, 0.0);
     vec2 n = normalize(vec2(
       box(local + e.xy, extent, r) - box(local - e.xy, extent, r),
@@ -65,10 +66,11 @@ void main() {
     float rim = min(28.0 * u_scale, min(extent.x, extent.y) * 0.8);
     float k = 1.0 - clamp(-d / rim, 0.0, 1.0);
     vec2 shift = n * k * k * k * rim * 1.6;
-    color = vec3(frost(p + shift * 1.1).r, frost(p + shift).g, frost(p + shift * 0.9).b);
-    float edge = 1.0 - smoothstep(0.0, 1.5 * u_scale, -d);
+    vec3 lens = vec3(frost(p + shift * 1.1).r, frost(p + shift).g, frost(p + shift * 0.9).b);
+    float edge = 1.0 - smoothstep(0.0, 2.0 * u_scale, max(-d, 0.0));
     float light = abs(dot(n, normalize(vec2(-0.6, -1.0))));
-    color += edge * light * 0.5 + k * k * 0.08;
+    lens += edge * light * 0.5 + k * k * 0.08;
+    color = mix(color, lens, coverage);
   }
   gl_FragColor = vec4(color, 1.0);
 }`;
