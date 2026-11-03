@@ -1,7 +1,41 @@
-<main class="mx-auto flex h-dvh max-w-xl flex-col items-center justify-center gap-6 p-4 text-center">
-  <h1 class="text-3xl font-semibold">Ephemeral Chat</h1>
-  <p class="text-ink-soft">Create a room, share the link, talk. Nothing is kept.</p>
-  <button type="button" class="rounded bg-accent px-6 py-3 text-on-accent" (click)="createRoom()">
-    Create room
-  </button>
-</main>
+<div class="flex min-h-dvh flex-col p-3 md:p-4">
+  <header class="flex justify-end">
+    <app-theme-toggle />
+  </header>
+
+  <main class="flex flex-1 items-center justify-center py-6">
+    <section appGlass class="flex w-full max-w-md flex-col items-center gap-6 rounded-[2rem] px-6 py-10 text-center md:px-10">
+      <span
+        class="grid size-14 place-items-center rounded-2xl border border-edge bg-glass-strong text-accent"
+        aria-hidden="true"
+      >
+        <svg lucideHourglass class="size-7"></svg>
+      </span>
+      <div class="flex flex-col gap-2">
+        <h1 class="text-3xl font-semibold tracking-tight md:text-4xl">Ephemeral Chat</h1>
+        <p class="text-ink-soft">Create a room, share the link, talk. Nothing is kept.</p>
+      </div>
+      <button
+        type="button"
+        class="rounded-full bg-accent px-7 py-3 font-medium text-on-accent shadow-[0_8px_24px_-8px_var(--accent)] transition hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        (click)="createRoom()"
+      >
+        Create room
+      </button>
+      <ul class="flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs text-ink-soft">
+        <li class="flex items-center gap-1.5">
+          <svg lucideUserX class="size-4" aria-hidden="true"></svg>
+          No accounts
+        </li>
+        <li class="flex items-center gap-1.5">
+          <svg lucideShieldCheck class="size-4" aria-hidden="true"></svg>
+          Nothing stored
+        </li>
+        <li class="flex items-center gap-1.5">
+          <svg lucideLink class="size-4" aria-hidden="true"></svg>
+          The link is the key
+        </li>
+      </ul>
+    </section>
+  </main>
+</div>

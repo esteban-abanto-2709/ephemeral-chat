@@ -1,8 +1,12 @@
 import { Component, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { LucideHourglass, LucideLink, LucideShieldCheck, LucideUserX } from '@lucide/angular';
+import { Glass } from '../glass/glass';
+import { ThemeToggle } from '../theme/theme-toggle/theme-toggle';
 
 @Component({
+  imports: [Glass, LucideHourglass, LucideLink, LucideShieldCheck, LucideUserX, ThemeToggle],
   selector: 'app-home-page',
   templateUrl: './home-page.html',
 })

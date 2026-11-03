@@ -12,77 +12,91 @@
   </main>
 } @else if (room.status() === 'resolved') {
   @if (!socket.nameTaken() && name(); as me) {
-    <main class="mx-auto flex h-dvh max-w-xl flex-col gap-4 p-4">
-      <header class="flex items-center justify-between">
-        <div>
-          <h1 class="text-xl font-semibold">Ephemeral Chat</h1>
-          <p class="text-sm text-ink-soft">You are <strong class="text-ink">{{ me }}</strong></p>
-        </div>
-        <p class="text-sm text-ink-soft" role="status">{{ statusLabel() }}</p>
-      </header>
+    <div class="flex h-dvh gap-3 p-3 md:gap-4 md:p-4">
+      <app-room-panel
+        appGlass
+        role="complementary"
+        aria-label="Room"
+        class="min-w-0 flex-1 flex-col gap-5 rounded-3xl p-5 md:flex md:w-72 md:flex-none"
+        [class.flex]="panelOpen()"
+        [class.hidden]="!panelOpen()"
+        [link]="link()"
+        [members]="socket.members()"
+        [me]="me"
+        (closed)="panelOpen.set(false)"
+      />
 
-      <section class="flex flex-col gap-2 rounded border border-edge p-3" aria-labelledby="share-title">
-        <h2 id="share-title" class="text-sm font-semibold">Share this link to invite someone</h2>
-        <div class="flex gap-2">
-          <label for="room-link" class="sr-only">Room link</label>
-          <input
-            id="room-link"
-            class="flex-1 rounded border border-edge px-3 py-2 text-sm"
-            [value]="link()"
-            readonly
-          />
-          <button type="button" class="rounded bg-accent px-4 py-2 text-on-accent" (click)="copyLink()">
-            {{ copied() ? 'Copied' : 'Copy' }}
+      <main
+        appGlass
+        class="min-w-0 flex-1 flex-col overflow-hidden rounded-3xl md:flex"
+        [class.flex]="!panelOpen()"
+        [class.hidden]="panelOpen()"
+      >
+        <header class="flex items-center gap-3 border-b border-edge px-5 py-4">
+          <div class="min-w-0 flex-1">
+            <h1 class="font-semibold">Private room</h1>
+            <p class="flex items-center gap-2 text-xs text-ink-soft">
+              <span
+                class="size-2 shrink-0 rounded-full"
+                [class]="socket.status() === 'open' ? 'bg-accent shadow-[0_0_8px_var(--accent)]' : 'bg-ink-soft'"
+                aria-hidden="true"
+              ></span>
+              <span role="status">{{ statusLabel() }}</span>
+              <span aria-hidden="true">·</span>
+              <span class="truncate">{{ company() }}</span>
+            </p>
+          </div>
+          <button
+            type="button"
+            class="grid size-10 place-items-center rounded-full text-ink-soft md:hidden"
+            aria-label="Open room panel"
+            (click)="panelOpen.set(true)"
+          >
+            <svg lucideUsers class="size-5" aria-hidden="true"></svg>
           </button>
-        </div>
-      </section>
+        </header>
 
-      <section class="flex flex-col gap-2" aria-labelledby="members-title">
-        <h2 id="members-title" class="text-sm font-semibold">In this room ({{ socket.members().length }})</h2>
-        <ul class="flex flex-wrap gap-2" aria-label="People in the room">
-          @for (member of socket.members(); track $index) {
-            <li class="rounded bg-glass-strong px-2 py-1 text-sm">{{ member }}</li>
+        <ul class="flex flex-1 flex-col gap-2 overflow-y-auto px-4 py-5 md:px-6" aria-label="Messages" aria-live="polite">
+          @for (event of socket.events(); track $index) {
+            @if (event.type === 'message') {
+              <li class="flex gap-2 self-start rounded-2xl border border-edge bg-glass-strong px-3.5 py-2">
+                <strong class="font-semibold">{{ event.name }}</strong>
+                <span class="min-w-0 wrap-anywhere">{{ event.text }}</span>
+              </li>
+            } @else if (event.type === 'error') {
+              <li class="text-center text-sm text-red-700 dark:text-red-400" role="alert">{{ event.text }}</li>
+            } @else {
+              <li class="text-center text-sm text-ink-soft">{{ event.name }} {{ event.type }}</li>
+            }
           }
         </ul>
-      </section>
 
-      <ul class="flex-1 space-y-2 overflow-y-auto" aria-label="Messages" aria-live="polite">
-        @for (event of socket.events(); track $index) {
-          @if (event.type === 'message') {
-            <li class="flex gap-2 rounded bg-glass-strong px-3 py-2">
-              <strong class="font-semibold">{{ event.name }}</strong>
-              <span class="min-w-0 wrap-anywhere">{{ event.text }}</span>
-            </li>
-          } @else if (event.type === 'error') {
-            <li class="text-center text-sm text-red-700 dark:text-red-400" role="alert">{{ event.text }}</li>
-          } @else {
-            <li class="text-center text-sm text-ink-soft">{{ event.name }} {{ event.type }}</li>
+        <form class="flex items-center gap-2 p-3 md:p-4" (submit)="send($event, input)">
+          <label for="message" class="sr-only">Message</label>
+          <input
+            #input
+            id="message"
+            appGlass
+            class="min-w-0 flex-1 rounded-full px-5 py-3 placeholder:text-ink-soft focus-visible:outline-2 focus-visible:outline-accent"
+            placeholder="Write a message"
+            autocomplete="off"
+            [maxLength]="messageMaxLength"
+            (input)="length.set(input.value.length)"
+          />
+          @if (length() >= counterFrom) {
+            <span class="text-xs text-ink-soft" id="message-length">{{ length() }} / {{ messageMaxLength }}</span>
           }
-        }
-      </ul>
-
-      <form class="flex gap-2" (submit)="send($event, input)">
-        <label for="message" class="sr-only">Message</label>
-        <input
-          #input
-          id="message"
-          class="flex-1 rounded border border-edge px-3 py-2"
-          autocomplete="off"
-          [maxLength]="messageMaxLength"
-          (input)="length.set(input.value.length)"
-        />
-        @if (length() >= counterFrom) {
-          <span class="self-center text-sm text-ink-soft" id="message-length">{{ length() }} / {{ messageMaxLength }}</span>
-        }
-        <button
-          type="submit"
-          class="rounded bg-accent px-4 py-2 text-on-accent disabled:opacity-50"
-          [disabled]="socket.status() !== 'open'"
-        >
-          Send
-        </button>
-      </form>
-    </main>
+          <button
+            type="submit"
+            class="grid size-12 shrink-0 place-items-center rounded-full bg-accent text-on-accent shadow-[0_6px_18px_-6px_var(--accent)] transition hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
+            aria-label="Send"
+            [disabled]="socket.status() !== 'open'"
+          >
+            <svg lucideSendHorizontal class="size-5" aria-hidden="true"></svg>
+          </button>
+        </form>
+      </main>
+    </div>
   } @else {
     <app-name-dialog [taken]="socket.nameTaken() ? name() : null" (chosen)="join($event)" />
   }

@@ -1,4 +1,4 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, afterNextRender, computed, inject, signal } from '@angular/core';
 import { LucideMoon, LucideSun } from '@lucide/angular';
 import { Glass } from '../../glass/glass';
 import { Theme } from '../theme';
@@ -20,8 +20,10 @@ import { Theme } from '../theme';
       <span aria-hidden="true">{{ dark() ? 'Dark' : 'Light' }}</span>
       <span
         appGlass
-        class="absolute top-px left-px grid size-9 place-items-center rounded-full text-ink transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] motion-reduce:transition-none"
+        class="absolute top-px left-px grid size-9 place-items-center rounded-full text-ink ease-[cubic-bezier(0.34,1.56,0.64,1)] motion-reduce:transition-none"
         [class.translate-x-12]="dark()"
+        [class.transition-transform]="animate()"
+        [class.duration-500]="animate()"
         aria-hidden="true"
       >
         @if (dark()) {
@@ -36,4 +38,9 @@ import { Theme } from '../theme';
 export class ThemeToggle {
   protected readonly theme = inject(Theme);
   protected readonly dark = computed(() => this.theme.mode() === 'dark');
+  protected readonly animate = signal(false);
+
+  constructor() {
+    afterNextRender(() => this.animate.set(true));
+  }
 }

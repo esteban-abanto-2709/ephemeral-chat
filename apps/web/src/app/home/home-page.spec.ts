@@ -15,7 +15,8 @@ describe('HomePage', () => {
 
     const fixture = TestBed.createComponent(HomePage);
     await fixture.whenStable();
-    (fixture.nativeElement as HTMLElement).querySelector('button')?.click();
+    const page = fixture.nativeElement as HTMLElement;
+    [...page.querySelectorAll('button')].find((b) => b.textContent?.includes('Create room'))?.click();
 
     http.expectOne({ method: 'POST', url: '/api/rooms' }).flush({ id: 'abc' });
     expect(navigate).toHaveBeenCalledWith(['/room', 'abc']);

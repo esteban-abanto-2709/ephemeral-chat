@@ -1,8 +1,11 @@
 import { Component, DOCUMENT, computed, inject, input, signal } from '@angular/core';
 import { httpResource } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
+import { LucideSendHorizontal, LucideUsers } from '@lucide/angular';
+import { Glass } from '../glass/glass';
 import { RoomSocket } from './room-socket';
 import { NameDialog } from './name-dialog/name-dialog';
+import { RoomPanel } from './room-panel/room-panel';
 
 const messageMaxLength = 1000;
 
@@ -13,7 +16,7 @@ const statusLabels = {
 };
 
 @Component({
-  imports: [NameDialog, RouterLink],
+  imports: [Glass, LucideSendHorizontal, LucideUsers, NameDialog, RoomPanel, RouterLink],
   providers: [RoomSocket],
   selector: 'app-room-page',
   templateUrl: './room-page.html',
@@ -27,7 +30,11 @@ export class RoomPage {
 
   protected readonly socket = inject(RoomSocket);
   protected readonly statusLabel = computed(() => statusLabels[this.socket.status()]);
-  protected readonly copied = signal(false);
+  protected readonly panelOpen = signal(false);
+  protected readonly company = computed(() => {
+    const others = this.socket.members().filter((member) => member !== this.name());
+    return others.length ? `${others.join(', ')} and you` : 'Only you';
+  });
 
   protected readonly messageMaxLength = messageMaxLength;
   protected readonly counterFrom = messageMaxLength - 100;
@@ -39,12 +46,6 @@ export class RoomPage {
   protected join(name: string): void {
     this.name.set(name);
     this.socket.connect(this.id(), name);
-  }
-
-  protected copyLink(): void {
-    this.document.defaultView?.navigator.clipboard
-      .writeText(this.link())
-      .then(() => this.copied.set(true));
   }
 
   protected send(event: SubmitEvent, input: HTMLInputElement): void {

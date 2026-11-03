@@ -25,7 +25,6 @@ describe('RoomPage', () => {
     connect: vi.fn(),
     send: (text: string) => sent.push(text),
   };
-  const writeText = vi.fn().mockResolvedValue(undefined);
 
   beforeEach(async () => {
     sent.length = 0;
@@ -33,8 +32,6 @@ describe('RoomPage', () => {
     fakeSocket.nameTaken.set(false);
     fakeSocket.roomGone.set(false);
     fakeSocket.roomFull.set(false);
-    writeText.mockClear();
-    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
     await TestBed.configureTestingModule({
       imports: [RoomPage],
       providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
@@ -101,7 +98,7 @@ describe('RoomPage', () => {
   it('joins the room with the chosen name', async () => {
     const { page } = await render();
     expect(page.querySelector('dialog')).toBeNull();
-    expect(page.textContent).toContain('You are Juan');
+    expect(page.querySelector('[aria-label="People in the room"]')?.textContent).toContain('you');
     expect(fakeSocket.connect).toHaveBeenCalledWith('abc', 'Juan');
   });
 
@@ -114,19 +111,6 @@ describe('RoomPage', () => {
     expect(page.querySelector('dialog')?.open).toBe(true);
     expect(page.querySelector('[role="alert"]')?.textContent).toContain('Juan is already in this room');
     expect(page.querySelector('#message')).toBeNull();
-  });
-
-  it('shows the room link and copies it', async () => {
-    const { fixture, page } = await render();
-    const link = page.querySelector('#room-link') as HTMLInputElement;
-    expect(link.value).toBe(`${location.origin}/room/abc`);
-
-    const copy = [...page.querySelectorAll('button')].find((b) => b.textContent?.includes('Copy'))!;
-    copy.click();
-    await fixture.whenStable();
-
-    expect(writeText).toHaveBeenCalledWith(`${location.origin}/room/abc`);
-    expect(copy.textContent).toContain('Copied');
   });
 
   it('shows the connection status, the messages, who joined or left and warnings', async () => {
@@ -148,14 +132,11 @@ describe('RoomPage', () => {
     ]);
   });
 
-  it('shows who is in the room', async () => {
+  it('shows who is in the room, in the panel and the header', async () => {
     const { page } = await render();
 
-    expect(page.querySelector('#members-title')?.textContent).toContain('In this room (2)');
-    const members = [...page.querySelectorAll('[aria-label="People in the room"] li')].map((li) =>
-      li.textContent?.trim(),
-    );
-    expect(members).toEqual(['Juan', 'Luis']);
+    expect(page.querySelector('#members-title')?.textContent).toContain('In this room · 2');
+    expect(page.querySelector('header')?.textContent).toContain('Luis and you');
   });
 
   it('caps the message and shows a counter near the limit', async () => {
