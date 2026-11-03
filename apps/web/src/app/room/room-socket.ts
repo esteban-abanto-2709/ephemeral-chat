@@ -6,10 +6,11 @@ const statusRoomGone = 4004;
 const statusNameTaken = 4009;
 const statusRoomFull = 4029;
 
-export type RoomEvent =
+export type RoomEvent = (
   | { type: 'message'; name: string; text: string }
   | { type: 'joined' | 'left'; name: string; members: string[] }
-  | { type: 'error'; text: string };
+  | { type: 'error'; text: string }
+) & { at: number };
 
 @Service({ autoProvided: false })
 export class RoomSocket implements OnDestroy {
@@ -39,7 +40,7 @@ export class RoomSocket implements OnDestroy {
       this._closeCode.set(event.code);
     };
     socket.onmessage = (message: MessageEvent<string>) => {
-      const event = JSON.parse(message.data) as RoomEvent;
+      const event = { ...JSON.parse(message.data), at: Date.now() } as RoomEvent;
       if (event.type === 'joined' || event.type === 'left') {
         this._members.set(event.members);
       }

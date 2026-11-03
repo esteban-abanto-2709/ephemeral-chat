@@ -42,8 +42,6 @@
                 aria-hidden="true"
               ></span>
               <span role="status">{{ statusLabel() }}</span>
-              <span aria-hidden="true">·</span>
-              <span class="truncate">{{ company() }}</span>
             </p>
           </div>
           <button
@@ -56,20 +54,7 @@
           </button>
         </header>
 
-        <ul class="flex flex-1 flex-col gap-2 overflow-y-auto px-4 py-5 md:px-6" aria-label="Messages" aria-live="polite">
-          @for (event of socket.events(); track $index) {
-            @if (event.type === 'message') {
-              <li class="flex gap-2 self-start rounded-2xl border border-edge bg-glass-strong px-3.5 py-2">
-                <strong class="font-semibold">{{ event.name }}</strong>
-                <span class="min-w-0 wrap-anywhere">{{ event.text }}</span>
-              </li>
-            } @else if (event.type === 'error') {
-              <li class="text-center text-sm text-red-700 dark:text-red-400" role="alert">{{ event.text }}</li>
-            } @else {
-              <li class="text-center text-sm text-ink-soft">{{ event.name }} {{ event.type }}</li>
-            }
-          }
-        </ul>
+        <app-message-list [events]="socket.events()" [me]="me" />
 
         <form class="flex items-center gap-2 p-3 md:p-4" (submit)="send($event, input)">
           <label for="message" class="sr-only">Message</label>

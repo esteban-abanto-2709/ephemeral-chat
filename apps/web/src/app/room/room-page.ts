@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { LucideSendHorizontal, LucideUsers } from '@lucide/angular';
 import { Glass } from '../glass/glass';
 import { RoomSocket } from './room-socket';
+import { MessageList } from './message-list/message-list';
 import { NameDialog } from './name-dialog/name-dialog';
 import { RoomPanel } from './room-panel/room-panel';
 
@@ -16,7 +17,15 @@ const statusLabels = {
 };
 
 @Component({
-  imports: [Glass, LucideSendHorizontal, LucideUsers, NameDialog, RoomPanel, RouterLink],
+  imports: [
+    Glass,
+    LucideSendHorizontal,
+    LucideUsers,
+    MessageList,
+    NameDialog,
+    RoomPanel,
+    RouterLink,
+  ],
   providers: [RoomSocket],
   selector: 'app-room-page',
   templateUrl: './room-page.html',
@@ -31,10 +40,6 @@ export class RoomPage {
   protected readonly socket = inject(RoomSocket);
   protected readonly statusLabel = computed(() => statusLabels[this.socket.status()]);
   protected readonly panelOpen = signal(false);
-  protected readonly company = computed(() => {
-    const others = this.socket.members().filter((member) => member !== this.name());
-    return others.length ? `${others.join(', ')} and you` : 'Only you';
-  });
 
   protected readonly messageMaxLength = messageMaxLength;
   protected readonly counterFrom = messageMaxLength - 100;

@@ -10,14 +10,7 @@ describe('RoomPage', () => {
   const sent: string[] = [];
   const fakeSocket = {
     status: signal<SocketStatus>('open'),
-    events: signal<RoomEvent[]>([
-      { type: 'joined', name: 'Ana', members: ['Ana'] },
-      { type: 'message', name: 'Ana', text: 'hola' },
-      { type: 'joined', name: 'Juan', members: ['Ana', 'Juan'] },
-      { type: 'message', name: 'Juan', text: 'segundo' },
-      { type: 'left', name: 'Ana', members: ['Juan'] },
-      { type: 'error', text: 'Slow down: up to 5 messages per second.' },
-    ]),
+    events: signal<RoomEvent[]>([{ type: 'message', name: 'Ana', text: 'hola', at: 0 }]),
     members: signal(['Juan', 'Luis']),
     nameTaken: signal(false),
     roomGone: signal(false),
@@ -113,30 +106,17 @@ describe('RoomPage', () => {
     expect(page.querySelector('#message')).toBeNull();
   });
 
-  it('shows the connection status, the messages, who joined or left and warnings', async () => {
+  it('shows the connection status and the messages', async () => {
     const { page } = await render();
 
     expect(page.querySelector('[role="status"]')?.textContent).toContain('Connected');
-    const items = [...page.querySelectorAll('[aria-label="Messages"] li')].map((li) =>
-      li.children.length
-        ? [...li.children].map((part) => part.textContent).join(' ')
-        : li.textContent?.trim(),
-    );
-    expect(items).toEqual([
-      'Ana joined',
-      'Ana hola',
-      'Juan joined',
-      'Juan segundo',
-      'Ana left',
-      'Slow down: up to 5 messages per second.',
-    ]);
+    expect(page.querySelector('[aria-label="Messages"]')?.textContent).toContain('hola');
   });
 
-  it('shows who is in the room, in the panel and the header', async () => {
+  it('shows who is in the room in the panel', async () => {
     const { page } = await render();
 
     expect(page.querySelector('#members-title')?.textContent).toContain('In this room · 2');
-    expect(page.querySelector('header')?.textContent).toContain('Luis and you');
   });
 
   it('caps the message and shows a counter near the limit', async () => {

@@ -1,0 +1,49 @@
+<ul
+  #list
+  class="flex flex-1 flex-col gap-1 overflow-y-auto px-4 py-5 [scrollbar-color:var(--edge)_transparent] [scrollbar-width:thin] md:px-6"
+  aria-label="Messages"
+  aria-live="polite"
+  (scroll)="follow()"
+>
+  @for (item of items(); track $index) {
+    @let event = item.event;
+    @if (event.type === 'message') {
+      @if (item.own) {
+        <li
+          class="max-w-[80%] self-end rounded-2xl rounded-br-md bg-accent px-3.5 py-2 text-on-accent shadow-[0_6px_18px_-6px_var(--accent)]"
+          [class.mt-2]="item.first"
+        >
+          <span class="sr-only">You:</span>
+          <span class="wrap-anywhere whitespace-pre-wrap">{{ event.text }}</span>
+          &ngsp;<time class="ml-1.5 align-bottom text-[0.6875rem]">{{ event.at | date: 'HH:mm' }}</time>
+        </li>
+      } @else {
+        <li
+          class="max-w-[80%] self-start rounded-2xl rounded-bl-md border border-edge bg-glass-strong px-3.5 py-2"
+          [class.mt-2]="item.first"
+        >
+          <p
+            class="text-xs font-semibold text-(--name) dark:text-[color-mix(in_oklab,var(--name),white_45%)]"
+            [class.sr-only]="!item.first"
+            [style.--name]="avatarColor(event.name)"
+          >
+            {{ event.name }}
+          </p>
+          <span class="wrap-anywhere whitespace-pre-wrap">{{ event.text }}</span>
+          &ngsp;<time class="ml-1.5 align-bottom text-[0.6875rem] text-ink-soft">{{ event.at | date: 'HH:mm' }}</time>
+        </li>
+      }
+    } @else if (event.type === 'error') {
+      <li
+        class="my-2 self-center rounded-full bg-red-500/15 px-3 py-1 text-center text-xs text-red-700 dark:text-red-300"
+        role="alert"
+      >
+        {{ event.text }}
+      </li>
+    } @else {
+      <li class="my-2 self-center rounded-full border border-edge bg-glass-strong px-3 py-1 text-xs text-ink-soft">
+        {{ event.name }} {{ event.type }}
+      </li>
+    }
+  }
+</ul>

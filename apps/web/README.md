@@ -55,10 +55,15 @@ the [API](../api/README.md#room-chat)).
 
 Its state is exposed as read-only signals, written only inside the service:
 `status` (`connecting`, `open`, `closed`), `events` (messages, notices and
-warnings such as sending too fast, in order), `members` (who is in the room, taken from the latest notice), and
+warnings such as sending too fast, in order, each stamped with its arrival
+time `at`: the server sends none), `members` (who is in the room, taken from the latest notice), and
 `nameTaken` / `roomGone` / `roomFull` (the API closed with `4009`, `4004` or
 `4029`: the room page reopens the name dialog, or shows "Room not found" or
 "Room is full").
+
+`room/message-list` draws them as bubbles (yours on the right, a run of
+messages from one person grouped under one name) and follows new ones unless
+you scrolled up to read; sending always brings you back down.
 
 The message input stops at 1000 characters (`maxlength`, the API's limit) and
 shows a counter from 900 on.
