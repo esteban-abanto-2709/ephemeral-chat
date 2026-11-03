@@ -74,9 +74,6 @@ Then open `http://localhost:3000`.
 
 ## About the project
 
-Built to learn Angular and Go in depth, coming from Next.js and NestJS. No
-rush: the goal is to understand each piece, not to ship the most features.
-
 - [Product vision](./docs/product-vision.md): principles, limits, versions and
   what was decided against.
 - [Logbook](./docs/logbook/): roadmap, ideas, technical debt and changelog.

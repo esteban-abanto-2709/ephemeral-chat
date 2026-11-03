@@ -20,17 +20,17 @@ Ephemerality is a design feature, not a limitation.
 The full reasoning, limits, versions and what was decided against are in
 `docs/product-vision.md`.
 
-It is also a learning project: the owner's main stack is Next.js + NestJS, and
-this one is built with **Angular and Go** to learn both properly. Explain the
-Angular and Go concepts behind a change when they are new, and prefer the
-idiomatic, standard way over clever shortcuts.
+Built with **Angular and Go**: prefer the idiomatic, standard way of each over
+clever shortcuts.
 
-## Current state (2026-10)
+## Current state (2026-11)
 
-- Both apps are freshly scaffolded: the Angular CLI default page and a Go
-  server with `GET /api/health`. No chat logic yet.
-- Working toward **v0.1**: `docs/logbook/roadmap.md` is ordered by priority,
-  one entry per commit.
+- **v0.1 is feature-complete**: create a room, share its link, pick a name,
+  see who is in, chat; rooms vanish a minute after they empty; limits on
+  message length, rate and room size. The protocol is in the
+  [API README](./apps/api/README.md#room-chat).
+- Next versions are ideas in `docs/logbook/wishlist.md` until committed to
+  `docs/logbook/roadmap.md`.
 - **Deployment:** one free Render Web Service built from
   `apps/docker/Dockerfile`; every push to `main` deploys. **No commit breaks
   production**: each one leaves the image building and the app working.
