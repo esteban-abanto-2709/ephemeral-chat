@@ -8,19 +8,19 @@ If an idea is promoted, it's deleted from here and a new `RM` is born.
 ---
 
 ## [WL-001] Typing indicator
-"X is typing…" in the room. Candidate for v0.2.
+"X is typing…" in the room. Candidate for v0.3.
 
 ## [WL-002] Send images
-Images relayed through the WebSocket like any message, never stored; needs a size limit. Candidate for v0.3.
+Images relayed through the WebSocket like any message, never stored; needs a size limit. Candidate for v0.4.
 
 ## [WL-003] Voice messages
-Record in the browser and relay the audio, never stored; needs a duration/size limit. Candidate for v0.3.
+Record in the browser and relay the audio, never stored; needs a duration/size limit. Candidate for v0.4.
 
 ## [WL-004] Stickers
-Accept `.webp` images, animated included, shown as stickers. WhatsApp's own stickers can't be imported (no API): whoever has the file sends it. Candidate for v0.3.
+Accept `.webp` images, animated included, shown as stickers. WhatsApp's own stickers can't be imported (no API): whoever has the file sends it. Candidate for v0.4.
 
 ## [WL-005] End-to-end encryption
-The key travels in the link after `#`, which browsers never send to the server; Web Crypto encrypts in the browser and the API only relays ciphertext. Candidate for v0.4.
+The key travels in the link after `#`, which browsers never send to the server; Web Crypto encrypts in the browser and the API only relays ciphertext. Candidate for v0.5.
 
 ## [WL-006] Single-use link
 A link that only lets one person in, for the room's creator to hand out. Far future.
@@ -30,3 +30,6 @@ Measure concurrent connections against RAM and latency (e.g. with `k6`) and publ
 
 ## [WL-008] Identity by id, rename inside the room
 Each person in a room gets a fixed id from the server and can change their name anytime; the chat shows "A is now B" and messages follow the id, so two people may share a name and still be told apart. Replaces rejecting duplicate names (RM-006).
+
+## [WL-009] Several chats at once
+A list of open rooms beside the chat, as in WhatsApp Web, to talk in more than one at a time; each room still lives only in memory. The v0.2 layout leaves the sidebar ready for it.

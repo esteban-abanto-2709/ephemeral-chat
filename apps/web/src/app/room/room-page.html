@@ -1,14 +1,14 @@
 @if (room.error() || socket.roomGone()) {
   <main class="mx-auto flex h-dvh max-w-xl flex-col items-center justify-center gap-6 p-4 text-center">
     <h1 class="text-3xl font-semibold">Room not found</h1>
-    <p class="text-gray-600">This room doesn't exist. Rooms disappear a minute after everyone leaves.</p>
-    <a routerLink="/" class="rounded bg-gray-900 px-6 py-3 text-white">Go to the home page</a>
+    <p class="text-ink-soft">This room doesn't exist. Rooms disappear a minute after everyone leaves.</p>
+    <a routerLink="/" class="rounded bg-accent px-6 py-3 text-on-accent">Go to the home page</a>
   </main>
 } @else if (socket.roomFull()) {
   <main class="mx-auto flex h-dvh max-w-xl flex-col items-center justify-center gap-6 p-4 text-center">
     <h1 class="text-3xl font-semibold">Room is full</h1>
-    <p class="text-gray-600">This room already has 50 people. Try again when someone leaves.</p>
-    <a routerLink="/" class="rounded bg-gray-900 px-6 py-3 text-white">Go to the home page</a>
+    <p class="text-ink-soft">This room already has 50 people. Try again when someone leaves.</p>
+    <a routerLink="/" class="rounded bg-accent px-6 py-3 text-on-accent">Go to the home page</a>
   </main>
 } @else if (room.status() === 'resolved') {
   @if (!socket.nameTaken() && name(); as me) {
@@ -16,22 +16,22 @@
       <header class="flex items-center justify-between">
         <div>
           <h1 class="text-xl font-semibold">Ephemeral Chat</h1>
-          <p class="text-sm text-gray-600">You are <strong class="text-gray-900">{{ me }}</strong></p>
+          <p class="text-sm text-ink-soft">You are <strong class="text-ink">{{ me }}</strong></p>
         </div>
-        <p class="text-sm text-gray-600" role="status">{{ statusLabel() }}</p>
+        <p class="text-sm text-ink-soft" role="status">{{ statusLabel() }}</p>
       </header>
 
-      <section class="flex flex-col gap-2 rounded border border-gray-300 p-3" aria-labelledby="share-title">
+      <section class="flex flex-col gap-2 rounded border border-edge p-3" aria-labelledby="share-title">
         <h2 id="share-title" class="text-sm font-semibold">Share this link to invite someone</h2>
         <div class="flex gap-2">
           <label for="room-link" class="sr-only">Room link</label>
           <input
             id="room-link"
-            class="flex-1 rounded border border-gray-400 px-3 py-2 text-sm"
+            class="flex-1 rounded border border-edge px-3 py-2 text-sm"
             [value]="link()"
             readonly
           />
-          <button type="button" class="rounded bg-gray-900 px-4 py-2 text-white" (click)="copyLink()">
+          <button type="button" class="rounded bg-accent px-4 py-2 text-on-accent" (click)="copyLink()">
             {{ copied() ? 'Copied' : 'Copy' }}
           </button>
         </div>
@@ -41,7 +41,7 @@
         <h2 id="members-title" class="text-sm font-semibold">In this room ({{ socket.members().length }})</h2>
         <ul class="flex flex-wrap gap-2" aria-label="People in the room">
           @for (member of socket.members(); track $index) {
-            <li class="rounded bg-gray-100 px-2 py-1 text-sm">{{ member }}</li>
+            <li class="rounded bg-glass-strong px-2 py-1 text-sm">{{ member }}</li>
           }
         </ul>
       </section>
@@ -49,14 +49,14 @@
       <ul class="flex-1 space-y-2 overflow-y-auto" aria-label="Messages" aria-live="polite">
         @for (event of socket.events(); track $index) {
           @if (event.type === 'message') {
-            <li class="flex gap-2 rounded bg-gray-100 px-3 py-2">
+            <li class="flex gap-2 rounded bg-glass-strong px-3 py-2">
               <strong class="font-semibold">{{ event.name }}</strong>
               <span class="min-w-0 wrap-anywhere">{{ event.text }}</span>
             </li>
           } @else if (event.type === 'error') {
-            <li class="text-center text-sm text-red-700" role="alert">{{ event.text }}</li>
+            <li class="text-center text-sm text-red-700 dark:text-red-400" role="alert">{{ event.text }}</li>
           } @else {
-            <li class="text-center text-sm text-gray-500">{{ event.name }} {{ event.type }}</li>
+            <li class="text-center text-sm text-ink-soft">{{ event.name }} {{ event.type }}</li>
           }
         }
       </ul>
@@ -66,17 +66,17 @@
         <input
           #input
           id="message"
-          class="flex-1 rounded border border-gray-400 px-3 py-2"
+          class="flex-1 rounded border border-edge px-3 py-2"
           autocomplete="off"
           [maxLength]="messageMaxLength"
           (input)="length.set(input.value.length)"
         />
         @if (length() >= counterFrom) {
-          <span class="self-center text-sm text-gray-600" id="message-length">{{ length() }} / {{ messageMaxLength }}</span>
+          <span class="self-center text-sm text-ink-soft" id="message-length">{{ length() }} / {{ messageMaxLength }}</span>
         }
         <button
           type="submit"
-          class="rounded bg-gray-900 px-4 py-2 text-white disabled:opacity-50"
+          class="rounded bg-accent px-4 py-2 text-on-accent disabled:opacity-50"
           [disabled]="socket.status() !== 'open'"
         >
           Send

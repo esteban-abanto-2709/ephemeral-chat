@@ -97,6 +97,21 @@ pnpm 11 blocks dependency install scripts unless they are listed in
 install. When a new dependency needs one, decide it there: `true` to run it,
 `false` if the package ships prebuilt binaries.
 
+## Look and feel
+
+Light and dark themes are CSS variables in `src/styles.css` (`data-theme` on
+`<html>`, Tailwind's `dark:` variant follows it). An inline script in
+`index.html` sets the theme before Angular boots, so there is no flash: the
+system's choice until you pick one with the theme toggle, which is remembered
+in the browser (a preference, never chat data). Panels use the `glass`
+utility over a fixed abstract background; with reduced transparency they turn
+solid. `/demo` shows the redesign with sample data while it is built.
+
+Icons come from `@lucide/angular`, the font is Inter (`@fontsource-variable/inter`).
+Backgrounds in `public/backdrops`, free under the Unsplash License:
+[dark](https://unsplash.com/photos/qmUKOInkOL8) by Andrew Kliatskyi,
+[light](https://unsplash.com/photos/yKVBAM-gKJo) by Pawel Czerwinski.
+
 ## In production
 
 There is no web server of its own: the build in `dist/web/browser` is served

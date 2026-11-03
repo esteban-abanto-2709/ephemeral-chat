@@ -1,0 +1,127 @@
+<div class="flex h-dvh gap-3 p-3 md:gap-4 md:p-4">
+  <aside
+    class="glass fixed inset-3 z-10 flex-col gap-5 rounded-3xl p-5 md:static md:flex md:w-72"
+    [class.flex]="panelOpen()"
+    [class.hidden]="!panelOpen()"
+    aria-label="Room"
+  >
+    <div class="flex items-center justify-between">
+      <p class="flex items-center gap-2 text-base font-semibold">
+        <svg lucideHourglass class="size-5 text-accent" aria-hidden="true"></svg>
+        Ephemeral
+      </p>
+      <div class="flex items-center gap-2">
+        <app-theme-toggle />
+        <button
+          type="button"
+          class="grid size-10 place-items-center rounded-full md:hidden"
+          aria-label="Close room panel"
+          (click)="panelOpen.set(false)"
+        >
+          <svg lucideX class="size-5" aria-hidden="true"></svg>
+        </button>
+      </div>
+    </div>
+
+    <section class="flex flex-col gap-2 rounded-2xl border border-edge bg-glass-strong p-3" aria-labelledby="invite-title">
+      <h2 id="invite-title" class="text-xs text-ink-soft">Invite with this link</h2>
+      <div class="flex items-center gap-2">
+        <span class="min-w-0 flex-1 truncate text-sm">ephemeral.chat/room/k3f9a</span>
+        <button type="button" class="grid size-8 place-items-center rounded-full text-accent" aria-label="Copy link">
+          <svg lucideCopy class="size-4" aria-hidden="true"></svg>
+        </button>
+      </div>
+    </section>
+
+    <section class="flex flex-col gap-3" aria-labelledby="members-title">
+      <h2 id="members-title" class="text-xs text-ink-soft">In this room · {{ members.length }}</h2>
+      <ul class="flex flex-col gap-3">
+        @for (member of members; track member) {
+          <li class="flex items-center gap-3 text-sm">
+            <span
+              class="grid size-8 place-items-center rounded-full text-xs font-semibold text-white"
+              [style.background-color]="colors[member]"
+              aria-hidden="true"
+              >{{ member[0] }}</span
+            >
+            {{ member }}
+            @if (member === 'Alex') {
+              <span class="text-xs text-ink-soft">you</span>
+            }
+          </li>
+        }
+      </ul>
+    </section>
+
+    <p class="mt-auto flex gap-2 text-xs text-ink-soft">
+      <svg lucideShieldCheck class="size-4 shrink-0" aria-hidden="true"></svg>
+      Nothing is stored. When everyone leaves, it's gone.
+    </p>
+  </aside>
+
+  <main class="glass flex min-w-0 flex-1 flex-col overflow-hidden rounded-3xl">
+    <header class="flex items-center gap-3 border-b border-edge px-5 py-4">
+      <div class="min-w-0 flex-1">
+        <h1 class="font-semibold">Room k3f9a</h1>
+        <p class="flex items-center gap-2 text-xs text-ink-soft">
+          <span class="size-2 rounded-full bg-accent shadow-[0_0_8px_var(--accent)]" aria-hidden="true"></span>
+          Connected · Ana, Luis and you
+        </p>
+      </div>
+      <button
+        type="button"
+        class="grid size-10 place-items-center rounded-full text-ink-soft md:hidden"
+        aria-label="Open room panel"
+        (click)="panelOpen.set(true)"
+      >
+        <svg lucideUsers class="size-5" aria-hidden="true"></svg>
+      </button>
+    </header>
+
+    <ul class="flex flex-1 flex-col gap-1 overflow-y-auto px-4 py-5 md:px-6" aria-label="Messages">
+      @for (event of events; track $index) {
+        @if (event.type === 'notice') {
+          <li class="my-2 self-center rounded-full border border-edge bg-glass-strong px-3 py-1 text-xs text-ink-soft">
+            {{ event.text }}
+          </li>
+        } @else if (event.own) {
+          <li
+            class="max-w-[75%] self-end rounded-2xl rounded-br-md bg-accent px-3.5 py-2 text-on-accent shadow-[0_6px_18px_-6px_var(--accent)]"
+            [class.mt-2]="event.first"
+          >
+            <span class="wrap-anywhere">{{ event.text }}</span>
+            <span class="ml-2 align-bottom text-[0.6875rem] opacity-80">{{ event.time }}</span>
+          </li>
+        } @else {
+          <li
+            class="max-w-[75%] self-start rounded-2xl rounded-bl-md border border-edge bg-glass-strong px-3.5 py-2"
+            [class.mt-2]="event.first"
+          >
+            @if (event.first) {
+              <p class="text-xs font-semibold" [style.color]="colors[event.name]">{{ event.name }}</p>
+            }
+            <span class="wrap-anywhere">{{ event.text }}</span>
+            <span class="ml-2 align-bottom text-[0.6875rem] text-ink-soft">{{ event.time }}</span>
+          </li>
+        }
+      }
+    </ul>
+
+    <form class="flex items-center gap-2 p-3 md:p-4" (submit)="$event.preventDefault()">
+      <label for="message" class="sr-only">Message</label>
+      <input
+        id="message"
+        class="min-w-0 flex-1 rounded-full border border-edge bg-glass-strong px-5 py-3 placeholder:text-ink-soft focus-visible:outline-2 focus-visible:outline-accent"
+        placeholder="Write a message"
+        autocomplete="off"
+      />
+      <button
+        type="submit"
+        class="grid size-12 shrink-0 place-items-center rounded-full bg-accent text-on-accent shadow-[0_6px_18px_-6px_var(--accent)] transition hover:scale-105"
+        aria-label="Send"
+      >
+        <svg lucideSendHorizontal class="size-5" aria-hidden="true"></svg>
+      </button>
+    </form>
+  </main>
+</div>

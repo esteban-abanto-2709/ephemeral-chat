@@ -1,27 +1,27 @@
 <dialog
   #dialog
-  class="m-auto w-full max-w-sm rounded p-6 backdrop:bg-black/50"
+  class="m-auto w-full max-w-sm rounded bg-canvas p-6 text-ink backdrop:bg-black/50"
   aria-labelledby="name-title"
   (cancel)="$event.preventDefault()"
 >
   <form class="flex flex-col gap-3" [formRoot]="nameForm">
     <h2 id="name-title" class="text-lg font-semibold">What's your name?</h2>
-    <p class="text-sm text-gray-600">It's how others will see you in this room.</p>
+    <p class="text-sm text-ink-soft">It's how others will see you in this room.</p>
 
     <label for="name" class="text-sm font-medium">Name</label>
     <input
       id="name"
-      class="rounded border border-gray-400 px-3 py-2"
+      class="rounded border border-edge px-3 py-2"
       autocomplete="off"
       [formField]="nameForm.name"
     />
     @if (taken(); as name) {
-      <p class="text-sm text-red-700" role="alert">{{ name }} is already in this room. Pick another name.</p>
+      <p class="text-sm text-red-700 dark:text-red-400" role="alert">{{ name }} is already in this room. Pick another name.</p>
     }
     @if (nameForm.name().touched() && nameForm.name().invalid()) {
-      <p class="text-sm text-red-700" role="alert">Enter a name, up to {{ maxLength }} characters.</p>
+      <p class="text-sm text-red-700 dark:text-red-400" role="alert">Enter a name, up to {{ maxLength }} characters.</p>
     }
 
-    <button type="submit" class="rounded bg-gray-900 px-4 py-2 text-white">Join</button>
+    <button type="submit" class="rounded bg-accent px-4 py-2 text-on-accent">Join</button>
   </form>
 </dialog>

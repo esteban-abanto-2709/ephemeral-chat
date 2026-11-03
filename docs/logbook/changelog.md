@@ -12,6 +12,9 @@ Summary in ≤2 lines of what was done.
 
 ---
 
+## [TD-002] Unreadable when the browser uses a dark color scheme (2026-11-03 10:30)
+Light and dark themes with `color-scheme`, an explicit background and theme colors; follows the system until picked by hand, remembered in the browser.
+
 ## [RM-008] Limits against abuse (2026-11-03 09:02)
 Messages up to 1000 characters (frames over 8 KiB close the socket), 5 messages per second per person (`x/time/rate`, warning to the sender only), 50 people per room (`4029`, "Room is full"). Completes v0.1.
 

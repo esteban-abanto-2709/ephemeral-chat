@@ -53,12 +53,13 @@ Each version is a milestone. When all its work is done, it gets a git tag
 
 | Version | Theme | Work |
 |---|---|---|
-| **v0.1** | The core | The whole user journey above, deployed. Committed: [roadmap](./logbook/roadmap.md) |
-| v0.2 | Comfort | Typing indicator |
-| v0.3 | Media | Images, voice messages, stickers |
-| v0.4 | Privacy | End-to-end encryption |
+| v0.1 | The core | The whole user journey above, deployed |
+| **v0.2** | Glass | Visual redesign: WhatsApp Web layout, liquid glass, light and dark themes. Committed: [roadmap](./logbook/roadmap.md) |
+| v0.3 | Comfort | Typing indicator |
+| v0.4 | Media | Images, voice messages, stickers |
+| v0.5 | Privacy | End-to-end encryption |
 
-v0.2 to v0.4 are ideas in the [wishlist](./logbook/wishlist.md) until they
+v0.3 to v0.5 are ideas in the [wishlist](./logbook/wishlist.md) until they
 are committed.
 
 **Deploy early.** The app is on Render from the first steps, not at the end,
@@ -71,7 +72,6 @@ Decided against, with the reason, so they are not reopened by accident:
 - **No global chat.** A public, anonymous room on an open URL attracts spam
   with no way to moderate without accounts, and it goes against principle 4.
 - **No random chat** with strangers.
-- **No several rooms open at once** inside the app.
 - **No blocking someone from opening two tabs with two names.** Without
   accounts it can't really be enforced: an incognito window or another
   browser gets around it.

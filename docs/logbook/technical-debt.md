@@ -13,11 +13,3 @@ and is deleted from here.
 - **Date** and **Status** (Open / In progress).
 
 ---
-
-## [TD-002] Unreadable when the browser uses a dark color scheme
-- **Location:** `apps/web/src/styles.css:1`
-- **Risk:** 3/10
-- **Problem:** the pages set dark text colors but never a background or a `color-scheme`, so a browser in dark mode paints a dark page under dark text (the room header and banner become unreadable).
-- **Future impact:** anyone with a dark system theme sees a broken page on first visit.
-- **Suggestion:** settle it with the visual design: declare `color-scheme` and an explicit background, or style both themes.
-- **Date:** 2026-10-29 · **Status:** Open
