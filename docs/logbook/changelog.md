@@ -12,6 +12,9 @@ Summary in ≤2 lines of what was done.
 
 ---
 
+## [RM-007] Room lifecycle (2026-11-02 23:50)
+A room is dropped after one minute empty (`time.AfterFunc`, tested with `testing/synctest`); joining within the minute keeps it. `GET /api/rooms/{id}` lets the room page show "Room not found" before asking for a name.
+
 ## [RM-006] Presence: who joined, who left, who is here (2026-11-02 23:38)
 Server events now carry a `type`; `joined`/`left` notices bring the full member list, shown above the chat. A name already in the room (ignoring case) is rejected with close code `4009` and the name dialog asks again.
 

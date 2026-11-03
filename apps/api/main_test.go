@@ -31,6 +31,7 @@ func TestRouting(t *testing.T) {
 	}{
 		{"GET", "/api/health", 200, "ok"},
 		{"GET", "/api/missing", 404, "404"},
+		{"GET", "/api/rooms/unknown", 404, "404"},
 		{"GET", "/api/rooms/unknown/ws?name=Juan", 404, "404"},
 		{"GET", "/api/ws", 404, "404"},
 		{"POST", "/api/health", 405, ""},
@@ -64,6 +65,20 @@ func TestCreateRoom(t *testing.T) {
 	}
 	if len(body.ID) != 22 {
 		t.Errorf("id = %q, want 22 characters", body.ID)
+	}
+}
+
+func TestFindRoom(t *testing.T) {
+	mux := newMux("")
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, httptest.NewRequest("POST", "/api/rooms", nil))
+	var created struct{ ID string }
+	json.NewDecoder(rec.Body).Decode(&created)
+
+	rec = httptest.NewRecorder()
+	mux.ServeHTTP(rec, httptest.NewRequest("GET", "/api/rooms/"+created.ID, nil))
+	if rec.Code != http.StatusNoContent {
+		t.Errorf("GET an existing room = %d, want 204", rec.Code)
 	}
 }
 

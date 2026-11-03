@@ -31,7 +31,7 @@ the page connects to it on load.
 | Route       | Page                  | What it does |
 | ----------- | --------------------- | ------------ |
 | `/`         | `home/home-page`      | **Create room**: asks the API for a room (`POST /api/rooms`) and goes to it |
-| `/room/:id` | `room/room-page`      | The room: asks for your name, then a banner to copy its link, and the chat |
+| `/room/:id` | `room/room-page`      | The room: checks it exists ("Room not found" otherwise), asks for your name, then a banner to copy its link, and the chat |
 
 Both pages are lazy-loaded. The router binds `:id` straight to the page's
 `id` input (`withComponentInputBinding`). Any id shows a room for now; a room
@@ -55,9 +55,13 @@ the [API](../api/README.md#room-chat)).
 
 Its state is exposed as read-only signals, written only inside the service:
 `status` (`connecting`, `open`, `closed`), `events` (messages and notices, in
-order), `members` (who is in the room, taken from the latest notice) and
-`nameTaken` (the API closed with `4009`: the room page reopens the name dialog
-saying so).
+order), `members` (who is in the room, taken from the latest notice), and
+`nameTaken` / `roomGone` (the API closed with `4009` or `4004`: the room
+page reopens the name dialog, or shows "Room not found").
+
+Before asking for a name, the room page looks the room up with `httpResource`
+(`GET /api/rooms/<id>`): a signal-based request that follows the `id` input
+and exposes `status()` and `error()` to the template.
 
 It is provided by the room page itself (`providers: [RoomSocket]`), not at the
 root: each room page gets its own socket, and leaving the page destroys the

@@ -16,12 +16,6 @@ changelog and is deleted from here.
 Everything below is **v0.1** (see [product vision](../product-vision.md)).
 Each entry is one commit, or a few when it spans both apps; no commit breaks production.
 
-## [RM-007] Room lifecycle
-- **Goal:** a room disappears once it has been empty for one minute; a link to a room that no longer exists says so.
-- **Scope:** the grace period is one value in the API, easy to change.
-- **Done when:** a room left empty for over a minute is gone (its link shows "room not found"), and reloading while alone inside the minute keeps it.
-- **Date:** 2026-10-29 · **Status:** In progress (2026-11-02)
-
 ## [RM-008] Limits against abuse
 - **Goal:** the API protects itself: messages up to 1000 characters, 5 messages per second per person, 50 people per room.
 - **Scope:** enforced in the API (the source of truth), reflected in the web (character counter, a clear message when a room is full or you're sending too fast). Each value lives in one place.

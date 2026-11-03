@@ -44,6 +44,7 @@ Every API route lives under `/api/`, so it never collides with a web route.
 | ------ | ------------- | ------------------- |
 | `GET`  | `/api/health` | `ok` (health check) |
 | `POST` | `/api/rooms`  | `201` with `{"id": "..."}`: creates a room in memory |
+| `GET`  | `/api/rooms/{id}` | `204` if the room exists, `404` if not |
 | `GET`  | `/api/rooms/{id}/ws?name=…` | WebSocket: joins the room as `name` (see below) |
 | `GET`  | `/api/*`      | `404` for any other |
 

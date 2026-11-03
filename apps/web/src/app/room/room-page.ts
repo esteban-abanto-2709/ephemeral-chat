@@ -1,4 +1,6 @@
 import { Component, DOCUMENT, computed, inject, input, signal } from '@angular/core';
+import { httpResource } from '@angular/common/http';
+import { RouterLink } from '@angular/router';
 import { RoomSocket } from './room-socket';
 import { NameDialog } from './name-dialog/name-dialog';
 
@@ -9,13 +11,15 @@ const statusLabels = {
 };
 
 @Component({
-  imports: [NameDialog],
+  imports: [NameDialog, RouterLink],
   providers: [RoomSocket],
   selector: 'app-room-page',
   templateUrl: './room-page.html',
 })
 export class RoomPage {
   readonly id = input.required<string>();
+
+  protected readonly room = httpResource(() => `/api/rooms/${encodeURIComponent(this.id())}`);
 
   protected readonly name = signal<string | null>(null);
 

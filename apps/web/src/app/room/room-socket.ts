@@ -1,7 +1,8 @@
-import { DOCUMENT, OnDestroy, Service, inject, signal } from '@angular/core';
+import { DOCUMENT, OnDestroy, Service, computed, inject, signal } from '@angular/core';
 
 export type SocketStatus = 'connecting' | 'open' | 'closed';
 
+const statusRoomGone = 4004;
 const statusNameTaken = 4009;
 
 export type RoomEvent =
@@ -13,11 +14,12 @@ export class RoomSocket implements OnDestroy {
   private readonly _status = signal<SocketStatus>('connecting');
   private readonly _events = signal<RoomEvent[]>([]);
   private readonly _members = signal<string[]>([]);
-  private readonly _nameTaken = signal(false);
+  private readonly _closeCode = signal<number | null>(null);
   readonly status = this._status.asReadonly();
   readonly events = this._events.asReadonly();
   readonly members = this._members.asReadonly();
-  readonly nameTaken = this._nameTaken.asReadonly();
+  readonly nameTaken = computed(() => this._closeCode() === statusNameTaken);
+  readonly roomGone = computed(() => this._closeCode() === statusRoomGone);
 
   private readonly location = inject(DOCUMENT).location;
   private socket?: WebSocket;
@@ -27,11 +29,11 @@ export class RoomSocket implements OnDestroy {
     const path = `/api/rooms/${encodeURIComponent(roomId)}/ws?name=${encodeURIComponent(name)}`;
     const socket = new WebSocket(`${scheme}://${this.location.host}${path}`);
     this._status.set('connecting');
-    this._nameTaken.set(false);
+    this._closeCode.set(null);
     socket.onopen = () => this._status.set('open');
     socket.onclose = (event) => {
       this._status.set('closed');
-      this._nameTaken.set(event.code === statusNameTaken);
+      this._closeCode.set(event.code);
     };
     socket.onmessage = (message: MessageEvent<string>) => {
       const event = JSON.parse(message.data) as RoomEvent;

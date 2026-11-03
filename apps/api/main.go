@@ -39,6 +39,7 @@ func newMux(staticDir string) *http.ServeMux {
 		w.Write([]byte("ok"))
 	})
 	mux.HandleFunc("POST /api/rooms", createRoom(rooms))
+	mux.HandleFunc("GET /api/rooms/{id}", findRoom(rooms))
 	mux.HandleFunc("GET /api/rooms/{id}/ws", joinRoom(rooms))
 	mux.HandleFunc("GET /api/", http.NotFound)
 
@@ -55,6 +56,16 @@ func createRoom(rooms *room.Registry) http.HandlerFunc {
 		json.NewEncoder(w).Encode(struct {
 			ID string `json:"id"`
 		}{rooms.Create()})
+	}
+}
+
+func findRoom(rooms *room.Registry) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if _, ok := rooms.Get(r.PathValue("id")); !ok {
+			http.NotFound(w, r)
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
 	}
 }
 

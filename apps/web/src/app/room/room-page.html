@@ -1,63 +1,71 @@
-@if (!socket.nameTaken() && name(); as me) {
-  <main class="mx-auto flex h-dvh max-w-xl flex-col gap-4 p-4">
-    <header class="flex items-center justify-between">
-      <div>
-        <h1 class="text-xl font-semibold">Ephemeral Chat</h1>
-        <p class="text-sm text-gray-600">You are <strong class="text-gray-900">{{ me }}</strong></p>
-      </div>
-      <p class="text-sm text-gray-600" role="status">{{ statusLabel() }}</p>
-    </header>
+@if (room.error() || socket.roomGone()) {
+  <main class="mx-auto flex h-dvh max-w-xl flex-col items-center justify-center gap-6 p-4 text-center">
+    <h1 class="text-3xl font-semibold">Room not found</h1>
+    <p class="text-gray-600">This room doesn't exist. Rooms disappear a minute after everyone leaves.</p>
+    <a routerLink="/" class="rounded bg-gray-900 px-6 py-3 text-white">Go to the home page</a>
+  </main>
+} @else if (room.status() === 'resolved') {
+  @if (!socket.nameTaken() && name(); as me) {
+    <main class="mx-auto flex h-dvh max-w-xl flex-col gap-4 p-4">
+      <header class="flex items-center justify-between">
+        <div>
+          <h1 class="text-xl font-semibold">Ephemeral Chat</h1>
+          <p class="text-sm text-gray-600">You are <strong class="text-gray-900">{{ me }}</strong></p>
+        </div>
+        <p class="text-sm text-gray-600" role="status">{{ statusLabel() }}</p>
+      </header>
 
-    <section class="flex flex-col gap-2 rounded border border-gray-300 p-3" aria-labelledby="share-title">
-      <h2 id="share-title" class="text-sm font-semibold">Share this link to invite someone</h2>
-      <div class="flex gap-2">
-        <label for="room-link" class="sr-only">Room link</label>
-        <input
-          id="room-link"
-          class="flex-1 rounded border border-gray-400 px-3 py-2 text-sm"
-          [value]="link()"
-          readonly
-        />
-        <button type="button" class="rounded bg-gray-900 px-4 py-2 text-white" (click)="copyLink()">
-          {{ copied() ? 'Copied' : 'Copy' }}
-        </button>
-      </div>
-    </section>
+      <section class="flex flex-col gap-2 rounded border border-gray-300 p-3" aria-labelledby="share-title">
+        <h2 id="share-title" class="text-sm font-semibold">Share this link to invite someone</h2>
+        <div class="flex gap-2">
+          <label for="room-link" class="sr-only">Room link</label>
+          <input
+            id="room-link"
+            class="flex-1 rounded border border-gray-400 px-3 py-2 text-sm"
+            [value]="link()"
+            readonly
+          />
+          <button type="button" class="rounded bg-gray-900 px-4 py-2 text-white" (click)="copyLink()">
+            {{ copied() ? 'Copied' : 'Copy' }}
+          </button>
+        </div>
+      </section>
 
-    <section class="flex flex-col gap-2" aria-labelledby="members-title">
-      <h2 id="members-title" class="text-sm font-semibold">In this room ({{ socket.members().length }})</h2>
-      <ul class="flex flex-wrap gap-2" aria-label="People in the room">
-        @for (member of socket.members(); track $index) {
-          <li class="rounded bg-gray-100 px-2 py-1 text-sm">{{ member }}</li>
+      <section class="flex flex-col gap-2" aria-labelledby="members-title">
+        <h2 id="members-title" class="text-sm font-semibold">In this room ({{ socket.members().length }})</h2>
+        <ul class="flex flex-wrap gap-2" aria-label="People in the room">
+          @for (member of socket.members(); track $index) {
+            <li class="rounded bg-gray-100 px-2 py-1 text-sm">{{ member }}</li>
+          }
+        </ul>
+      </section>
+
+      <ul class="flex-1 space-y-2 overflow-y-auto" aria-label="Messages" aria-live="polite">
+        @for (event of socket.events(); track $index) {
+          @if (event.type === 'message') {
+            <li class="flex gap-2 rounded bg-gray-100 px-3 py-2">
+              <strong class="font-semibold">{{ event.name }}</strong>
+              <span>{{ event.text }}</span>
+            </li>
+          } @else {
+            <li class="text-center text-sm text-gray-500">{{ event.name }} {{ event.type }}</li>
+          }
         }
       </ul>
-    </section>
 
-    <ul class="flex-1 space-y-2 overflow-y-auto" aria-label="Messages" aria-live="polite">
-      @for (event of socket.events(); track $index) {
-        @if (event.type === 'message') {
-          <li class="flex gap-2 rounded bg-gray-100 px-3 py-2">
-            <strong class="font-semibold">{{ event.name }}</strong>
-            <span>{{ event.text }}</span>
-          </li>
-        } @else {
-          <li class="text-center text-sm text-gray-500">{{ event.name }} {{ event.type }}</li>
-        }
-      }
-    </ul>
-
-    <form class="flex gap-2" (submit)="send($event, input)">
-      <label for="message" class="sr-only">Message</label>
-      <input #input id="message" class="flex-1 rounded border border-gray-400 px-3 py-2" autocomplete="off" />
-      <button
-        type="submit"
-        class="rounded bg-gray-900 px-4 py-2 text-white disabled:opacity-50"
-        [disabled]="socket.status() !== 'open'"
-      >
-        Send
-      </button>
-    </form>
-  </main>
-} @else {
-  <app-name-dialog [taken]="socket.nameTaken() ? name() : null" (chosen)="join($event)" />
+      <form class="flex gap-2" (submit)="send($event, input)">
+        <label for="message" class="sr-only">Message</label>
+        <input #input id="message" class="flex-1 rounded border border-gray-400 px-3 py-2" autocomplete="off" />
+        <button
+          type="submit"
+          class="rounded bg-gray-900 px-4 py-2 text-white disabled:opacity-50"
+          [disabled]="socket.status() !== 'open'"
+        >
+          Send
+        </button>
+      </form>
+    </main>
+  } @else {
+    <app-name-dialog [taken]="socket.nameTaken() ? name() : null" (chosen)="join($event)" />
+  }
 }

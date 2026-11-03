@@ -1,5 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideRouter } from '@angular/router';
 import { RoomPage } from './room-page';
 import { RoomEvent, RoomSocket, SocketStatus } from './room-socket';
 
@@ -16,6 +19,7 @@ describe('RoomPage', () => {
     ]),
     members: signal(['Juan', 'Luis']),
     nameTaken: signal(false),
+    roomGone: signal(false),
     connect: vi.fn(),
     send: (text: string) => sent.push(text),
   };
@@ -25,20 +29,32 @@ describe('RoomPage', () => {
     sent.length = 0;
     fakeSocket.connect.mockClear();
     fakeSocket.nameTaken.set(false);
+    fakeSocket.roomGone.set(false);
     writeText.mockClear();
     Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
-    await TestBed.configureTestingModule({ imports: [RoomPage] })
+    await TestBed.configureTestingModule({
+      imports: [RoomPage],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
+    })
       .overrideComponent(RoomPage, {
         set: { providers: [{ provide: RoomSocket, useValue: fakeSocket }] },
       })
       .compileComponents();
   });
 
-  async function render() {
+  async function open(status = 204) {
     const fixture = TestBed.createComponent(RoomPage);
     fixture.componentRef.setInput('id', 'abc');
+    TestBed.tick();
+    TestBed.inject(HttpTestingController)
+      .expectOne('/api/rooms/abc')
+      .flush(null, { status, statusText: status === 204 ? 'No Content' : 'Not Found' });
     await fixture.whenStable();
-    const page = fixture.nativeElement as HTMLElement;
+    return { fixture, page: fixture.nativeElement as HTMLElement };
+  }
+
+  async function render() {
+    const { fixture, page } = await open();
 
     const name = page.querySelector('#name') as HTMLInputElement;
     name.value = 'Juan';
@@ -49,11 +65,22 @@ describe('RoomPage', () => {
     return { fixture, page };
   }
 
-  it('asks for a name before showing the room', async () => {
-    const fixture = TestBed.createComponent(RoomPage);
-    fixture.componentRef.setInput('id', 'abc');
+  it('says so when the room does not exist', async () => {
+    const { page } = await open(404);
+    expect(page.querySelector('h1')?.textContent).toContain('Room not found');
+    expect(page.querySelector('a')?.getAttribute('href')).toBe('/');
+    expect(page.querySelector('dialog')).toBeNull();
+  });
+
+  it('says so when the room is dropped before joining', async () => {
+    const { fixture, page } = await render();
+    fakeSocket.roomGone.set(true);
     await fixture.whenStable();
-    const page = fixture.nativeElement as HTMLElement;
+    expect(page.querySelector('h1')?.textContent).toContain('Room not found');
+  });
+
+  it('asks for a name before showing the room', async () => {
+    const { page } = await open();
 
     expect(page.querySelector('dialog')?.open).toBe(true);
     expect(page.querySelector('#message')).toBeNull();
