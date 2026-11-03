@@ -15,6 +15,7 @@ describe('RoomPage', () => {
       { type: 'left', name: 'Ana', members: ['Juan'] },
     ]),
     members: signal(['Juan', 'Luis']),
+    nameTaken: signal(false),
     connect: vi.fn(),
     send: (text: string) => sent.push(text),
   };
@@ -23,6 +24,7 @@ describe('RoomPage', () => {
   beforeEach(async () => {
     sent.length = 0;
     fakeSocket.connect.mockClear();
+    fakeSocket.nameTaken.set(false);
     writeText.mockClear();
     Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
     await TestBed.configureTestingModule({ imports: [RoomPage] })
@@ -63,6 +65,17 @@ describe('RoomPage', () => {
     expect(page.querySelector('dialog')).toBeNull();
     expect(page.textContent).toContain('You are Juan');
     expect(fakeSocket.connect).toHaveBeenCalledWith('abc', 'Juan');
+  });
+
+  it('asks again when the name is taken', async () => {
+    const { fixture, page } = await render();
+
+    fakeSocket.nameTaken.set(true);
+    await fixture.whenStable();
+
+    expect(page.querySelector('dialog')?.open).toBe(true);
+    expect(page.querySelector('[role="alert"]')?.textContent).toContain('Juan is already in this room');
+    expect(page.querySelector('#message')).toBeNull();
   });
 
   it('shows the room link and copies it', async () => {

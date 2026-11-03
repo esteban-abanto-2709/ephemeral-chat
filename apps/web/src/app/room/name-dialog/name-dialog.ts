@@ -1,4 +1,4 @@
-import { Component, ElementRef, afterNextRender, output, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, afterNextRender, input, output, signal, viewChild } from '@angular/core';
 import { FormField, FormRoot, form, maxLength, requiredError, validate } from '@angular/forms/signals';
 
 export const nameMaxLength = 24;
@@ -9,6 +9,7 @@ export const nameMaxLength = 24;
   templateUrl: './name-dialog.html',
 })
 export class NameDialog {
+  readonly taken = input<string | null>(null);
   readonly chosen = output<string>();
 
   protected readonly maxLength = nameMaxLength;

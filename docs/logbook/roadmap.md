@@ -16,12 +16,6 @@ changelog and is deleted from here.
 Everything below is **v0.1** (see [product vision](../product-vision.md)).
 Each entry is one commit, or a few when it spans both apps; no commit breaks production.
 
-## [RM-006] Presence: who joined, who left, who is here
-- **Goal:** the room announces "X joined" and "X left" and shows the list of people connected.
-- **Scope:** a name already taken in the room is rejected (case-insensitive) and the name dialog asks again. Identity by id with renames is WL-008, for later.
-- **Done when:** opening and closing a tab updates the list and the notices in every other browser in the room.
-- **Date:** 2026-10-29 · **Status:** In progress (2026-11-02)
-
 ## [RM-007] Room lifecycle
 - **Goal:** a room disappears once it has been empty for one minute; a link to a room that no longer exists says so.
 - **Scope:** the grace period is one value in the API, easy to change.

@@ -12,6 +12,9 @@ Summary in ≤2 lines of what was done.
 
 ---
 
+## [RM-006] Presence: who joined, who left, who is here (2026-11-02 23:38)
+Server events now carry a `type`; `joined`/`left` notices bring the full member list, shown above the chat. A name already in the room (ignoring case) is rejected with close code `4009` and the name dialog asks again.
+
 ## [RM-005] Text messages in a room (2026-10-29 21:50)
 The API relays each message to everyone in the room (per-member mailboxes, slow clients disconnected, nothing stored); the room page joins with your name and shows each message with its sender. The echo is gone.
 

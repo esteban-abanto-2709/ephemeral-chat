@@ -1,10 +1,20 @@
 package room
 
 import (
+	"errors"
 	"reflect"
 	"strings"
 	"testing"
 )
+
+func join(t *testing.T, room *Room, name string) *Member {
+	t.Helper()
+	member, err := room.Join(name)
+	if err != nil {
+		t.Fatalf("Join(%q): %v", name, err)
+	}
+	return member
+}
 
 func receive(t *testing.T, member *Member) Message {
 	t.Helper()
@@ -51,10 +61,10 @@ func drain(member *Member) {
 
 func TestJoinAnnouncesTheNewcomerToEveryone(t *testing.T) {
 	room := newRoom()
-	juan := room.Join("Juan")
+	juan := join(t, room, "Juan")
 	expect(t, juan, Message{Type: "joined", Name: "Juan", Members: []string{"Juan"}})
 
-	ana := room.Join("Ana")
+	ana := join(t, room, "Ana")
 	want := Message{Type: "joined", Name: "Ana", Members: []string{"Juan", "Ana"}}
 	expect(t, juan, want)
 	expect(t, ana, want)
@@ -62,7 +72,7 @@ func TestJoinAnnouncesTheNewcomerToEveryone(t *testing.T) {
 
 func TestLeaveAnnouncesWhoIsStillHere(t *testing.T) {
 	room := newRoom()
-	juan, ana, luis := room.Join("Juan"), room.Join("Ana"), room.Join("Luis")
+	juan, ana, luis := join(t, room, "Juan"), join(t, room, "Ana"), join(t, room, "Luis")
 	drain(juan)
 	drain(luis)
 
@@ -73,9 +83,23 @@ func TestLeaveAnnouncesWhoIsStillHere(t *testing.T) {
 	expect(t, luis, want)
 }
 
+func TestJoinRejectsANameAlreadyInTheRoom(t *testing.T) {
+	room := newRoom()
+	juan := join(t, room, "Juan")
+	drain(juan)
+
+	if _, err := room.Join("jUAN"); !errors.Is(err, ErrNameTaken) {
+		t.Fatalf("Join(jUAN) error = %v, want ErrNameTaken", err)
+	}
+	assertEmpty(t, juan)
+
+	room.Leave(juan)
+	join(t, room, "Juan")
+}
+
 func TestSendReachesEveryMemberWithTheSenderName(t *testing.T) {
 	room := newRoom()
-	juan, ana := room.Join("Juan"), room.Join("Ana")
+	juan, ana := join(t, room, "Juan"), join(t, room, "Ana")
 	drain(juan)
 	drain(ana)
 
@@ -88,11 +112,11 @@ func TestSendReachesEveryMemberWithTheSenderName(t *testing.T) {
 
 func TestLateJoinerSeesNothingFromBefore(t *testing.T) {
 	room := newRoom()
-	juan := room.Join("Juan")
+	juan := join(t, room, "Juan")
 	room.Send(juan, "before")
 	drain(juan)
 
-	ana := room.Join("Ana")
+	ana := join(t, room, "Ana")
 	expect(t, ana, Message{Type: "joined", Name: "Ana", Members: []string{"Juan", "Ana"}})
 	assertEmpty(t, ana)
 
@@ -104,7 +128,7 @@ func TestLateJoinerSeesNothingFromBefore(t *testing.T) {
 
 func TestLeftMemberStopsReceiving(t *testing.T) {
 	room := newRoom()
-	juan, ana := room.Join("Juan"), room.Join("Ana")
+	juan, ana := join(t, room, "Juan"), join(t, room, "Ana")
 	drain(ana)
 
 	room.Leave(ana)
@@ -117,7 +141,7 @@ func TestLeftMemberStopsReceiving(t *testing.T) {
 
 func TestSlowMemberIsDisconnectedAndAnnounced(t *testing.T) {
 	room := newRoom()
-	fast, slow := room.Join("Fast"), room.Join("Slow")
+	fast, slow := join(t, room, "Fast"), join(t, room, "Slow")
 	drain(fast)
 	drain(slow)
 
@@ -137,7 +161,7 @@ func TestSlowMemberIsDisconnectedAndAnnounced(t *testing.T) {
 
 func TestBlankMessagesAreIgnored(t *testing.T) {
 	room := newRoom()
-	juan := room.Join("Juan")
+	juan := join(t, room, "Juan")
 	drain(juan)
 
 	room.Send(juan, "   ")

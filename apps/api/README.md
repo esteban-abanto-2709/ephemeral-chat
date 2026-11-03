@@ -56,7 +56,10 @@ default), which holds both in production and behind the `ng serve` proxy.
 ### Room chat
 
 Joining needs an existing room (`404` otherwise) and a name of 1 to 24
-characters once trimmed (`400` otherwise). Then, as JSON text frames:
+characters once trimmed (`400` otherwise). A name already in the room
+(ignoring case) is accepted as a WebSocket and closed right away with status
+`4009`: a browser can't read the HTTP status of a failed handshake, but it can
+read a close code. Then, as JSON text frames:
 
 ```
 client → server:   {"text": "hola"}

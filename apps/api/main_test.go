@@ -118,6 +118,13 @@ func TestRoomChat(t *testing.T) {
 
 	ana.Close(websocket.StatusNormalClosure, "")
 	expect(room.Message{Type: "left", Name: "Ana", Members: []string{"Juan", "Luis"}}, juan, luis)
+
+	impostor := join("JUAN")
+	if _, _, err := impostor.Read(ctx); websocket.CloseStatus(err) != statusNameTaken {
+		t.Errorf("joining as JUAN closed with %v, want %d", err, statusNameTaken)
+	}
+	wsjson.Write(ctx, luis, map[string]string{"text": "solo nosotros"})
+	expect(room.Message{Type: "message", Name: "Luis", Text: "solo nosotros"}, juan, luis)
 }
 
 func TestAPIOnlyWithoutStaticDir(t *testing.T) {

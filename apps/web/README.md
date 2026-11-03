@@ -55,7 +55,9 @@ the [API](../api/README.md#room-chat)).
 
 Its state is exposed as read-only signals, written only inside the service:
 `status` (`connecting`, `open`, `closed`), `events` (messages and notices, in
-order) and `members` (who is in the room, taken from the latest notice).
+order), `members` (who is in the room, taken from the latest notice) and
+`nameTaken` (the API closed with `4009`: the room page reopens the name dialog
+saying so).
 
 It is provided by the room page itself (`providers: [RoomSocket]`), not at the
 root: each room page gets its own socket, and leaving the page destroys the

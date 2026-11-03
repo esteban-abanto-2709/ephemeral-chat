@@ -1,6 +1,7 @@
 package room
 
 import (
+	"errors"
 	"slices"
 	"strings"
 	"sync"
@@ -11,6 +12,8 @@ const (
 	NameMaxLength = 24
 	mailboxSize   = 16
 )
+
+var ErrNameTaken = errors.New("name already taken in this room")
 
 type Message struct {
 	Type    string   `json:"type"`
@@ -41,14 +44,19 @@ func ValidName(name string) bool {
 	return strings.TrimSpace(name) != "" && utf8.RuneCountInString(name) <= NameMaxLength
 }
 
-func (r *Room) Join(name string) *Member {
+func (r *Room) Join(name string) (*Member, error) {
 	member := &Member{Name: name, mailbox: make(chan Message, mailboxSize)}
 
 	r.mu.Lock()
 	defer r.mu.Unlock()
+	for _, other := range r.members {
+		if strings.EqualFold(other.Name, name) {
+			return nil, ErrNameTaken
+		}
+	}
 	r.members = append(r.members, member)
 	r.broadcast(Message{Type: "joined", Name: name, Members: r.names()})
-	return member
+	return member, nil
 }
 
 func (r *Room) Leave(member *Member) {
