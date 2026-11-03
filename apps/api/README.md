@@ -60,12 +60,15 @@ characters once trimmed (`400` otherwise). Then, as JSON text frames:
 
 ```
 client → server:   {"text": "hola"}
-server → clients:  {"name": "Juan", "text": "hola"}
+server → clients:  {"type": "message", "name": "Juan", "text": "hola"}
+                   {"type": "joined",  "name": "Ana",  "members": ["Juan", "Ana"]}
+                   {"type": "left",    "name": "Ana",  "members": ["Juan"]}
 ```
 
-Every message goes to everyone connected to the room at that moment, sender
-included. Nothing is stored: whoever joins later sees only what comes after.
-Blank messages are dropped.
+Every event goes to everyone connected to the room at that moment, sender and
+newcomer included. `joined` and `left` carry the full list of who is in, in
+order of arrival, so a client never has to work it out. Nothing is stored:
+whoever joins later sees only what comes after. Blank messages are dropped.
 
 ## Code layout
 
@@ -84,8 +87,8 @@ How a room relays messages:
 - Each member has a **mailbox**: a buffered channel of 16 messages.
 - `Room.Send` drops a copy in every member's mailbox, without waiting. A
   mailbox that is full means a client that can't keep up: that member is
-  removed and its mailbox closed, so one slow connection never holds up the
-  room.
+  removed and its mailbox closed (and announced as `left`), so one slow
+  connection never holds up the room.
 - Each WebSocket runs two goroutines: the handler **reads** frames and calls
   `Send`; a second one **writes** whatever lands in the mailbox. When the
   mailbox closes (the member left or was too slow), the writer closes the

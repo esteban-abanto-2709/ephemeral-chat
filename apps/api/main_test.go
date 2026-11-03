@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -89,25 +90,34 @@ func TestRoomChat(t *testing.T) {
 		t.Cleanup(func() { conn.CloseNow() })
 		return conn
 	}
-	expect := func(conn *websocket.Conn, want room.Message) {
+	expect := func(want room.Message, conns ...*websocket.Conn) {
 		t.Helper()
-		var got room.Message
-		if err := wsjson.Read(ctx, conn, &got); err != nil {
-			t.Fatal(err)
-		}
-		if got != want {
-			t.Errorf("got %+v, want %+v", got, want)
+		for _, conn := range conns {
+			var got room.Message
+			if err := wsjson.Read(ctx, conn, &got); err != nil {
+				t.Fatal(err)
+			}
+			if !reflect.DeepEqual(got, want) {
+				t.Errorf("got %+v, want %+v", got, want)
+			}
 		}
 	}
 
-	juan, ana := join("Juan"), join("Ana")
+	juan := join("Juan")
+	expect(room.Message{Type: "joined", Name: "Juan", Members: []string{"Juan"}}, juan)
+	ana := join("Ana")
+	expect(room.Message{Type: "joined", Name: "Ana", Members: []string{"Juan", "Ana"}}, juan, ana)
+
 	wsjson.Write(ctx, juan, map[string]string{"text": "hola"})
-	expect(juan, room.Message{Name: "Juan", Text: "hola"})
-	expect(ana, room.Message{Name: "Juan", Text: "hola"})
+	expect(room.Message{Type: "message", Name: "Juan", Text: "hola"}, juan, ana)
 
 	luis := join("Luis")
+	expect(room.Message{Type: "joined", Name: "Luis", Members: []string{"Juan", "Ana", "Luis"}}, juan, ana, luis)
 	wsjson.Write(ctx, ana, map[string]string{"text": "bienvenido"})
-	expect(luis, room.Message{Name: "Ana", Text: "bienvenido"})
+	expect(room.Message{Type: "message", Name: "Ana", Text: "bienvenido"}, juan, ana, luis)
+
+	ana.Close(websocket.StatusNormalClosure, "")
+	expect(room.Message{Type: "left", Name: "Ana", Members: []string{"Juan", "Luis"}}, juan, luis)
 }
 
 func TestAPIOnlyWithoutStaticDir(t *testing.T) {

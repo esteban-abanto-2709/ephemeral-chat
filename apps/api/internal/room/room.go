@@ -1,6 +1,7 @@
 package room
 
 import (
+	"slices"
 	"strings"
 	"sync"
 	"unicode/utf8"
@@ -12,8 +13,10 @@ const (
 )
 
 type Message struct {
-	Name string `json:"name"`
-	Text string `json:"text"`
+	Type    string   `json:"type"`
+	Name    string   `json:"name"`
+	Text    string   `json:"text,omitempty"`
+	Members []string `json:"members,omitempty"`
 }
 
 type Member struct {
@@ -27,11 +30,11 @@ func (m *Member) Messages() <-chan Message {
 
 type Room struct {
 	mu      sync.Mutex
-	members map[*Member]struct{}
+	members []*Member
 }
 
 func newRoom() *Room {
-	return &Room{members: make(map[*Member]struct{})}
+	return &Room{}
 }
 
 func ValidName(name string) bool {
@@ -43,7 +46,8 @@ func (r *Room) Join(name string) *Member {
 
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	r.members[member] = struct{}{}
+	r.members = append(r.members, member)
+	r.broadcast(Message{Type: "joined", Name: name, Members: r.names()})
 	return member
 }
 
@@ -57,22 +61,39 @@ func (r *Room) Send(from *Member, text string) {
 	if strings.TrimSpace(text) == "" {
 		return
 	}
-	message := Message{Name: from.Name, Text: text}
-
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	for member := range r.members {
+	r.broadcast(Message{Type: "message", Name: from.Name, Text: text})
+}
+
+func (r *Room) broadcast(message Message) {
+	var slow []*Member
+	for _, member := range r.members {
 		select {
 		case member.mailbox <- message:
 		default:
-			r.remove(member)
+			slow = append(slow, member)
 		}
+	}
+	for _, member := range slow {
+		r.remove(member)
 	}
 }
 
 func (r *Room) remove(member *Member) {
-	if _, ok := r.members[member]; ok {
-		delete(r.members, member)
-		close(member.mailbox)
+	i := slices.Index(r.members, member)
+	if i < 0 {
+		return
 	}
+	r.members = slices.Delete(r.members, i, i+1)
+	close(member.mailbox)
+	r.broadcast(Message{Type: "left", Name: member.Name, Members: r.names()})
+}
+
+func (r *Room) names() []string {
+	names := make([]string, len(r.members))
+	for i, member := range r.members {
+		names[i] = member.Name
+	}
+	return names
 }

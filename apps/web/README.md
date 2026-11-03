@@ -49,11 +49,13 @@ so reloading asks again. The room shows nothing else until there is a name.
 
 `src/app/room/room-socket.ts` joins the room once you've picked a name: one
 WebSocket to `/api/rooms/<id>/ws?name=<name>` on the page's own host (`ws://`
-or `wss://` to match the page). It sends `{"text": …}` and receives
-`{"name": …, "text": …}` from everyone in the room, sender included.
+or `wss://` to match the page). It sends `{"text": …}` and receives the room's
+events: messages from everyone (sender included) and who joined or left (see
+the [API](../api/README.md#room-chat)).
 
-Its state is exposed as read-only signals (`status`: `connecting`, `open`,
-`closed`; `messages`), written only inside the service.
+Its state is exposed as read-only signals, written only inside the service:
+`status` (`connecting`, `open`, `closed`), `events` (messages and notices, in
+order) and `members` (who is in the room, taken from the latest notice).
 
 It is provided by the room page itself (`providers: [RoomSocket]`), not at the
 root: each room page gets its own socket, and leaving the page destroys the

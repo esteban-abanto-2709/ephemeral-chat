@@ -18,9 +18,9 @@ Each entry is one commit, or a few when it spans both apps; no commit breaks pro
 
 ## [RM-006] Presence: who joined, who left, who is here
 - **Goal:** the room announces "X joined" and "X left" and shows the list of people connected.
-- **Open questions:** two people with the same name in one room: allow it, reject it, or tell them apart (e.g. "Juan (2)")? Once the server knows the names it can enforce any of them.
+- **Scope:** a name already taken in the room is rejected (case-insensitive) and the name dialog asks again. Identity by id with renames is WL-008, for later.
 - **Done when:** opening and closing a tab updates the list and the notices in every other browser in the room.
-- **Date:** 2026-10-29 · **Status:** Open
+- **Date:** 2026-10-29 · **Status:** In progress (2026-11-02)
 
 ## [RM-007] Room lifecycle
 - **Goal:** a room disappears once it has been empty for one minute; a link to a room that no longer exists says so.

@@ -1,16 +1,20 @@
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { RoomPage } from './room-page';
-import { ChatMessage, RoomSocket, SocketStatus } from './room-socket';
+import { RoomEvent, RoomSocket, SocketStatus } from './room-socket';
 
 describe('RoomPage', () => {
   const sent: string[] = [];
   const fakeSocket = {
     status: signal<SocketStatus>('open'),
-    messages: signal<ChatMessage[]>([
-      { name: 'Ana', text: 'hola' },
-      { name: 'Juan', text: 'segundo' },
+    events: signal<RoomEvent[]>([
+      { type: 'joined', name: 'Ana', members: ['Ana'] },
+      { type: 'message', name: 'Ana', text: 'hola' },
+      { type: 'joined', name: 'Juan', members: ['Ana', 'Juan'] },
+      { type: 'message', name: 'Juan', text: 'segundo' },
+      { type: 'left', name: 'Ana', members: ['Juan'] },
     ]),
+    members: signal(['Juan', 'Luis']),
     connect: vi.fn(),
     send: (text: string) => sent.push(text),
   };
@@ -74,18 +78,26 @@ describe('RoomPage', () => {
     expect(copy.textContent).toContain('Copied');
   });
 
-  it('shows the connection status and each message with its sender', async () => {
+  it('shows the connection status, the messages and who joined or left', async () => {
     const { page } = await render();
 
     expect(page.querySelector('[role="status"]')?.textContent).toContain('Connected');
-    const items = [...page.querySelectorAll('li')].map((li) => [
-      li.querySelector('strong')?.textContent,
-      li.querySelector('span')?.textContent,
-    ]);
-    expect(items).toEqual([
-      ['Ana', 'hola'],
-      ['Juan', 'segundo'],
-    ]);
+    const items = [...page.querySelectorAll('[aria-label="Messages"] li')].map((li) =>
+      li.children.length
+        ? [...li.children].map((part) => part.textContent).join(' ')
+        : li.textContent?.trim(),
+    );
+    expect(items).toEqual(['Ana joined', 'Ana hola', 'Juan joined', 'Juan segundo', 'Ana left']);
+  });
+
+  it('shows who is in the room', async () => {
+    const { page } = await render();
+
+    expect(page.querySelector('#members-title')?.textContent).toContain('In this room (2)');
+    const members = [...page.querySelectorAll('[aria-label="People in the room"] li')].map((li) =>
+      li.textContent?.trim(),
+    );
+    expect(members).toEqual(['Juan', 'Luis']);
   });
 
   it('sends the typed text and clears the input', async () => {

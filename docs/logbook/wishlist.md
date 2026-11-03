@@ -27,3 +27,6 @@ A link that only lets one person in, for the room's creator to hand out. Far fut
 
 ## [WL-007] Load test with real numbers
 Measure concurrent connections against RAM and latency (e.g. with `k6`) and publish the result in the README.
+
+## [WL-008] Identity by id, rename inside the room
+Each person in a room gets a fixed id from the server and can change their name anytime; the chat shows "A is now B" and messages follow the id, so two people may share a name and still be told apart. Replaces rejecting duplicate names (RM-006).
