@@ -49,6 +49,21 @@ func TestRouting(t *testing.T) {
 	}
 }
 
+func TestIndexIsNeverCached(t *testing.T) {
+	dir := t.TempDir()
+	os.WriteFile(filepath.Join(dir, "index.html"), []byte("<app-root>"), 0o644)
+	os.WriteFile(filepath.Join(dir, "main.js"), []byte("console.log"), 0o644)
+	mux := newMux(dir)
+
+	for path, want := range map[string]string{"/": "no-cache", "/room/abc": "no-cache", "/main.js": ""} {
+		rec := httptest.NewRecorder()
+		mux.ServeHTTP(rec, httptest.NewRequest("GET", path, nil))
+		if got := rec.Header().Get("Cache-Control"); got != want {
+			t.Errorf("GET %s Cache-Control = %q, want %q", path, got, want)
+		}
+	}
+}
+
 func TestCreateRoom(t *testing.T) {
 	rec := httptest.NewRecorder()
 	newMux("").ServeHTTP(rec, httptest.NewRequest("POST", "/api/rooms", nil))

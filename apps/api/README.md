@@ -125,9 +125,10 @@ How a room relays messages:
 
 With `STATIC_DIR` set, every path outside `/api/` is served from that folder,
 and a path with no file behind it gets `index.html`, so Angular resolves its
-own routes (`/room/abc`). Without it, the server is an API only: that's how it
-runs in development, next to `ng serve`. In the Docker image it points to the
-Angular build (see [`apps/docker`](../docker/README.md)).
+own routes (`/room/abc`). `index.html` goes out with `Cache-Control: no-cache`,
+so a new deploy's bundles load at once instead of a cached old build. Without
+it, the server is an API only: that's how it runs in development, next to
+`ng serve`. In the Docker image it points to the Angular build (see [`apps/docker`](../docker/README.md)).
 
 ## Tests
 

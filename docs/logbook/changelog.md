@@ -12,6 +12,9 @@ Summary in ≤2 lines of what was done.
 
 ---
 
+## [TD-003] index.html is served without a cache policy (2026-11-04 17:25)
+The Go server sends `Cache-Control: no-cache` with `index.html`, so browsers revalidate it and pick up a new build's bundles right after a deploy.
+
 ## [RM-009] Glass redesign (v0.2) (2026-11-03 13:54)
 WhatsApp Web layout with WebGL liquid glass over an abstract background, light and dark themes from tokens, grouped bubbles, invite card, reconnect and loading states; the page never scrolls. Completes v0.2.
 
