@@ -150,7 +150,7 @@ export class LiquidGlass {
     }
     canvas.setAttribute('aria-hidden', 'true');
     canvas.style.cssText =
-      'position:fixed;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none';
+      'position:fixed;inset:0;width:100%;height:100%;z-index:-1;pointer-events:none;visibility:hidden';
     canvas.addEventListener('webglcontextlost', () => this.stop());
     this.document.body.append(canvas);
     this.canvas = canvas;
@@ -216,17 +216,16 @@ export class LiquidGlass {
     if (!this.program) {
       return;
     }
-    const value = getComputedStyle(this.document.documentElement).getPropertyValue('--backdrop');
-    const url = /url\(['"]?(.*?)['"]?\)/.exec(value)?.[1];
-    if (!url) {
-      return;
-    }
+    const url = `/backdrops/${this.theme.mode()}.webp`;
     this.backdrop = url;
     const image = new Image();
     image.src = url;
     try {
       await image.decode();
     } catch {
+      if (this.backdrop === url) {
+        this.stop();
+      }
       return;
     }
     if (!this.program || this.backdrop !== url) {
@@ -241,6 +240,7 @@ export class LiquidGlass {
     gl.generateMipmap(gl.TEXTURE_2D);
     this.imageSize = [image.naturalWidth, image.naturalHeight];
     this.last = '';
+    this.canvas?.style.removeProperty('visibility');
     this.document.documentElement.classList.add('liquid');
     this.wake();
   }
