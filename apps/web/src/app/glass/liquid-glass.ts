@@ -4,6 +4,8 @@ import { Theme } from '../theme/theme';
 const maxLenses = 8;
 const idleFrames = 30;
 
+export type Optics = [blur: number, refraction: number, edge: number, light: number];
+
 const vertexShader = `
 attribute vec2 a_position;
 void main() {
@@ -24,6 +26,7 @@ uniform float u_scale;
 uniform int u_count;
 uniform vec4 u_rects[${maxLenses}];
 uniform float u_radii[${maxLenses}];
+uniform vec4 u_optics[${maxLenses}];
 
 vec2 cover(vec2 p) {
   float s = max(u_resolution.x / u_imageSize.x, u_resolution.y / u_imageSize.y);
@@ -36,14 +39,14 @@ float box(vec2 p, vec2 extent, float r) {
   return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r;
 }
 
-vec3 frost(vec2 p) {
+vec3 frost(vec2 p, float blur) {
   vec2 o = vec2(8.0 * u_scale, 0.0);
   return (
-    texture2D(u_image, cover(p), 3.0).rgb * 2.0 +
-    texture2D(u_image, cover(p + o.xy), 3.0).rgb +
-    texture2D(u_image, cover(p - o.xy), 3.0).rgb +
-    texture2D(u_image, cover(p + o.yx), 3.0).rgb +
-    texture2D(u_image, cover(p - o.yx), 3.0).rgb
+    texture2D(u_image, cover(p), blur).rgb * 2.0 +
+    texture2D(u_image, cover(p + o.xy), blur).rgb +
+    texture2D(u_image, cover(p - o.xy), blur).rgb +
+    texture2D(u_image, cover(p + o.yx), blur).rgb +
+    texture2D(u_image, cover(p - o.yx), blur).rgb
   ) / 6.0;
 }
 
@@ -63,13 +66,18 @@ void main() {
       box(local + e.xy, extent, r) - box(local - e.xy, extent, r),
       box(local + e.yx, extent, r) - box(local - e.yx, extent, r)
     ) + 1e-5);
-    float rim = min(28.0 * u_scale, min(extent.x, extent.y) * 0.8);
+    vec4 optics = u_optics[i];
+    float rim = min(optics.z * u_scale, min(extent.x, extent.y) * 0.8);
     float k = 1.0 - clamp(-d / rim, 0.0, 1.0);
-    vec2 shift = n * k * k * k * rim * 1.6;
-    vec3 lens = vec3(frost(p + shift * 1.1).r, frost(p + shift).g, frost(p + shift * 0.9).b);
+    vec2 shift = n * k * k * k * rim * optics.y;
+    vec3 lens = vec3(
+      frost(p + shift * 1.1, optics.x).r,
+      frost(p + shift, optics.x).g,
+      frost(p + shift * 0.9, optics.x).b
+    );
     float edge = 1.0 - smoothstep(0.0, 2.0 * u_scale, max(-d, 0.0));
     float light = abs(dot(n, normalize(vec2(-0.6, -1.0))));
-    lens += edge * light * 0.5 + k * k * 0.08;
+    lens += edge * light * optics.w + k * k * 0.08;
     color = mix(color, lens, coverage);
   }
   gl_FragColor = vec4(color, 1.0);
@@ -83,13 +91,14 @@ interface Program {
   count: WebGLUniformLocation | null;
   rects: WebGLUniformLocation | null;
   radii: WebGLUniformLocation | null;
+  optics: WebGLUniformLocation | null;
 }
 
 @Service()
 export class LiquidGlass {
   private readonly document = inject(DOCUMENT);
   private readonly theme = inject(Theme);
-  private readonly lenses = new Map<HTMLElement, number>();
+  private readonly lenses = new Map<HTMLElement, { radius: number; optics: Optics }>();
   private resizes?: ResizeObserver;
   private canvas?: HTMLCanvasElement;
   private program?: Program;
@@ -105,24 +114,31 @@ export class LiquidGlass {
       this.theme.mode();
       this.loadBackdrop();
     });
+
   }
 
-  add(element: HTMLElement): void {
-    if (this.lenses.size >= maxLenses) {
+  add(element: HTMLElement, optics: Optics): void {
+    const known = this.lenses.get(element);
+    if (!known && this.lenses.size >= maxLenses) {
       return;
     }
     this.start();
     if (this.disabled) {
       return;
     }
-    this.lenses.set(element, parseFloat(getComputedStyle(element).borderTopLeftRadius) || 0);
-    element.classList.add('lens');
-    this.resizes?.observe(element);
+    const radius = known?.radius ?? (parseFloat(getComputedStyle(element).borderTopLeftRadius) || 0);
+    this.lenses.set(element, { radius, optics });
+    if (!known) {
+      element.classList.add('lens');
+      this.resizes?.observe(element);
+    }
+    this.last = '';
     this.wake();
   }
 
   delete(element: HTMLElement): void {
     if (this.lenses.delete(element)) {
+      element.classList.remove('lens');
       this.resizes?.unobserve(element);
       this.wake();
     }
@@ -209,6 +225,7 @@ export class LiquidGlass {
       count: at('u_count'),
       rects: at('u_rects'),
       radii: at('u_radii'),
+      optics: at('u_optics'),
     };
   }
 
@@ -263,18 +280,20 @@ export class LiquidGlass {
     const height = Math.round(canvas.clientHeight * scale);
     const rects: number[] = [];
     const radii: number[] = [];
-    for (const [element, radius] of this.lenses) {
+    const optics: number[] = [];
+    for (const [element, lens] of this.lenses) {
       const box = element.getBoundingClientRect();
       if (box.width && box.height) {
         rects.push(box.left * scale, box.top * scale, box.width * scale, box.height * scale);
-        radii.push(radius * scale);
+        radii.push(lens.radius * scale);
+        optics.push(...lens.optics);
       }
     }
     const key = `${width}x${height}:${rects.join()}`;
     if (key !== this.last) {
       this.last = key;
       this.idle = 0;
-      this.draw(program, canvas, width, height, scale, rects, radii);
+      this.draw(program, canvas, width, height, scale, rects, radii, optics);
     }
     if (++this.idle < idleFrames) {
       this.frame = requestAnimationFrame(() => this.tick());
@@ -289,6 +308,7 @@ export class LiquidGlass {
     scale: number,
     rects: number[],
     radii: number[],
+    optics: number[],
   ): void {
     if (canvas.width !== width || canvas.height !== height) {
       canvas.width = width;
@@ -303,6 +323,7 @@ export class LiquidGlass {
     if (count) {
       gl.uniform4fv(at.rects, rects);
       gl.uniform1fv(at.radii, radii);
+      gl.uniform4fv(at.optics, optics);
     }
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   }

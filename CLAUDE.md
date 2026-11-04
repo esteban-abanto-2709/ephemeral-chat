@@ -105,6 +105,9 @@ To verify a change, prefer commands that finish on their own: builds, tests,
   `white`) or `dark:` color overrides in templates. A person's color is a hue
   from their name (`room/avatar-hue.ts`); lightness and saturation come from
   the theme (`avatar`, `person-ink` utilities).
+- **Design first:** visual changes are tried on `/design` (development only,
+  see the [web README](./apps/web/README.md#design-board)) and reach the app
+  once approved.
 - **No persistence**, ever: no database, no files, no browser storage for chat
   data. If a feature needs to remember something, it lives in memory.
 

@@ -3,5 +3,8 @@ import { Routes } from '@angular/router';
 export const routes: Routes = [
   { path: '', loadComponent: () => import('./home/home-page').then((m) => m.HomePage) },
   { path: 'room/:id', loadComponent: () => import('./room/room-page').then((m) => m.RoomPage) },
+  ...(DESIGN
+    ? [{ path: 'design', loadChildren: () => import('./design/design.routes').then((m) => m.designRoutes) }]
+    : []),
   { path: '**', redirectTo: '' },
 ];

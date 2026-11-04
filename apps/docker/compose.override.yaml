@@ -3,6 +3,8 @@ services:
     build:
       context: ../..
       dockerfile: apps/docker/Dockerfile
+      args:
+        DESIGN: "true"
     ports:
       - "3000:8080"
 

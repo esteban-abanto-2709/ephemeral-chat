@@ -27,7 +27,10 @@
             ],
             "styles": [
               "src/styles.css"
-            ]
+            ],
+            "define": {
+              "DESIGN": "false"
+            }
           },
           "configurations": {
             "production": {
@@ -48,7 +51,10 @@
             "development": {
               "optimization": false,
               "extractLicenses": false,
-              "sourceMap": true
+              "sourceMap": true,
+              "define": {
+                "DESIGN": "true"
+              }
             }
           },
           "defaultConfiguration": "production"

@@ -1,0 +1,59 @@
+<div class="flex h-dvh gap-3 p-3 md:gap-4 md:p-4">
+  <app-room-panel
+    appGlass
+    role="complementary"
+    aria-label="Room"
+    class="min-w-0 flex-1 flex-col gap-5 rounded-3xl p-5 md:flex md:w-72 md:flex-none"
+    [class.flex]="panelOpen()"
+    [class.hidden]="!panelOpen()"
+    [members]="members"
+    [me]="me"
+    (closed)="panelOpen.set(false)"
+  />
+
+  <main
+    appGlass
+    class="min-w-0 flex-1 flex-col overflow-hidden rounded-3xl md:flex"
+    [class.flex]="!panelOpen()"
+    [class.hidden]="panelOpen()"
+  >
+    <header class="flex items-center gap-3 border-b border-edge px-5 py-4">
+      <div class="min-w-0 flex-1">
+        <h1 class="font-semibold">Private room</h1>
+        <p class="flex items-center gap-2 text-xs text-ink-soft">
+          <span class="size-2 shrink-0 rounded-full bg-accent-ink" aria-hidden="true"></span>
+          <span>Connected</span>
+        </p>
+      </div>
+      <app-copy-link [link]="link" />
+      <button
+        type="button"
+        class="grid size-10 place-items-center rounded-full text-ink-soft transition hover:bg-glass-strong md:hidden"
+        aria-label="Open room panel"
+        (click)="panelOpen.set(true)"
+      >
+        <svg lucideUsers class="size-5" aria-hidden="true"></svg>
+      </button>
+    </header>
+
+    <app-message-list [events]="events" [me]="me" [link]="link" />
+
+    <form class="flex items-center gap-2 p-3 md:p-4" (submit)="$event.preventDefault()">
+      <label for="message" class="sr-only">Message</label>
+      <input
+        id="message"
+        appGlass="composer"
+        class="min-w-0 flex-1 rounded-full px-5 py-3 placeholder:text-ink-soft focus-visible:outline-2 focus-visible:outline-accent-ink"
+        placeholder="Write a message"
+        autocomplete="off"
+      />
+      <button
+        type="submit"
+        class="grid size-12 shrink-0 place-items-center rounded-full bg-accent text-on-accent shadow-lift transition hover:scale-105"
+        aria-label="Send"
+      >
+        <svg lucideSendHorizontal class="size-5" aria-hidden="true"></svg>
+      </button>
+    </form>
+  </main>
+</div>

@@ -33,6 +33,8 @@ the page connects to it on load.
 | `/`         | `home/home-page`      | **Create room**: asks the API for a room (`POST /api/rooms`) and goes to it |
 | `/room/:id` | `room/room-page`      | The room: checks it exists ("Room not found" otherwise), asks for your name, then the room: a side panel (`room/room-panel`: who is in, theme) and the chat, which opens with a card holding the link to share (`room/copy-link` also sits in its header); on phones the panel replaces the chat |
 
+| `/design`   | `design/design-board` | Development only: the design board (see [Design board](#design-board)) |
+
 Both pages are lazy-loaded. The router binds `:id` straight to the page's
 `id` input (`withComponentInputBinding`). Any id shows a room for now; a room
 that doesn't exist will say so later in the roadmap.
@@ -117,10 +119,17 @@ in the browser (a preference, never chat data). Panels use the `glass`
 utility over a fixed abstract background; with reduced transparency they turn
 solid.
 
-Liquid glass: elements with the `appGlass` directive (`src/app/glass`) are
-lenses for `LiquidGlass`, one WebGL canvas behind the page that draws the
-background and, under each lens (up to 8), bends it at the edges, blurs it and
-lights the rim. It samples the background image itself, never the page, so it
+Each glass piece names its style: `appGlass="header"`, `appGlass="bubbleTheirs"`
+(plain `appGlass` is `panel`). The styles live in `glass/glass-styles.ts`, one
+per piece, either `liquid` (tint, blur, refraction, edge thickness, edge light,
+border) or `frosted` (fill, blur, saturation, border); tint, fill and border
+have a value per theme. To restyle a piece, change its entry there.
+
+Liquid glass: `liquid` pieces are lenses for `LiquidGlass`, one WebGL canvas
+behind the page that draws the background and, under each lens (up to 8),
+bends it at the edges, blurs it and lights the rim, each with its own values.
+`frosted` pieces are plain CSS glass (`backdrop-filter`), so there can be any
+number of them. It samples the background image itself, never the page, so it
 works the same on Safari. It redraws only while something moves. Without
 WebGL, with reduced transparency or if the context is lost, lenses stay
 frosted CSS glass (`backdrop-filter`).
@@ -129,6 +138,21 @@ Icons come from `@lucide/angular`, the font is Inter (`@fontsource-variable/inte
 Backgrounds in `public/backdrops`, free under the Unsplash License:
 [dark](https://unsplash.com/photos/qmUKOInkOL8) by Andrew Kliatskyi,
 [light](https://unsplash.com/photos/yKVBAM-gKJo) by Pawel Czerwinski.
+
+## Design board
+
+`/design` shows the app with sample data, no logic, in four frames at once:
+desktop (1280 × 800, scaled to fit) and mobile (390 × 844), each in light and
+dark, with a switch for the screen (home, room). Each frame is an `iframe` of
+`/design/frame?screen=…&theme=…`, so it has its own theme, its own liquid glass
+and a real viewport width. Visual changes are tried here first and moved into
+the app once approved; screens reuse the app's components wherever they exist.
+
+It exists only in development: the `DESIGN` build constant (`define` in
+`angular.json`) is `true` in the development configuration and `false`
+otherwise, and the route is dropped from the bundle when it is `false`. The
+local Docker image turns it on with the `DESIGN` build argument
+(`compose.override.yaml`); Render builds without it.
 
 ## In production
 

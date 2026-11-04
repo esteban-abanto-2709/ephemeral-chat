@@ -8,14 +8,15 @@ apps/docker/
 ├── Dockerfile               # builds web + api into one image
 ├── Dockerfile.dockerignore  # ignore file for that Dockerfile
 ├── compose.yaml             # what every environment shares: container, restart, healthcheck
-├── compose.override.yaml    # development: builds from source, publishes 3000, optional tunnel
+├── compose.override.yaml    # development: builds from source with /design, publishes 3000, optional tunnel
 └── README.md
 ```
 
 A plain `docker compose …` merges `compose.yaml` with `compose.override.yaml`
 on its own, so on your machine it is always development. Production never
 reads either file: Render builds `Dockerfile` directly (see below), so nothing
-in the override, the tunnel included, can reach it.
+in the override, the tunnel and the `DESIGN=true` build argument (the web's
+`/design` board) included, can reach it.
 
 ## Quick start
 

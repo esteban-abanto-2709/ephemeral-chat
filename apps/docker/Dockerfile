@@ -11,7 +11,8 @@ COPY apps/web/package.json apps/web/pnpm-lock.yaml apps/web/pnpm-workspace.yaml 
 RUN pnpm install --frozen-lockfile
 
 COPY apps/web .
-RUN pnpm run build
+ARG DESIGN=false
+RUN pnpm run build --define DESIGN=${DESIGN}
 
 
 # ---------- API ----------
