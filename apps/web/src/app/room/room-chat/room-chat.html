@@ -1,0 +1,108 @@
+<div class="flex h-dvh md:gap-4 md:p-4">
+  <app-room-panel
+    appGlass
+    role="complementary"
+    aria-label="Room"
+    class="m-2 min-w-0 flex-1 flex-col gap-5 rounded-3xl p-5 md:m-0 md:flex md:w-72 md:flex-none"
+    [class.flex]="panelOpen()"
+    [class.hidden]="!panelOpen()"
+    [members]="members()"
+    [me]="me()"
+    (closed)="panelOpen.set(false)"
+  />
+
+  <main class="relative min-w-0 flex-1 flex-col md:flex" [class.flex]="!panelOpen()" [class.hidden]="panelOpen()">
+    <header
+      appGlass="header"
+      class="absolute inset-x-2 top-[calc(env(safe-area-inset-top)+0.5rem)] z-10 flex items-center gap-1 rounded-2xl py-1 pr-1 pl-4 md:inset-x-0 md:top-0"
+    >
+      <div class="min-w-0 flex-1">
+        <h1 class="text-sm font-semibold">Private room</h1>
+        <p class="flex items-center gap-1.5 text-xs text-ink-soft">
+          <span
+            class="size-1.5 shrink-0 rounded-full"
+            [class]="status() === 'open' ? 'bg-accent-ink' : 'bg-ink-soft'"
+            aria-hidden="true"
+          ></span>
+          <span role="status">{{ statusLabel() }}</span>
+        </p>
+      </div>
+      <button
+        [appCopyLink]="link()"
+        class="grid size-10 place-items-center rounded-full text-accent-ink transition hover:bg-glass-strong focus-visible:outline-2 focus-visible:outline-accent-ink"
+        aria-label="Copy room link"
+      >
+        <svg lucideCopy class="size-5" aria-hidden="true"></svg>
+      </button>
+      <button
+        type="button"
+        class="grid size-10 place-items-center rounded-full text-ink-soft transition hover:bg-glass-strong focus-visible:outline-2 focus-visible:outline-accent-ink md:hidden"
+        aria-label="Open room panel"
+        (click)="panelOpen.set(true)"
+      >
+        <svg lucideUsers class="size-5" aria-hidden="true"></svg>
+      </button>
+    </header>
+
+    <app-message-list [events]="events()" [me]="me()" [link]="link()" />
+
+    @if (copied()) {
+      <p
+        appGlass="bubble"
+        role="status"
+        class="absolute top-[calc(env(safe-area-inset-top)+4.5rem)] left-1/2 z-20 flex -translate-x-1/2 animate-appear items-center gap-2 rounded-full px-4 py-2 text-sm font-medium motion-reduce:animate-none md:top-16"
+      >
+        <svg lucideCheck class="size-4 text-accent-ink" aria-hidden="true"></svg>
+        Link copied
+      </p>
+    }
+
+    <div
+      class="absolute inset-x-2 bottom-[calc(env(safe-area-inset-bottom)+0.5rem)] z-10 flex flex-col gap-2 md:inset-x-0 md:bottom-0"
+    >
+      @if (status() === 'closed') {
+        <div appGlass="bubble" class="flex items-center gap-3 rounded-2xl py-1.5 pr-1.5 pl-4 text-sm" role="alert">
+          <svg lucideWifiOff class="size-4 shrink-0 text-ink-soft" aria-hidden="true"></svg>
+          <span class="flex-1">You're disconnected from the room.</span>
+          <button
+            type="button"
+            class="flex items-center gap-2 rounded-full px-3 py-1.5 font-medium text-accent-ink transition hover:bg-glass-strong focus-visible:outline-2 focus-visible:outline-accent-ink"
+            (click)="reconnect.emit()"
+          >
+            <svg lucideRefreshCw class="size-4" aria-hidden="true"></svg>
+            Reconnect
+          </button>
+        </div>
+      }
+
+      <form
+        appGlass="composer"
+        class="flex items-center gap-2 rounded-full py-1 pr-1 pl-5 has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-accent-ink"
+        (submit)="send($event, input)"
+      >
+        <label for="message" class="sr-only">Message</label>
+        <input
+          #input
+          id="message"
+          class="min-w-0 flex-1 bg-transparent py-2.5 outline-none placeholder:text-ink-soft"
+          placeholder="Write a message"
+          autocomplete="off"
+          [maxLength]="messageMaxLength"
+          (input)="length.set(input.value.length)"
+        />
+        @if (length() >= counterFrom) {
+          <span class="text-xs text-ink-soft" id="message-length">{{ length() }} / {{ messageMaxLength }}</span>
+        }
+        <button
+          type="submit"
+          class="grid size-10 shrink-0 place-items-center rounded-full text-ink-soft transition hover:scale-110 disabled:opacity-50 disabled:hover:scale-100 focus-visible:outline-2 focus-visible:outline-accent-ink"
+          aria-label="Send"
+          [class.text-ink]="length() > 0"
+          [disabled]="status() !== 'open'"
+        >
+          <svg lucideSendHorizontal class="size-5" aria-hidden="true"></svg>
+        </button>
+      </form>
+    </div>
+  </main>
+</div>

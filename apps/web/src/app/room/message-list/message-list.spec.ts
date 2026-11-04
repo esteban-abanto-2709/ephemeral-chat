@@ -37,10 +37,9 @@ describe('MessageList', () => {
     const about = list.querySelector('[aria-label="About this room"]')!;
 
     expect(about.textContent).toContain('Nothing is stored');
-    expect((about.querySelector('#room-link') as HTMLInputElement).value).toBe(
+    expect(about.querySelector('[aria-label="Copy room link"]')?.textContent).toContain(
       'https://chat.test/room/abc',
     );
-    expect(about.textContent).toContain('Copy link');
   });
 
   it('puts your messages on the right and groups messages in a row', async () => {

@@ -1,36 +1,26 @@
+import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { CopyLink } from './copy-link';
+import { CopyLink, CopyNotice } from './copy-link';
+
+@Component({
+  imports: [CopyLink],
+  template: `<button appCopyLink="https://chat.test/room/abc" aria-label="Copy room link"></button>`,
+})
+class Host {}
 
 describe('CopyLink', () => {
-  const writeText = vi.fn().mockResolvedValue(undefined);
-
-  async function render(labelled: boolean) {
+  it('copies the link and shows the notice', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
-    const fixture = TestBed.createComponent(CopyLink);
-    fixture.componentRef.setInput('link', 'https://chat.test/room/abc');
-    fixture.componentRef.setInput('labelled', labelled);
+    const fixture = TestBed.createComponent(Host);
     await fixture.whenStable();
-    return { fixture, button: (fixture.nativeElement as HTMLElement).querySelector('button')! };
-  }
+    const notice = TestBed.inject(CopyNotice);
+    expect(notice.visible()).toBe(false);
 
-  it('copies the link and says so', async () => {
-    const { fixture, button } = await render(true);
-    expect(button.textContent).toContain('Copy link');
-
-    button.click();
+    (fixture.nativeElement as HTMLElement).querySelector('button')!.click();
     await fixture.whenStable();
 
     expect(writeText).toHaveBeenCalledWith('https://chat.test/room/abc');
-    expect(button.textContent).toContain('Copied');
-  });
-
-  it('names the icon-only button for screen readers', async () => {
-    const { fixture, button } = await render(false);
-    expect(button.getAttribute('aria-label')).toBe('Copy link');
-
-    button.click();
-    await fixture.whenStable();
-
-    expect(button.getAttribute('aria-label')).toBe('Link copied');
+    expect(notice.visible()).toBe(true);
   });
 });

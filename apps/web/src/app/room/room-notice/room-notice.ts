@@ -24,7 +24,8 @@ import { Glass } from '../../glass/glass';
         </div>
         <a
           routerLink="/"
-          class="flex items-center gap-2 rounded-full bg-accent px-6 py-3 font-medium text-on-accent shadow-lift transition hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink"
+          appGlass="primary"
+          class="flex items-center gap-2 rounded-full px-6 py-3 font-semibold shadow-lift transition hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink"
         >
           <svg lucideArrowLeft class="size-4" aria-hidden="true"></svg>
           Go to the home page

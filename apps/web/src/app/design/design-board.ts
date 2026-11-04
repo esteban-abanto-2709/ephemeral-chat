@@ -16,8 +16,8 @@ import { DesignScreen, designScreens } from './design-frame';
                 type="button"
                 role="radio"
                 class="rounded-full border border-edge px-4 py-1.5 text-sm capitalize transition"
-                [class.bg-accent]="screen() === option"
-                [class.text-on-accent]="screen() === option"
+                [class.bg-glass-strong]="screen() === option"
+                [class.font-semibold]="screen() === option"
                 [attr.aria-checked]="screen() === option"
                 (click)="screen.set(option)"
               >

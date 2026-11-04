@@ -11,16 +11,16 @@ If an idea is promoted, it's deleted from here and a new `RM` is born.
 "X is typing…" in the room. Candidate for v0.3.
 
 ## [WL-002] Send images
-Images relayed through the WebSocket like any message, never stored; needs a size limit. Candidate for v0.4.
+Images relayed through the WebSocket like any message, never stored; needs a size limit. Candidate for v0.5.
 
 ## [WL-003] Voice messages
-Record in the browser and relay the audio, never stored; needs a duration/size limit. Candidate for v0.4.
+Record in the browser and relay the audio, never stored; needs a duration/size limit. Candidate for v0.5.
 
 ## [WL-004] Stickers
-Accept `.webp` images, animated included, shown as stickers. WhatsApp's own stickers can't be imported (no API): whoever has the file sends it. Candidate for v0.4.
+Accept `.webp` images, animated included, shown as stickers. WhatsApp's own stickers can't be imported (no API): whoever has the file sends it. Candidate for v0.5.
 
 ## [WL-005] End-to-end encryption
-The key travels in the link after `#`, which browsers never send to the server; Web Crypto encrypts in the browser and the API only relays ciphertext. Candidate for v0.5.
+The key travels in the link after `#`, which browsers never send to the server; Web Crypto encrypts in the browser and the API only relays ciphertext. Candidate for v0.6.
 
 ## [WL-006] Single-use link
 A link that only lets one person in, for the room's creator to hand out. Far future.
@@ -32,7 +32,7 @@ Measure concurrent connections against RAM and latency (e.g. with `k6`) and publ
 Each person in a room gets a fixed id from the server and can change their name anytime; the chat shows "A is now B" and messages follow the id, so two people may share a name and still be told apart. Replaces rejecting duplicate names (RM-006).
 
 ## [WL-009] Several chats at once
-A list of open rooms beside the chat, as in WhatsApp Web, to talk in more than one at a time; each room still lives only in memory. The v0.2 layout leaves the sidebar ready for it.
+A list of open rooms beside the chat, as in WhatsApp Web, to talk in more than one at a time; each room still lives only in memory. The v0.2 layout leaves the sidebar ready for it. Candidate for v0.4.
 
 ## [WL-010] Liquid glass avatars
 Avatars drawn as small glass lenses instead of flat tinted circles. The WebGL layer draws up to 8 lenses and a room holds 50 people, so it needs another approach (one lens for the list, or CSS glass).

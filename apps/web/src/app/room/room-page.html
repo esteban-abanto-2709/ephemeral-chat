@@ -10,94 +10,15 @@
   </app-room-notice>
 } @else if (room.status() === 'resolved' || room.status() === 'reloading') {
   @if (!socket.nameTaken() && name(); as me) {
-    <div class="flex h-dvh gap-3 p-3 md:gap-4 md:p-4">
-      <app-room-panel
-        appGlass
-        role="complementary"
-        aria-label="Room"
-        class="min-w-0 flex-1 flex-col gap-5 rounded-3xl p-5 md:flex md:w-72 md:flex-none"
-        [class.flex]="panelOpen()"
-        [class.hidden]="!panelOpen()"
-        [members]="socket.members()"
-        [me]="me"
-        (closed)="panelOpen.set(false)"
-      />
-
-      <main
-        appGlass
-        class="min-w-0 flex-1 flex-col overflow-hidden rounded-3xl md:flex"
-        [class.flex]="!panelOpen()"
-        [class.hidden]="panelOpen()"
-      >
-        <header class="flex items-center gap-3 border-b border-edge px-5 py-4">
-          <div class="min-w-0 flex-1">
-            <h1 class="font-semibold">Private room</h1>
-            <p class="flex items-center gap-2 text-xs text-ink-soft">
-              <span
-                class="size-2 shrink-0 rounded-full"
-                [class]="socket.status() === 'open' ? 'bg-accent-ink' : 'bg-ink-soft'"
-                aria-hidden="true"
-              ></span>
-              <span role="status">{{ statusLabel() }}</span>
-            </p>
-          </div>
-          <app-copy-link [link]="link()" />
-          <button
-            type="button"
-            class="grid size-10 place-items-center rounded-full text-ink-soft transition hover:bg-glass-strong focus-visible:outline-2 focus-visible:outline-accent-ink md:hidden"
-            aria-label="Open room panel"
-            (click)="panelOpen.set(true)"
-          >
-            <svg lucideUsers class="size-5" aria-hidden="true"></svg>
-          </button>
-        </header>
-
-        <app-message-list [events]="socket.events()" [me]="me" [link]="link()" />
-
-        @if (socket.status() === 'closed') {
-          <div
-            class="mx-3 flex items-center gap-3 rounded-2xl border border-edge bg-glass-strong py-2 pr-2 pl-4 text-sm md:mx-4"
-            role="alert"
-          >
-            <svg lucideWifiOff class="size-4 shrink-0 text-ink-soft" aria-hidden="true"></svg>
-            <span class="flex-1">You're disconnected from the room.</span>
-            <button
-              type="button"
-              class="flex items-center gap-2 rounded-full px-3 py-1.5 font-medium text-accent-ink transition hover:bg-glass-strong focus-visible:outline-2 focus-visible:outline-accent-ink"
-              (click)="reconnect()"
-            >
-              <svg lucideRefreshCw class="size-4" aria-hidden="true"></svg>
-              Reconnect
-            </button>
-          </div>
-        }
-
-        <form class="flex items-center gap-2 p-3 md:p-4" (submit)="send($event, input)">
-          <label for="message" class="sr-only">Message</label>
-          <input
-            #input
-            id="message"
-            appGlass="composer"
-            class="min-w-0 flex-1 rounded-full px-5 py-3 placeholder:text-ink-soft focus-visible:outline-2 focus-visible:outline-accent-ink"
-            placeholder="Write a message"
-            autocomplete="off"
-            [maxLength]="messageMaxLength"
-            (input)="length.set(input.value.length)"
-          />
-          @if (length() >= counterFrom) {
-            <span class="text-xs text-ink-soft" id="message-length">{{ length() }} / {{ messageMaxLength }}</span>
-          }
-          <button
-            type="submit"
-            class="grid size-12 shrink-0 place-items-center rounded-full bg-accent text-on-accent shadow-lift transition hover:scale-105 disabled:opacity-50 disabled:hover:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink"
-            aria-label="Send"
-            [disabled]="socket.status() !== 'open'"
-          >
-            <svg lucideSendHorizontal class="size-5" aria-hidden="true"></svg>
-          </button>
-        </form>
-      </main>
-    </div>
+    <app-room-chat
+      [status]="socket.status()"
+      [events]="socket.events()"
+      [members]="socket.members()"
+      [me]="me"
+      [link]="link()"
+      (sent)="socket.send($event)"
+      (reconnect)="reconnect()"
+    />
   } @else {
     <app-name-dialog [taken]="socket.nameTaken() ? name() : null" (chosen)="join($event)" />
   }

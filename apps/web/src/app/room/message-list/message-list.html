@@ -1,41 +1,35 @@
 <div
   #list
-  class="scroll-glass relative flex flex-1 flex-col gap-4 overflow-y-auto px-4 py-5 md:px-6"
+  class="scroll-glass relative flex flex-1 flex-col gap-4 overflow-y-auto px-3 pt-[calc(env(safe-area-inset-top)+4.5rem)] pb-[calc(env(safe-area-inset-bottom)+4.5rem)] md:px-4 md:pt-16 md:pb-16"
   (scroll)="follow()"
 >
-  <section class="flex flex-col items-center gap-3" aria-label="About this room">
-    <p
-      class="flex max-w-sm items-start gap-2 rounded-xl border border-edge bg-glass-strong px-3 py-1.5 text-xs text-ink-soft"
+  <section
+    appGlass="bubble"
+    class="mx-auto flex w-full max-w-sm flex-col items-center gap-3 rounded-3xl px-5 py-6 text-center"
+    aria-label="About this room"
+  >
+    <span
+      class="grid size-14 place-items-center rounded-2xl border border-edge bg-glass-strong/50 text-accent-ink"
+      aria-hidden="true"
     >
+      <svg lucideHourglass class="size-7"></svg>
+    </span>
+    <div class="flex flex-col gap-1">
+      <h2 class="font-semibold">Private room</h2>
+      <p class="text-sm text-ink-soft">Anyone with this link can join.</p>
+    </div>
+    <button
+      [appCopyLink]="link()"
+      class="flex w-full items-center gap-2 rounded-full border border-edge bg-glass-strong/50 px-4 py-2.5 text-sm transition hover:bg-glass-strong focus-visible:outline-2 focus-visible:outline-accent-ink"
+      aria-label="Copy room link"
+    >
+      <span class="min-w-0 flex-1 truncate text-left">{{ link() }}</span>
+      <svg lucideCopy class="size-4 shrink-0 text-accent-ink" aria-hidden="true"></svg>
+    </button>
+    <p class="flex items-start gap-1.5 text-xs text-ink-soft">
       <svg lucideShieldCheck class="mt-px size-3.5 shrink-0" aria-hidden="true"></svg>
       Nothing is stored. Messages vanish when everyone leaves.
     </p>
-    <div
-      class="flex w-full max-w-sm flex-col items-center gap-3 rounded-3xl border border-edge bg-glass-strong px-5 py-6 text-center"
-    >
-      <span
-        class="grid size-14 place-items-center rounded-2xl border border-edge bg-glass-strong text-accent-ink"
-        aria-hidden="true"
-      >
-        <svg lucideHourglass class="size-7"></svg>
-      </span>
-      <div class="flex flex-col gap-1">
-        <h2 class="font-semibold">Private room</h2>
-        <p class="text-sm text-ink-soft">Anyone with this link can join.</p>
-      </div>
-      <div
-        class="flex w-full items-center gap-1 rounded-full border border-edge bg-glass-strong py-1 pr-1 pl-4"
-      >
-        <label for="room-link" class="sr-only">Room link</label>
-        <input
-          id="room-link"
-          class="min-w-0 flex-1 truncate bg-transparent text-sm outline-none"
-          [value]="link()"
-          readonly
-        />
-        <app-copy-link [link]="link()" [labelled]="true" />
-      </div>
-    </div>
   </section>
 
   <ul class="flex flex-col gap-1" aria-label="Messages" aria-live="polite">
@@ -44,18 +38,20 @@
       @if (event.type === 'message') {
         @if (item.own) {
           <li
-            class="max-w-[80%] animate-rise self-end motion-reduce:animate-none rounded-2xl rounded-br-md bg-accent px-3.5 py-2 text-on-accent shadow-lift"
+            appGlass="bubble"
+            class="max-w-[80%] animate-rise self-end motion-reduce:animate-none rounded-2xl rounded-br-md px-3.5 py-2"
             [class.mt-2]="item.first"
           >
             <span class="sr-only">You:</span>
             <span class="wrap-anywhere whitespace-pre-wrap">{{ event.text }}</span>
-            &ngsp;<time class="ml-1.5 align-bottom text-[0.6875rem]">{{
+            &ngsp;<time class="ml-1.5 align-bottom text-[0.6875rem] text-ink-soft">{{
               event.at | date: 'HH:mm'
             }}</time>
           </li>
         } @else {
           <li
-            class="max-w-[80%] animate-rise self-start motion-reduce:animate-none rounded-2xl rounded-bl-md border border-edge bg-glass-strong px-3.5 py-2"
+            appGlass="bubble"
+            class="max-w-[80%] animate-rise self-start motion-reduce:animate-none rounded-2xl rounded-bl-md px-3.5 py-2"
             [class.mt-2]="item.first"
           >
             <p
@@ -80,7 +76,8 @@
         </li>
       } @else {
         <li
-          class="my-2 animate-rise self-center motion-reduce:animate-none rounded-full border border-edge bg-glass-strong px-3 py-1 text-xs text-ink-soft"
+          appGlass="bubble"
+          class="my-2 animate-rise self-center motion-reduce:animate-none rounded-full px-3 py-1 text-xs text-ink-soft"
         >
           {{ event.name }} {{ event.type }}
         </li>

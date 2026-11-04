@@ -15,7 +15,7 @@
       <label for="name" class="text-xs font-medium text-ink-soft">Name</label>
       <input
         id="name"
-        class="rounded-full border border-edge bg-glass-strong px-5 py-3 placeholder:text-ink-soft focus-visible:outline-2 focus-visible:outline-accent-ink"
+        class="rounded-full border border-edge bg-glass-strong/50 px-5 py-3 placeholder:text-ink-soft focus-visible:outline-2 focus-visible:outline-accent-ink"
         placeholder="Ana"
         autocomplete="off"
         [formField]="nameForm.name"
@@ -30,7 +30,8 @@
 
     <button
       type="submit"
-      class="rounded-full bg-accent px-6 py-3 font-medium text-on-accent shadow-lift transition hover:scale-[1.02] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink"
+      appGlass="primary"
+      class="rounded-full px-6 py-3 font-semibold shadow-lift transition hover:scale-[1.02] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink"
     >
       Join
     </button>

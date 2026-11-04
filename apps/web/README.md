@@ -31,7 +31,7 @@ the page connects to it on load.
 | Route       | Page                  | What it does |
 | ----------- | --------------------- | ------------ |
 | `/`         | `home/home-page`      | **Create room**: asks the API for a room (`POST /api/rooms`) and goes to it |
-| `/room/:id` | `room/room-page`      | The room: checks it exists ("Room not found" otherwise), asks for your name, then the room: a side panel (`room/room-panel`: who is in, theme) and the chat, which opens with a card holding the link to share (`room/copy-link` also sits in its header); on phones the panel replaces the chat |
+| `/room/:id` | `room/room-page`      | The room: checks it exists ("Room not found" otherwise), asks for your name, then `room/room-chat`: a side panel (`room/room-panel`: who is in, theme) and the chat, with its header and composer floating over the messages; it opens with a card holding the link to share, and every `room/copy-link` button shows a "Link copied" notice; on phones the panel replaces the chat |
 
 | `/design`   | `design/design-board` | Development only: the design board (see [Design board](#design-board)) |
 
@@ -146,7 +146,8 @@ desktop (1280 × 800, scaled to fit) and mobile (390 × 844), each in light and
 dark, with a switch for the screen (home, room). Each frame is an `iframe` of
 `/design/frame?screen=…&theme=…`, so it has its own theme, its own liquid glass
 and a real viewport width. Visual changes are tried here first and moved into
-the app once approved; screens reuse the app's components wherever they exist.
+the app once approved; screens reuse the app's components (the room is
+`room/room-chat` fed with sample events), so the board never drifts from the app.
 
 It exists only in development: the `DESIGN` build constant (`define` in
 `angular.json`) is `true` in the development configuration and `false`

@@ -1,6 +1,7 @@
 import { Component, ElementRef, afterRenderEffect, computed, input, viewChild } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { LucideHourglass, LucideShieldCheck } from '@lucide/angular';
+import { LucideCopy, LucideHourglass, LucideShieldCheck } from '@lucide/angular';
+import { Glass } from '../../glass/glass';
 import { CopyLink } from '../copy-link/copy-link';
 import { avatarHue } from '../avatar-hue';
 import { RoomEvent } from '../room-socket';
@@ -8,7 +9,7 @@ import { RoomEvent } from '../room-socket';
 const stickyDistance = 80;
 
 @Component({
-  imports: [CopyLink, DatePipe, LucideHourglass, LucideShieldCheck],
+  imports: [CopyLink, DatePipe, Glass, LucideCopy, LucideHourglass, LucideShieldCheck],
   selector: 'app-message-list',
   host: { class: 'flex min-h-0 flex-1 flex-col' },
   templateUrl: './message-list.html',

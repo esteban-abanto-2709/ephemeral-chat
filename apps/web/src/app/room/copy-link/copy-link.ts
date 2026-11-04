@@ -1,40 +1,29 @@
-import { Component, DOCUMENT, inject, input, signal } from '@angular/core';
-import { LucideCheck, LucideCopy } from '@lucide/angular';
+import { DOCUMENT, Directive, Service, inject, input, signal } from '@angular/core';
 
-@Component({
-  imports: [LucideCheck, LucideCopy],
-  selector: 'app-copy-link',
-  template: `
-    <button
-      type="button"
-      class="flex h-10 shrink-0 items-center justify-center gap-2 rounded-full text-sm font-medium text-accent-ink transition hover:bg-glass-strong focus-visible:outline-2 focus-visible:outline-accent-ink"
-      [class.px-4]="labelled()"
-      [class.w-10]="!labelled()"
-      [attr.aria-label]="labelled() ? null : copied() ? 'Link copied' : 'Copy link'"
-      (click)="copy()"
-    >
-      @if (copied()) {
-        <svg lucideCheck class="size-4" aria-hidden="true"></svg>
-      } @else {
-        <svg lucideCopy class="size-4" aria-hidden="true"></svg>
-      }
-      @if (labelled()) {
-        {{ copied() ? 'Copied' : 'Copy link' }}
-      }
-    </button>
-  `,
+@Service()
+export class CopyNotice {
+  private readonly _visible = signal(false);
+  readonly visible = this._visible.asReadonly();
+  private timer?: ReturnType<typeof setTimeout>;
+
+  show(): void {
+    this._visible.set(true);
+    clearTimeout(this.timer);
+    this.timer = setTimeout(() => this._visible.set(false), 2000);
+  }
+}
+
+@Directive({
+  selector: 'button[appCopyLink]',
+  host: { type: 'button', '(click)': 'copy()' },
 })
 export class CopyLink {
-  readonly link = input.required<string>();
-  readonly labelled = input(false);
+  readonly appCopyLink = input.required<string>();
 
-  protected readonly copied = signal(false);
+  private readonly notice = inject(CopyNotice);
   private readonly document = inject(DOCUMENT);
 
   protected copy(): void {
-    this.document.defaultView?.navigator.clipboard.writeText(this.link()).then(() => {
-      this.copied.set(true);
-      setTimeout(() => this.copied.set(false), 2000);
-    });
+    this.document.defaultView?.navigator.clipboard.writeText(this.appCopyLink()).then(() => this.notice.show());
   }
 }

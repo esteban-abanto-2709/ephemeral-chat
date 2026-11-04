@@ -55,11 +55,12 @@ Each version is a milestone. When all its work is done, it gets a git tag
 |---|---|---|
 | v0.1 | The core | The whole user journey above, deployed |
 | v0.2 | Glass | Visual redesign: WhatsApp Web layout, liquid glass, light and dark themes |
-| v0.3 | Comfort | Typing indicator |
-| v0.4 | Media | Images, voice messages, stickers |
-| v0.5 | Privacy | End-to-end encryption |
+| v0.3 | Comfort | Clearer room design, mobile keyboard handling, installable app (PWA), typing indicator |
+| v0.4 | Rooms | Several chats at once |
+| v0.5 | Media | Images, voice messages, stickers |
+| v0.6 | Privacy | End-to-end encryption |
 
-v0.3 to v0.5 are ideas in the [wishlist](./logbook/wishlist.md) until they
+v0.4 to v0.6 are ideas in the [wishlist](./logbook/wishlist.md) until they
 are committed.
 
 **Deploy early.** The app is on Render from the first steps, not at the end,
