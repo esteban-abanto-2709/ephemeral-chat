@@ -1,8 +1,15 @@
-import { Component, signal } from '@angular/core';
-import { LucideSendHorizontal, LucideUsers } from '@lucide/angular';
+import { Component, DOCUMENT, inject, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
+import {
+  LucideCheck,
+  LucideCopy,
+  LucideHourglass,
+  LucideSendHorizontal,
+  LucideShieldCheck,
+  LucideUsers,
+} from '@lucide/angular';
 import { Glass } from '../glass/glass';
-import { CopyLink } from '../room/copy-link/copy-link';
-import { MessageList } from '../room/message-list/message-list';
+import { avatarHue } from '../room/avatar-hue';
 import { RoomPanel } from '../room/room-panel/room-panel';
 import { RoomEvent } from '../room/room-socket';
 
@@ -25,14 +32,45 @@ const events: RoomEvent[] = [
 ];
 
 @Component({
-  imports: [CopyLink, Glass, LucideSendHorizontal, LucideUsers, MessageList, RoomPanel],
+  imports: [
+    DatePipe,
+    Glass,
+    LucideCheck,
+    LucideCopy,
+    LucideHourglass,
+    LucideSendHorizontal,
+    LucideShieldCheck,
+    LucideUsers,
+    RoomPanel,
+  ],
   selector: 'app-design-room',
   templateUrl: './design-room.html',
 })
 export class DesignRoom {
-  protected readonly events = events;
+  protected readonly avatarHue = avatarHue;
+  protected readonly items = events.map((event, index) => {
+    const previous = events[index - 1];
+    const name = event.type === 'error' ? '' : event.name;
+    return {
+      event,
+      own: event.type === 'message' && name === 'Sam',
+      first: !(event.type === 'message' && previous?.type === 'message' && previous.name === name),
+    };
+  });
   protected readonly members = members;
   protected readonly me = 'Sam';
   protected readonly link = 'https://ephemeral.chat/room/4g6uAftAF4ic8F0W';
   protected readonly panelOpen = signal(false);
+  protected readonly copied = signal(false);
+  protected readonly draft = signal('');
+  private readonly document = inject(DOCUMENT);
+  private timer = 0;
+
+  protected copy(): void {
+    this.document.defaultView?.navigator.clipboard.writeText(this.link).then(() => {
+      this.copied.set(true);
+      clearTimeout(this.timer);
+      this.timer = window.setTimeout(() => this.copied.set(false), 2000);
+    });
+  }
 }

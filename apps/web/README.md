@@ -119,7 +119,7 @@ in the browser (a preference, never chat data). Panels use the `glass`
 utility over a fixed abstract background; with reduced transparency they turn
 solid.
 
-Each glass piece names its style: `appGlass="header"`, `appGlass="bubbleTheirs"`
+Each glass piece names its style: `appGlass="header"`, `appGlass="bubble"`
 (plain `appGlass` is `panel`). The styles live in `glass/glass-styles.ts`, one
 per piece, either `liquid` (tint, blur, refraction, edge thickness, edge light,
 border) or `frosted` (fill, blur, saturation, border); tint, fill and border

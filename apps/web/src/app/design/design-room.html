@@ -1,9 +1,9 @@
-<div class="flex h-dvh gap-3 p-3 md:gap-4 md:p-4">
+<div class="flex h-dvh md:gap-4 md:p-4">
   <app-room-panel
     appGlass
     role="complementary"
     aria-label="Room"
-    class="min-w-0 flex-1 flex-col gap-5 rounded-3xl p-5 md:flex md:w-72 md:flex-none"
+    class="m-2 min-w-0 flex-1 flex-col gap-5 rounded-3xl p-5 md:m-0 md:flex md:w-72 md:flex-none"
     [class.flex]="panelOpen()"
     [class.hidden]="!panelOpen()"
     [members]="members"
@@ -11,21 +11,26 @@
     (closed)="panelOpen.set(false)"
   />
 
-  <main
-    appGlass
-    class="min-w-0 flex-1 flex-col overflow-hidden rounded-3xl md:flex"
-    [class.flex]="!panelOpen()"
-    [class.hidden]="panelOpen()"
-  >
-    <header class="flex items-center gap-3 border-b border-edge px-5 py-4">
+  <main class="relative min-w-0 flex-1 flex-col md:flex" [class.flex]="!panelOpen()" [class.hidden]="panelOpen()">
+    <header
+      appGlass="header"
+      class="absolute inset-x-2 top-[calc(env(safe-area-inset-top)+0.5rem)] z-10 flex items-center gap-1 rounded-2xl py-1 pr-1 pl-4 md:inset-x-0 md:top-0"
+    >
       <div class="min-w-0 flex-1">
-        <h1 class="font-semibold">Private room</h1>
-        <p class="flex items-center gap-2 text-xs text-ink-soft">
-          <span class="size-2 shrink-0 rounded-full bg-accent-ink" aria-hidden="true"></span>
-          <span>Connected</span>
+        <h1 class="text-sm font-semibold">Private room</h1>
+        <p class="flex items-center gap-1.5 text-xs text-ink-soft">
+          <span class="size-1.5 shrink-0 rounded-full bg-accent-ink" aria-hidden="true"></span>
+          Connected
         </p>
       </div>
-      <app-copy-link [link]="link" />
+      <button
+        type="button"
+        class="grid size-10 place-items-center rounded-full text-accent-ink transition hover:bg-glass-strong"
+        aria-label="Copy room link"
+        (click)="copy()"
+      >
+        <svg lucideCopy class="size-5" aria-hidden="true"></svg>
+      </button>
       <button
         type="button"
         class="grid size-10 place-items-center rounded-full text-ink-soft transition hover:bg-glass-strong md:hidden"
@@ -36,20 +41,102 @@
       </button>
     </header>
 
-    <app-message-list [events]="events" [me]="me" [link]="link" />
+    <div class="scroll-glass relative flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-3 pt-[calc(env(safe-area-inset-top)+4.5rem)] pb-[calc(env(safe-area-inset-bottom)+4.5rem)] md:px-4 md:pt-16 md:pb-16">
+      <section
+        appGlass="bubble"
+        class="mx-auto flex w-full max-w-sm flex-col items-center gap-3 rounded-3xl px-5 py-6 text-center"
+        aria-label="About this room"
+      >
+        <span
+          class="grid size-14 place-items-center rounded-2xl border border-edge bg-glass-strong/50 text-accent-ink"
+          aria-hidden="true"
+        >
+          <svg lucideHourglass class="size-7"></svg>
+        </span>
+        <div class="flex flex-col gap-1">
+          <h2 class="font-semibold">Private room</h2>
+          <p class="text-sm text-ink-soft">Anyone with this link can join.</p>
+        </div>
+        <button
+          type="button"
+          class="flex w-full items-center gap-2 rounded-full border border-edge bg-glass-strong/50 py-2.5 pr-4 pl-4 text-sm transition hover:bg-glass-strong focus-visible:outline-2 focus-visible:outline-accent-ink"
+          aria-label="Copy room link"
+          (click)="copy()"
+        >
+          <span class="min-w-0 flex-1 truncate text-left">{{ link }}</span>
+          <svg lucideCopy class="size-4 shrink-0 text-accent-ink" aria-hidden="true"></svg>
+        </button>
+        <p class="flex items-start gap-1.5 text-xs text-ink-soft">
+          <svg lucideShieldCheck class="mt-px size-3.5 shrink-0" aria-hidden="true"></svg>
+          Nothing is stored. Messages vanish when everyone leaves.
+        </p>
+      </section>
 
-    <form class="flex items-center gap-2 p-3 md:p-4" (submit)="$event.preventDefault()">
+      <ul class="flex flex-col gap-1" aria-label="Messages">
+        @for (item of items; track $index) {
+          @let event = item.event;
+          @if (event.type === 'message') {
+            @if (item.own) {
+              <li
+                appGlass="bubble"
+                class="max-w-[80%] self-end rounded-2xl rounded-br-md px-3.5 py-2"
+                [class.mt-2]="item.first"
+              >
+                <span class="sr-only">You:</span>
+                <span class="wrap-anywhere whitespace-pre-wrap">{{ event.text }}</span>
+                &ngsp;<time class="ml-1.5 align-bottom text-[0.6875rem] text-ink-soft">{{ event.at | date: 'HH:mm' }}</time>
+              </li>
+            } @else {
+              <li
+                appGlass="bubble"
+                class="max-w-[80%] self-start rounded-2xl rounded-bl-md px-3.5 py-2"
+                [class.mt-2]="item.first"
+              >
+                <p class="person-ink text-xs font-semibold" [class.sr-only]="!item.first" [style.--hue]="avatarHue(event.name)">
+                  {{ event.name }}
+                </p>
+                <span class="wrap-anywhere whitespace-pre-wrap">{{ event.text }}</span>
+                &ngsp;<time class="ml-1.5 align-bottom text-[0.6875rem] text-ink-soft">{{ event.at | date: 'HH:mm' }}</time>
+              </li>
+            }
+          } @else if (event.type !== 'error') {
+            <li appGlass="bubble" class="my-2 self-center rounded-full px-3 py-1 text-xs text-ink-soft">
+              {{ event.name }} {{ event.type }}
+            </li>
+          }
+        }
+      </ul>
+    </div>
+
+    @if (copied()) {
+      <p
+        appGlass="bubble"
+        role="status"
+        class="absolute top-[calc(env(safe-area-inset-top)+4.5rem)] left-1/2 z-20 flex -translate-x-1/2 animate-appear items-center gap-2 rounded-full px-4 py-2 text-sm font-medium motion-reduce:animate-none md:top-16"
+      >
+        <svg lucideCheck class="size-4 text-accent-ink" aria-hidden="true"></svg>
+        Link copied
+      </p>
+    }
+
+    <form
+      appGlass="composer"
+      class="absolute inset-x-2 bottom-[calc(env(safe-area-inset-bottom)+0.5rem)] z-10 flex items-center gap-2 rounded-full py-1 pr-1 pl-5 md:inset-x-0 md:bottom-0"
+      (submit)="$event.preventDefault()"
+    >
       <label for="message" class="sr-only">Message</label>
       <input
         id="message"
-        appGlass="composer"
-        class="min-w-0 flex-1 rounded-full px-5 py-3 placeholder:text-ink-soft focus-visible:outline-2 focus-visible:outline-accent-ink"
+        class="min-w-0 flex-1 bg-transparent py-2.5 outline-none placeholder:text-ink-soft"
         placeholder="Write a message"
         autocomplete="off"
+        #message
+        (input)="draft.set(message.value)"
       />
       <button
         type="submit"
-        class="grid size-12 shrink-0 place-items-center rounded-full bg-accent text-on-accent shadow-lift transition hover:scale-105"
+        class="grid size-10 shrink-0 place-items-center rounded-full text-ink-soft transition hover:scale-110"
+        [class.text-ink]="draft()"
         aria-label="Send"
       >
         <svg lucideSendHorizontal class="size-5" aria-hidden="true"></svg>

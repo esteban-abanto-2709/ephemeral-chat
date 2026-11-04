@@ -16,6 +16,7 @@ const mix = (color: string, amount: number) =>
     '[style.--glass-border]': 'border()',
     '[style.--glass-blur]': 'blur()',
     '[style.--glass-saturate]': 'saturate()',
+    '[style.--lens-blur]': 'lensBlur()',
   },
 })
 export class Glass {
@@ -24,10 +25,9 @@ export class Glass {
   private readonly theme = inject(Theme);
   protected readonly style = computed<GlassStyle>(() => glassStyles[this.appGlass() || 'panel']);
 
-  private readonly base = computed(() => {
-    const style = this.style();
-    return style.accent ? 'var(--accent)' : style.kind === 'liquid' ? 'var(--glass-base)' : 'var(--frost-base)';
-  });
+  private readonly base = computed(() =>
+    this.style().kind === 'liquid' ? 'var(--glass-base)' : 'var(--frost-base)',
+  );
   private readonly amount = computed(() => {
     const style = this.style();
     return (style.kind === 'liquid' ? style.tint : style.fill)[this.theme.mode()];
@@ -40,6 +40,10 @@ export class Glass {
   protected readonly blur = computed(() => {
     const style = this.style();
     return style.kind === 'liquid' ? '24px' : `${style.blur}px`;
+  });
+  protected readonly lensBlur = computed(() => {
+    const style = this.style();
+    return style.kind === 'liquid' ? `${style.blur * 2}px` : null;
   });
   protected readonly saturate = computed(() => {
     const style = this.style();

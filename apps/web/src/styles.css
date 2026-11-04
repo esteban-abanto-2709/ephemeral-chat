@@ -168,8 +168,8 @@
 
 .liquid .lens {
   background-color: var(--glass-fill);
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
+  -webkit-backdrop-filter: blur(var(--lens-blur));
+  backdrop-filter: blur(var(--lens-blur));
 }
 
 html,

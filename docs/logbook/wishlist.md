@@ -36,3 +36,6 @@ A list of open rooms beside the chat, as in WhatsApp Web, to talk in more than o
 
 ## [WL-010] Liquid glass avatars
 Avatars drawn as small glass lenses instead of flat tinted circles. The WebGL layer draws up to 8 lenses and a room holds 50 people, so it needs another approach (one lens for the list, or CSS glass).
+
+## [WL-011] A logo that says "message"
+The hourglass says ephemeral but not chat; a mark that reads as a message that fades. Tried on `/design` first.

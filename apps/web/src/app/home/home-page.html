@@ -3,8 +3,8 @@
     <app-theme-toggle />
   </header>
 
-  <main class="flex flex-1 items-center justify-center py-6">
-    <section appGlass class="flex w-full max-w-md animate-appear flex-col items-center gap-6 rounded-[2rem] motion-reduce:animate-none px-6 py-10 text-center md:px-10">
+  <main class="flex flex-1 items-center justify-center px-3 py-6 md:px-0">
+    <section appGlass="card" class="flex w-full max-w-md animate-appear flex-col items-center gap-6 rounded-[2rem] motion-reduce:animate-none px-6 py-10 text-center md:px-10">
       <span
         class="grid size-14 place-items-center rounded-2xl border border-edge bg-glass-strong text-accent-ink"
         aria-hidden="true"
@@ -18,7 +18,8 @@
       <div class="flex flex-col items-center gap-3">
         <button
           type="button"
-          class="flex items-center gap-2 rounded-full bg-accent px-7 py-3 font-medium text-on-accent shadow-lift transition hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink disabled:hover:scale-100"
+          appGlass="primary"
+          class="flex items-center gap-2 rounded-full px-7 py-3 font-semibold shadow-lift transition hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink disabled:hover:scale-100"
           [disabled]="state() === 'creating'"
           [attr.aria-busy]="state() === 'creating'"
           (click)="createRoom()"

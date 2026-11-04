@@ -4,7 +4,7 @@ import { Glass } from './glass';
 
 @Component({
   imports: [Glass],
-  template: `<div appGlass></div><p appGlass="bubbleTheirs"></p>`,
+  template: `<div appGlass></div><p appGlass="bubble"></p>`,
 })
 class Host {}
 
@@ -16,6 +16,6 @@ describe('Glass', () => {
 
     expect(panel.classList).toContain('glass');
     expect(bubble.classList).toContain('frost');
-    expect(bubble.style.getPropertyValue('--glass-blur')).toBe('16px');
+    expect(bubble.style.getPropertyValue('--glass-blur')).toBe('6px');
   });
 });
