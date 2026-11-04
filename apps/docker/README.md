@@ -7,9 +7,15 @@ Everything Docker-related lives here; the apps have no Dockerfile of their own.
 apps/docker/
 ├── Dockerfile               # builds web + api into one image
 ├── Dockerfile.dockerignore  # ignore file for that Dockerfile
-├── compose.yaml             # runs the production image locally
+├── compose.yaml             # what every environment shares: container, restart, healthcheck
+├── compose.override.yaml    # development: builds from source, publishes 3000, optional tunnel
 └── README.md
 ```
+
+A plain `docker compose …` merges `compose.yaml` with `compose.override.yaml`
+on its own, so on your machine it is always development. Production never
+reads either file: Render builds `Dockerfile` directly (see below), so nothing
+in the override, the tunnel included, can reach it.
 
 ## Quick start
 
@@ -22,6 +28,25 @@ docker compose up -d --build
 | ---------------- | ---------------------------------- |
 | `ephemeral-chat` | `http://localhost:3000`            |
 |                  | `http://localhost:3000/api/health` |
+
+## Testing on a phone
+
+```bash
+docker compose --profile tunnel up -d --build
+docker compose logs tunnel | grep trycloudflare.com
+```
+
+The `tunnel` profile adds `ephemeral-chat-tunnel`, a Cloudflare quick tunnel:
+a public `https://….trycloudflare.com` URL to the app, no account or token.
+The URL changes every time the tunnel starts. `https` matters on a phone:
+copying the link and installing the app need a secure origin.
+
+The tunnel has no restart policy, so it never comes back on its own after a
+reboot; anyone with the URL reaches your machine while it runs. Stop it with
+`docker compose --profile tunnel down`.
+
+On the same Wi-Fi, `http://<your PC's IPv4>:3000` also works, without copying
+or installing.
 
 For day-to-day development you don't need Docker: run the API with `go run .`
 and the web with `pnpm start` (see each app's README). Compose is for trying
@@ -61,7 +86,7 @@ wake together on the free tier.
 docker compose up -d --build   # build and start
 docker compose ps              # status and health
 docker compose logs -f app     # follow the logs
-docker compose down            # stop and remove the container
+docker compose --profile tunnel down  # stop everything, tunnel included
 docker images ephemeral-chat-* # image size
 ```
 

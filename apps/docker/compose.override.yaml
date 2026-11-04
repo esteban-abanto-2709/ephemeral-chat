@@ -1,0 +1,17 @@
+services:
+  app:
+    build:
+      context: ../..
+      dockerfile: apps/docker/Dockerfile
+    ports:
+      - "3000:8080"
+
+  # Cloudflare quick tunnel: a temporary https URL for testing on phones
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: ephemeral-chat-tunnel
+    profiles: [tunnel]
+    command: tunnel --no-autoupdate --url http://app:8080
+    depends_on:
+      app:
+        condition: service_healthy

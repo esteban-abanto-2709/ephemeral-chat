@@ -3,13 +3,8 @@ name: ephemeral-chat
 services:
   # Go API serving the Angular build (same image as production)
   app:
-    build:
-      context: ../..
-      dockerfile: apps/docker/Dockerfile
     container_name: ephemeral-chat
     restart: unless-stopped
-    ports:
-      - "3000:8080"
     healthcheck:
       test: [ "CMD-SHELL", "wget -qO /dev/null http://127.0.0.1:8080/api/health || exit 1" ]
       interval: 30s
