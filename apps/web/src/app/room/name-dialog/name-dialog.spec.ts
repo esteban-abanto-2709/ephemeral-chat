@@ -2,9 +2,8 @@ import { TestBed } from '@angular/core/testing';
 import { NameDialog } from './name-dialog';
 
 describe('NameDialog', () => {
-  async function render(taken: string | null = null) {
+  async function render() {
     const fixture = TestBed.createComponent(NameDialog);
-    fixture.componentRef.setInput('taken', taken);
     const chosen: string[] = [];
     fixture.componentInstance.chosen.subscribe((name) => chosen.push(name));
     await fixture.whenStable();
@@ -24,11 +23,6 @@ describe('NameDialog', () => {
   it('opens as soon as it appears', async () => {
     const { dialog } = await render();
     expect(dialog.open).toBe(true);
-  });
-
-  it('says when the previous name was taken', async () => {
-    const { page } = await render('Juan');
-    expect(page.querySelector('[role="alert"]')?.textContent).toContain('Juan is already in this room');
   });
 
   it('emits the trimmed name and closes', async () => {

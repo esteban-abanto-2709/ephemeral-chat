@@ -10,7 +10,6 @@ export const nameMaxLength = 24;
   templateUrl: './name-dialog.html',
 })
 export class NameDialog {
-  readonly taken = input<string | null>(null);
   readonly heading = input("What's your name?");
   readonly label = input('Name');
   readonly placeholder = input('Ana');

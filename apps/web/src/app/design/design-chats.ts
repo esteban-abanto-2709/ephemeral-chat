@@ -34,21 +34,25 @@ interface ChatPreview {
 
 const start = new Date(2026, 10, 4, 14, 2).getTime();
 const minute = 60_000;
+const ana = { id: 'ana', name: 'Ana' };
+const juan = { id: 'juan', name: 'Juan' };
+const sam = { id: 'sam', name: 'Sam' };
+const luis = { id: 'luis', name: 'Luis' };
 
 const groupEvents: RoomEvent[] = [
-  { type: 'joined', name: 'Ana', members: ['Ana'], at: start },
-  { type: 'joined', name: 'Juan', members: ['Ana', 'Juan'], at: start },
-  { type: 'joined', name: 'Sam', members: ['Ana', 'Juan', 'Sam'], at: start },
-  { type: 'message', name: 'Ana', text: 'Saturday at 9, the usual place?', at: start + minute },
-  { type: 'message', name: 'Ana', text: 'I can bring the tent', at: start + minute },
-  { type: 'message', name: 'Juan', text: 'Works for me', at: start + 2 * minute },
-  { type: 'message', name: 'Sam', text: 'Got it, I am in', at: start + 3 * minute },
+  { type: 'joined', ...ana, members: [ana], at: start },
+  { type: 'joined', ...juan, members: [ana, juan], at: start },
+  { type: 'joined', ...sam, members: [ana, juan, sam], at: start },
+  { type: 'message', ...ana, own: false, text: 'Saturday at 9, the usual place?', at: start + minute },
+  { type: 'message', ...ana, own: false, text: 'I can bring the tent', at: start + minute },
+  { type: 'message', ...juan, own: false, text: 'Works for me', at: start + 2 * minute },
+  { type: 'message', ...sam, own: true, text: 'Got it, I am in', at: start + 3 * minute },
 ];
 
 const privateEvents: RoomEvent[] = [
-  { type: 'message', name: 'Luis', text: 'Hey, got your id from the group', at: start + minute },
-  { type: 'message', name: 'Sam', text: 'Nice, this one is just us two', at: start + 2 * minute },
-  { type: 'message', name: 'Luis', text: 'And it is gone once we close the tab', at: start + 2 * minute },
+  { type: 'message', ...luis, own: false, text: 'Hey, got your id from the group', at: start + minute },
+  { type: 'message', ...sam, own: true, text: 'Nice, this one is just us two', at: start + 2 * minute },
+  { type: 'message', ...luis, own: false, text: 'And it is gone once we close the tab', at: start + 2 * minute },
 ];
 
 const chats: ChatPreview[] = [
@@ -108,7 +112,7 @@ export class DesignChats {
       return groupEvents;
     }
     return this.left()
-      ? [...privateEvents, { type: 'left', name: 'Luis', members: ['Sam'], at: start + 5 * minute } as RoomEvent]
+      ? [...privateEvents, { type: 'left', ...luis, members: [sam], at: start + 5 * minute } as RoomEvent]
       : privateEvents;
   });
 }

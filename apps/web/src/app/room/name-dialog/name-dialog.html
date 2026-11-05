@@ -20,9 +20,6 @@
         autocomplete="off"
         [formField]="nameForm.name"
       />
-      @if (taken(); as name) {
-        <p class="text-sm text-danger-ink" role="alert">{{ name }} is already in this room. Pick another name.</p>
-      }
       @if (nameForm.name().touched() && nameForm.name().invalid()) {
         <p class="text-sm text-danger-ink" role="alert">Enter a name, up to {{ maxLength }} characters.</p>
       }

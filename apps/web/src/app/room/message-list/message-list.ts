@@ -27,22 +27,16 @@ const stickyDistance = 80;
 })
 export class MessageList {
   readonly events = input.required<RoomEvent[]>();
-  readonly me = input.required<string>();
   readonly link = input.required<string>();
 
   protected readonly avatarHue = avatarHue;
   protected readonly items = computed(() =>
     this.events().map((event, index, events) => {
       const previous = events[index - 1];
-      const name = event.type === 'error' ? '' : event.name;
       return {
         event,
-        own: event.type === 'message' && name === this.me(),
-        first: !(
-          event.type === 'message' &&
-          previous?.type === 'message' &&
-          previous.name === name
-        ),
+        own: event.type === 'message' && event.own,
+        first: !(event.type === 'message' && previous?.type === 'message' && previous.id === event.id),
       };
     }),
   );

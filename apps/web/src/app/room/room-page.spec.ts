@@ -10,11 +10,14 @@ describe('RoomPage', () => {
   const sent: string[] = [];
   const fakeSocket = {
     status: signal<SocketStatus>('open'),
-    events: signal<RoomEvent[]>([{ type: 'message', name: 'Ana', text: 'hola', at: 0 }]),
-    members: signal(['Juan', 'Luis']),
+    events: signal<RoomEvent[]>([{ type: 'message', id: 'a', name: 'Ana', text: 'hola', own: false, at: 0 }]),
+    members: signal([
+      { id: 'j', name: 'Juan' },
+      { id: 'l', name: 'Luis' },
+    ]),
+    me: signal('j'),
     typing: signal<string[]>([]),
     sendTyping: vi.fn(),
-    nameTaken: signal(false),
     roomGone: signal(false),
     roomFull: signal(false),
     connect: vi.fn(),
@@ -25,7 +28,6 @@ describe('RoomPage', () => {
     sent.length = 0;
     fakeSocket.connect.mockClear();
     fakeSocket.status.set('open');
-    fakeSocket.nameTaken.set(false);
     fakeSocket.roomGone.set(false);
     fakeSocket.roomFull.set(false);
     await TestBed.configureTestingModule({
@@ -96,17 +98,6 @@ describe('RoomPage', () => {
     expect(page.querySelector('dialog')).toBeNull();
     expect(page.querySelector('[aria-label="People in the room"]')?.textContent).toContain('you');
     expect(fakeSocket.connect).toHaveBeenCalledWith('abc', 'Juan');
-  });
-
-  it('asks again when the name is taken', async () => {
-    const { fixture, page } = await render();
-
-    fakeSocket.nameTaken.set(true);
-    await fixture.whenStable();
-
-    expect(page.querySelector('dialog')?.open).toBe(true);
-    expect(page.querySelector('[role="alert"]')?.textContent).toContain('Juan is already in this room');
-    expect(page.querySelector('#message')).toBeNull();
   });
 
   it('shows the connection status and the messages', async () => {

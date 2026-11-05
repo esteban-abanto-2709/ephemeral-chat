@@ -17,53 +17,54 @@ const (
 	MessagesPerSecond = 5
 	MaxMembers        = 50
 	TypingInterval    = 2 * time.Second
-	mailboxSize       = 16
 	emptyLifetime     = time.Minute
 )
 
 var (
-	ErrNameTaken = errors.New("name already taken in this room")
-	ErrRoomGone  = errors.New("room no longer exists")
-	ErrRoomFull  = errors.New("room is full")
+	ErrRoomGone = errors.New("room no longer exists")
+	ErrRoomFull = errors.New("room is full")
 )
+
+type Person struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
 
 type Message struct {
 	Type    string   `json:"type"`
+	Room    string   `json:"room,omitempty"`
+	ID      string   `json:"id,omitempty"`
 	Name    string   `json:"name,omitempty"`
 	Text    string   `json:"text,omitempty"`
-	Members []string `json:"members,omitempty"`
+	Code    string   `json:"code,omitempty"`
+	Members []Person `json:"members,omitempty"`
 }
 
 type Member struct {
-	Name    string
-	mailbox chan Message
+	client  *Client
 	limiter *rate.Limiter
 	typing  *rate.Limiter
 }
 
-func (m *Member) Messages() <-chan Message {
-	return m.mailbox
-}
-
 type Room struct {
+	ID      string
 	mu      sync.Mutex
 	members []*Member
 	closed  bool
 	expiry  *time.Timer
 }
 
-func newRoom(onExpire func()) *Room {
-	return &Room{expiry: time.AfterFunc(emptyLifetime, onExpire)}
+func newRoom(id string, onExpire func()) *Room {
+	return &Room{ID: id, expiry: time.AfterFunc(emptyLifetime, onExpire)}
 }
 
 func ValidName(name string) bool {
 	return strings.TrimSpace(name) != "" && utf8.RuneCountInString(name) <= NameMaxLength
 }
 
-func (r *Room) Join(name string) (*Member, error) {
+func (r *Room) Join(client *Client) (*Member, error) {
 	member := &Member{
-		Name:    name,
-		mailbox: make(chan Message, mailboxSize),
+		client:  client,
 		limiter: rate.NewLimiter(MessagesPerSecond, MessagesPerSecond),
 		typing:  rate.NewLimiter(rate.Every(TypingInterval), 1),
 	}
@@ -76,13 +77,8 @@ func (r *Room) Join(name string) (*Member, error) {
 	if len(r.members) >= MaxMembers {
 		return nil, ErrRoomFull
 	}
-	for _, other := range r.members {
-		if strings.EqualFold(other.Name, name) {
-			return nil, ErrNameTaken
-		}
-	}
 	r.members = append(r.members, member)
-	r.broadcast(Message{Type: "joined", Name: name, Members: r.names()})
+	r.broadcast(Message{Type: "joined", ID: client.ID, Name: client.Name, Members: r.people()})
 	return member, nil
 }
 
@@ -98,11 +94,16 @@ func (r *Room) Send(from *Member, text string) {
 	}
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	if !from.limiter.Allow() {
-		r.deliver(from, Message{Type: "error", Text: "Slow down: up to 5 messages per second."})
+	if !slices.Contains(r.members, from) {
 		return
 	}
-	r.broadcast(Message{Type: "message", Name: from.Name, Text: text})
+	if !from.limiter.Allow() {
+		if !from.client.push(Message{Type: "error", Room: r.ID, Text: "Slow down: up to 5 messages per second."}) {
+			r.drop(from)
+		}
+		return
+	}
+	r.broadcast(Message{Type: "message", ID: from.client.ID, Name: from.client.Name, Text: text})
 }
 
 func (r *Room) Typing(from *Member) {
@@ -111,41 +112,30 @@ func (r *Room) Typing(from *Member) {
 	if !slices.Contains(r.members, from) || !from.typing.Allow() {
 		return
 	}
-	message := Message{Type: "typing", Name: from.Name}
+	message := Message{Type: "typing", Room: r.ID, ID: from.client.ID, Name: from.client.Name}
 	for _, member := range r.members {
-		if member == from {
-			continue
+		if member != from {
+			member.client.push(message)
 		}
-		select {
-		case member.mailbox <- message:
-		default:
-		}
-	}
-}
-
-func (r *Room) deliver(member *Member, message Message) {
-	if !slices.Contains(r.members, member) {
-		return
-	}
-	select {
-	case member.mailbox <- message:
-	default:
-		r.remove(member)
 	}
 }
 
 func (r *Room) broadcast(message Message) {
+	message.Room = r.ID
 	var slow []*Member
 	for _, member := range r.members {
-		select {
-		case member.mailbox <- message:
-		default:
+		if !member.client.push(message) {
 			slow = append(slow, member)
 		}
 	}
 	for _, member := range slow {
-		r.remove(member)
+		r.drop(member)
 	}
+}
+
+func (r *Room) drop(member *Member) {
+	member.client.disconnect()
+	r.remove(member)
 }
 
 func (r *Room) remove(member *Member) {
@@ -154,11 +144,10 @@ func (r *Room) remove(member *Member) {
 		return
 	}
 	r.members = slices.Delete(r.members, i, i+1)
-	close(member.mailbox)
 	if len(r.members) == 0 {
 		r.expiry.Reset(emptyLifetime)
 	}
-	r.broadcast(Message{Type: "left", Name: member.Name, Members: r.names()})
+	r.broadcast(Message{Type: "left", ID: member.client.ID, Name: member.client.Name, Members: r.people()})
 }
 
 func (r *Room) close() bool {
@@ -171,10 +160,10 @@ func (r *Room) close() bool {
 	return true
 }
 
-func (r *Room) names() []string {
-	names := make([]string, len(r.members))
+func (r *Room) people() []Person {
+	people := make([]Person, len(r.members))
 	for i, member := range r.members {
-		names[i] = member.Name
+		people[i] = member.client.person()
 	}
-	return names
+	return people
 }

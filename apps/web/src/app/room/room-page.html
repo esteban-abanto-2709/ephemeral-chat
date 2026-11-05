@@ -9,12 +9,12 @@
     This room already has 50 people. Try again when someone leaves.
   </app-room-notice>
 } @else if (room.status() === 'resolved' || room.status() === 'reloading') {
-  @if (!socket.nameTaken() && name(); as me) {
+  @if (name()) {
     <app-room-chat
       [status]="socket.status()"
       [events]="socket.events()"
       [members]="socket.members()"
-      [me]="me"
+      [me]="socket.me()"
       [link]="link()"
       [typing]="socket.typing()"
       (typed)="socket.sendTyping()"
@@ -22,6 +22,6 @@
       (reconnect)="reconnect()"
     />
   } @else {
-    <app-name-dialog [taken]="socket.nameTaken() ? name() : null" (chosen)="join($event)" />
+    <app-name-dialog (chosen)="join($event)" />
   }
 }

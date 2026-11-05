@@ -70,7 +70,7 @@ func TestEmptyRoomIsDroppedAfterAMinute(t *testing.T) {
 
 		time.Sleep(time.Second)
 		assertExists(t, rooms, id, false)
-		if _, err := room.Join("Ana"); !errors.Is(err, ErrRoomGone) {
+		if _, err := room.Join(NewClient("Ana")); !errors.Is(err, ErrRoomGone) {
 			t.Errorf("joining a dropped room: error = %v, want ErrRoomGone", err)
 		}
 	})

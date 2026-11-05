@@ -11,7 +11,7 @@ import { Glass } from '../../glass/glass';
 import { CopyLink, CopyNotice } from '../copy-link/copy-link';
 import { MessageList } from '../message-list/message-list';
 import { RoomPanel } from '../room-panel/room-panel';
-import { RoomEvent, SocketStatus } from '../room-socket';
+import { Person, RoomEvent, SocketStatus } from '../room-socket';
 import { VisibleViewport } from './visible-viewport';
 
 const messageMaxLength = 1000;
@@ -42,7 +42,7 @@ const statusLabels = {
 export class RoomChat {
   readonly status = input.required<SocketStatus>();
   readonly events = input.required<RoomEvent[]>();
-  readonly members = input.required<string[]>();
+  readonly members = input.required<Person[]>();
   readonly me = input.required<string>();
   readonly link = input.required<string>();
   readonly typing = input<string[]>([]);

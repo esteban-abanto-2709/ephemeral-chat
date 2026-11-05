@@ -19,16 +19,16 @@
 <section class="flex min-h-0 flex-col gap-3" aria-labelledby="members-title">
   <h2 id="members-title" class="text-xs text-ink-soft">In this room · {{ members().length }}</h2>
   <ul class="scroll-glass flex flex-col gap-3 overflow-y-auto" aria-label="People in the room">
-    @for (member of members(); track member) {
+    @for (member of members(); track member.id) {
       <li class="flex items-center gap-3 text-sm">
         <span
           class="avatar grid size-8 shrink-0 place-items-center rounded-full text-xs font-semibold"
-          [style.--hue]="avatarHue(member)"
+          [style.--hue]="avatarHue(member.name)"
           aria-hidden="true"
-          >{{ member[0].toUpperCase() }}</span
+          >{{ member.name[0].toUpperCase() }}</span
         >
-        <span class="truncate">{{ member }}</span>
-        @if (member === me()) {
+        <span class="truncate">{{ member.name }}</span>
+        @if (member.id === me()) {
           <span class="text-xs text-ink-soft">you</span>
         }
       </li>

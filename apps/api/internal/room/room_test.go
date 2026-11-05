@@ -10,9 +10,15 @@ import (
 	"time"
 )
 
+const roomID = "room-1"
+
+func newTestRoom() *Room {
+	return newRoom(roomID, func() {})
+}
+
 func join(t *testing.T, room *Room, name string) *Member {
 	t.Helper()
-	member, err := room.Join(name)
+	member, err := room.Join(NewClient(name))
 	if err != nil {
 		t.Fatalf("Join(%q): %v", name, err)
 	}
@@ -22,13 +28,10 @@ func join(t *testing.T, room *Room, name string) *Member {
 func receive(t *testing.T, member *Member) Message {
 	t.Helper()
 	select {
-	case message, ok := <-member.Messages():
-		if !ok {
-			t.Fatalf("%s's mailbox is closed", member.Name)
-		}
+	case message := <-member.client.Messages():
 		return message
 	default:
-		t.Fatalf("%s got nothing", member.Name)
+		t.Fatalf("%s got nothing", member.client.Name)
 		return Message{}
 	}
 }
@@ -36,72 +39,102 @@ func receive(t *testing.T, member *Member) Message {
 func expect(t *testing.T, member *Member, want Message) {
 	t.Helper()
 	if got := receive(t, member); !reflect.DeepEqual(got, want) {
-		t.Errorf("%s got %+v, want %+v", member.Name, got, want)
+		t.Errorf("%s got %+v, want %+v", member.client.Name, got, want)
 	}
 }
 
 func assertEmpty(t *testing.T, member *Member) {
 	t.Helper()
 	select {
-	case message := <-member.Messages():
-		t.Fatalf("%s got %+v, want nothing", member.Name, message)
+	case message := <-member.client.Messages():
+		t.Fatalf("%s got %+v, want nothing", member.client.Name, message)
 	default:
+	}
+}
+
+func assertConnected(t *testing.T, member *Member, want bool) {
+	t.Helper()
+	select {
+	case <-member.client.Gone():
+		if want {
+			t.Errorf("%s was disconnected", member.client.Name)
+		}
+	default:
+		if !want {
+			t.Errorf("%s is still connected", member.client.Name)
+		}
 	}
 }
 
 func drain(member *Member) {
 	for {
 		select {
-		case _, ok := <-member.Messages():
-			if !ok {
-				return
-			}
+		case <-member.client.Messages():
 		default:
 			return
 		}
 	}
 }
 
+func people(members ...*Member) []Person {
+	all := make([]Person, len(members))
+	for i, member := range members {
+		all[i] = member.client.person()
+	}
+	return all
+}
+
+func joined(who *Member, members ...*Member) Message {
+	return Message{Type: "joined", Room: roomID, ID: who.client.ID, Name: who.client.Name, Members: people(members...)}
+}
+
+func left(who *Member, members ...*Member) Message {
+	return Message{Type: "left", Room: roomID, ID: who.client.ID, Name: who.client.Name, Members: people(members...)}
+}
+
+func said(who *Member, text string) Message {
+	return Message{Type: "message", Room: roomID, ID: who.client.ID, Name: who.client.Name, Text: text}
+}
+
+func typing(who *Member) Message {
+	return Message{Type: "typing", Room: roomID, ID: who.client.ID, Name: who.client.Name}
+}
+
 func TestJoinAnnouncesTheNewcomerToEveryone(t *testing.T) {
-	room := newRoom(func() {})
+	room := newTestRoom()
 	juan := join(t, room, "Juan")
-	expect(t, juan, Message{Type: "joined", Name: "Juan", Members: []string{"Juan"}})
+	expect(t, juan, joined(juan, juan))
 
 	ana := join(t, room, "Ana")
-	want := Message{Type: "joined", Name: "Ana", Members: []string{"Juan", "Ana"}}
-	expect(t, juan, want)
-	expect(t, ana, want)
+	expect(t, juan, joined(ana, juan, ana))
+	expect(t, ana, joined(ana, juan, ana))
 }
 
 func TestLeaveAnnouncesWhoIsStillHere(t *testing.T) {
-	room := newRoom(func() {})
+	room := newTestRoom()
 	juan, ana, luis := join(t, room, "Juan"), join(t, room, "Ana"), join(t, room, "Luis")
 	drain(juan)
 	drain(luis)
 
 	room.Leave(ana)
 
-	want := Message{Type: "left", Name: "Ana", Members: []string{"Juan", "Luis"}}
-	expect(t, juan, want)
-	expect(t, luis, want)
+	expect(t, juan, left(ana, juan, luis))
+	expect(t, luis, left(ana, juan, luis))
 }
 
-func TestJoinRejectsANameAlreadyInTheRoom(t *testing.T) {
-	room := newRoom(func() {})
-	juan := join(t, room, "Juan")
-	drain(juan)
+func TestTwoPeopleMayShareAName(t *testing.T) {
+	room := newTestRoom()
+	first := join(t, room, "Juan")
+	second := join(t, room, "Juan")
 
-	if _, err := room.Join("jUAN"); !errors.Is(err, ErrNameTaken) {
-		t.Fatalf("Join(jUAN) error = %v, want ErrNameTaken", err)
+	if first.client.ID == second.client.ID {
+		t.Fatal("both got the same id")
 	}
-	assertEmpty(t, juan)
-
-	room.Leave(juan)
-	join(t, room, "Juan")
+	expect(t, second, joined(second, first, second))
 }
 
 func TestJoinRejectsOnceTheRoomIsFull(t *testing.T) {
-	room := newRoom(func() {})
+	room := newTestRoom()
 	members := make([]*Member, MaxMembers)
 	for i := range members {
 		members[i] = join(t, room, fmt.Sprint("Member ", i))
@@ -110,7 +143,7 @@ func TestJoinRejectsOnceTheRoomIsFull(t *testing.T) {
 		}
 	}
 
-	if _, err := room.Join("Late"); !errors.Is(err, ErrRoomFull) {
+	if _, err := room.Join(NewClient("Late")); !errors.Is(err, ErrRoomFull) {
 		t.Fatalf("Join on a full room: error = %v, want ErrRoomFull", err)
 	}
 
@@ -119,26 +152,25 @@ func TestJoinRejectsOnceTheRoomIsFull(t *testing.T) {
 }
 
 func TestSendReachesEveryMemberWithTheSenderName(t *testing.T) {
-	room := newRoom(func() {})
+	room := newTestRoom()
 	juan, ana := join(t, room, "Juan"), join(t, room, "Ana")
 	drain(juan)
 	drain(ana)
 
 	room.Send(juan, "hola")
 
-	want := Message{Type: "message", Name: "Juan", Text: "hola"}
-	expect(t, juan, want)
-	expect(t, ana, want)
+	expect(t, juan, said(juan, "hola"))
+	expect(t, ana, said(juan, "hola"))
 }
 
 func TestLateJoinerSeesNothingFromBefore(t *testing.T) {
-	room := newRoom(func() {})
+	room := newTestRoom()
 	juan := join(t, room, "Juan")
 	room.Send(juan, "before")
 	drain(juan)
 
 	ana := join(t, room, "Ana")
-	expect(t, ana, Message{Type: "joined", Name: "Ana", Members: []string{"Juan", "Ana"}})
+	expect(t, ana, joined(ana, juan, ana))
 	assertEmpty(t, ana)
 
 	room.Send(juan, "after")
@@ -148,21 +180,20 @@ func TestLateJoinerSeesNothingFromBefore(t *testing.T) {
 }
 
 func TestLeftMemberStopsReceiving(t *testing.T) {
-	room := newRoom(func() {})
+	room := newTestRoom()
 	juan, ana := join(t, room, "Juan"), join(t, room, "Ana")
 	drain(ana)
 
 	room.Leave(ana)
 	room.Send(juan, "hola")
 
-	if _, ok := <-ana.Messages(); ok {
-		t.Error("Ana's mailbox should be closed after leaving")
-	}
+	assertEmpty(t, ana)
+	assertConnected(t, ana, true)
 }
 
 func TestSlowMemberIsDisconnectedAndAnnounced(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
-		room := newRoom(func() {})
+		room := newTestRoom()
 		fast, slow := join(t, room, "Fast"), join(t, room, "Slow")
 		drain(fast)
 		drain(slow)
@@ -172,19 +203,14 @@ func TestSlowMemberIsDisconnectedAndAnnounced(t *testing.T) {
 			receive(t, fast)
 			time.Sleep(time.Second / MessagesPerSecond)
 		}
-		expect(t, fast, Message{Type: "left", Name: "Slow", Members: []string{"Fast"}})
-
-		for range mailboxSize {
-			receive(t, slow)
-		}
-		if _, ok := <-slow.Messages(); ok {
-			t.Error("the slow member's mailbox should be closed")
-		}
+		expect(t, fast, left(slow, fast))
+		assertConnected(t, slow, false)
+		assertConnected(t, fast, true)
 	})
 }
 
 func TestBlankMessagesAreIgnored(t *testing.T) {
-	room := newRoom(func() {})
+	room := newTestRoom()
 	juan := join(t, room, "Juan")
 	drain(juan)
 
@@ -193,7 +219,7 @@ func TestBlankMessagesAreIgnored(t *testing.T) {
 }
 
 func TestMessagesOverTheMaxLengthAreIgnored(t *testing.T) {
-	room := newRoom(func() {})
+	room := newTestRoom()
 	juan := join(t, room, "Juan")
 	drain(juan)
 
@@ -208,7 +234,7 @@ func TestMessagesOverTheMaxLengthAreIgnored(t *testing.T) {
 
 func TestSendingTooFastIsRefusedToTheSenderOnly(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
-		room := newRoom(func() {})
+		room := newTestRoom()
 		juan, ana := join(t, room, "Juan"), join(t, room, "Ana")
 		drain(juan)
 		drain(ana)
@@ -220,17 +246,17 @@ func TestSendingTooFastIsRefusedToTheSenderOnly(t *testing.T) {
 		}
 
 		room.Send(juan, "one too many")
-		expect(t, juan, Message{Type: "error", Text: "Slow down: up to 5 messages per second."})
+		expect(t, juan, Message{Type: "error", Room: roomID, Text: "Slow down: up to 5 messages per second."})
 		assertEmpty(t, ana)
 
 		time.Sleep(time.Second / MessagesPerSecond)
 		room.Send(juan, "again")
-		expect(t, ana, Message{Type: "message", Name: "Juan", Text: "again"})
+		expect(t, ana, said(juan, "again"))
 	})
 }
 
 func TestTypingReachesEveryoneButTheTypist(t *testing.T) {
-	room := newRoom(func() {})
+	room := newTestRoom()
 	juan, ana, luis := join(t, room, "Juan"), join(t, room, "Ana"), join(t, room, "Luis")
 	drain(juan)
 	drain(ana)
@@ -238,15 +264,14 @@ func TestTypingReachesEveryoneButTheTypist(t *testing.T) {
 
 	room.Typing(juan)
 
-	want := Message{Type: "typing", Name: "Juan"}
-	expect(t, ana, want)
-	expect(t, luis, want)
+	expect(t, ana, typing(juan))
+	expect(t, luis, typing(juan))
 	assertEmpty(t, juan)
 }
 
 func TestTypingIsRelayedOncePerInterval(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
-		room := newRoom(func() {})
+		room := newTestRoom()
 		juan, ana := join(t, room, "Juan"), join(t, room, "Ana")
 		drain(juan)
 		drain(ana)
@@ -259,13 +284,13 @@ func TestTypingIsRelayedOncePerInterval(t *testing.T) {
 
 		time.Sleep(TypingInterval)
 		room.Typing(juan)
-		expect(t, ana, Message{Type: "typing", Name: "Juan"})
+		expect(t, ana, typing(juan))
 	})
 }
 
 func TestTypingLeavesTheMessageLimitAlone(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
-		room := newRoom(func() {})
+		room := newTestRoom()
 		juan, ana := join(t, room, "Juan"), join(t, room, "Ana")
 		drain(juan)
 		drain(ana)
@@ -274,7 +299,7 @@ func TestTypingLeavesTheMessageLimitAlone(t *testing.T) {
 		receive(t, ana)
 		for range MessagesPerSecond {
 			room.Send(juan, "hola")
-			expect(t, ana, Message{Type: "message", Name: "Juan", Text: "hola"})
+			expect(t, ana, said(juan, "hola"))
 			receive(t, juan)
 		}
 	})
@@ -282,7 +307,7 @@ func TestTypingLeavesTheMessageLimitAlone(t *testing.T) {
 
 func TestTypingNeverDisconnectsASlowMember(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
-		room := newRoom(func() {})
+		room := newTestRoom()
 		juan, ana := join(t, room, "Juan"), join(t, room, "Ana")
 		drain(juan)
 		for range mailboxSize - 1 {
@@ -295,9 +320,10 @@ func TestTypingNeverDisconnectsASlowMember(t *testing.T) {
 		time.Sleep(TypingInterval)
 		room.Typing(ana)
 
-		if got := room.names(); !reflect.DeepEqual(got, []string{"Juan", "Ana"}) {
+		if got := room.people(); !reflect.DeepEqual(got, people(juan, ana)) {
 			t.Errorf("members = %v, want Juan and Ana", got)
 		}
+		assertConnected(t, ana, true)
 	})
 }
 

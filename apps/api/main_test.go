@@ -33,7 +33,7 @@ func TestRouting(t *testing.T) {
 		{"GET", "/api/missing", 404, "404"},
 		{"GET", "/api/rooms/unknown", 404, "404"},
 		{"GET", "/api/rooms/unknown/ws?name=Juan", 404, "404"},
-		{"GET", "/api/ws", 404, "404"},
+		{"GET", "/api/ws", 400, "name must be"},
 		{"POST", "/api/health", 405, ""},
 		{"GET", "/", 200, "<app-root>"},
 		{"GET", "/main.js", 200, "console.log"},
@@ -97,72 +97,120 @@ func TestFindRoom(t *testing.T) {
 	}
 }
 
-func TestRoomChat(t *testing.T) {
+func TestChat(t *testing.T) {
 	server := httptest.NewServer(newMux(""))
 	defer server.Close()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	resp, err := http.Post(server.URL+"/api/rooms", "", nil)
-	if err != nil {
-		t.Fatal(err)
+	create := func() string {
+		resp, err := http.Post(server.URL+"/api/rooms", "", nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer resp.Body.Close()
+		var created struct{ ID string }
+		json.NewDecoder(resp.Body).Decode(&created)
+		return created.ID
 	}
-	var created struct{ ID string }
-	json.NewDecoder(resp.Body).Decode(&created)
-	resp.Body.Close()
-
-	join := func(name string) *websocket.Conn {
-		conn, _, err := websocket.Dial(ctx, server.URL+"/api/rooms/"+created.ID+"/ws?name="+name, nil)
+	read := func(conn *websocket.Conn) room.Message {
+		t.Helper()
+		var got room.Message
+		if err := wsjson.Read(ctx, conn, &got); err != nil {
+			t.Fatal(err)
+		}
+		return got
+	}
+	type tab struct {
+		conn   *websocket.Conn
+		person room.Person
+	}
+	open := func(name string) tab {
+		t.Helper()
+		conn, _, err := websocket.Dial(ctx, server.URL+"/api/ws?name="+name, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
 		t.Cleanup(func() { conn.CloseNow() })
-		return conn
+		ready := read(conn)
+		if ready.Type != "ready" || ready.Name != name || len(ready.ID) != 22 {
+			t.Fatalf("first frame = %+v, want ready with a 22-character id", ready)
+		}
+		return tab{conn, room.Person{ID: ready.ID, Name: name}}
 	}
-	expect := func(want room.Message, conns ...*websocket.Conn) {
+	send := func(from tab, frame map[string]string) {
+		if err := wsjson.Write(ctx, from.conn, frame); err != nil {
+			t.Fatal(err)
+		}
+	}
+	expect := func(want room.Message, tabs ...tab) {
 		t.Helper()
-		for _, conn := range conns {
-			var got room.Message
-			if err := wsjson.Read(ctx, conn, &got); err != nil {
-				t.Fatal(err)
-			}
-			if !reflect.DeepEqual(got, want) {
-				t.Errorf("got %+v, want %+v", got, want)
+		for _, to := range tabs {
+			if got := read(to.conn); !reflect.DeepEqual(got, want) {
+				t.Errorf("%s got %+v, want %+v", to.person.Name, got, want)
 			}
 		}
 	}
 
-	juan := join("Juan")
-	expect(room.Message{Type: "joined", Name: "Juan", Members: []string{"Juan"}}, juan)
-	ana := join("Ana")
-	expect(room.Message{Type: "joined", Name: "Ana", Members: []string{"Juan", "Ana"}}, juan, ana)
+	id := create()
+	joined := func(who tab, members ...tab) room.Message {
+		people := make([]room.Person, len(members))
+		for i, member := range members {
+			people[i] = member.person
+		}
+		return room.Message{Type: "joined", Room: id, ID: who.person.ID, Name: who.person.Name, Members: people}
+	}
+	said := func(who tab, text string) room.Message {
+		return room.Message{Type: "message", Room: id, ID: who.person.ID, Name: who.person.Name, Text: text}
+	}
 
-	wsjson.Write(ctx, juan, map[string]string{"text": "hola"})
-	expect(room.Message{Type: "message", Name: "Juan", Text: "hola"}, juan, ana)
+	juan := open("Juan")
+	send(juan, map[string]string{"type": "join", "room": id})
+	expect(joined(juan, juan), juan)
+	ana := open("Ana")
+	send(ana, map[string]string{"type": "join", "room": id})
+	expect(joined(ana, juan, ana), juan, ana)
 
-	luis := join("Luis")
-	expect(room.Message{Type: "joined", Name: "Luis", Members: []string{"Juan", "Ana", "Luis"}}, juan, ana, luis)
-	wsjson.Write(ctx, ana, map[string]string{"text": "bienvenido"})
-	expect(room.Message{Type: "message", Name: "Ana", Text: "bienvenido"}, juan, ana, luis)
+	send(juan, map[string]string{"type": "message", "room": id, "text": "hola"})
+	expect(said(juan, "hola"), juan, ana)
+	send(ana, map[string]string{"type": "typing", "room": id})
+	expect(room.Message{Type: "typing", Room: id, ID: ana.person.ID, Name: "Ana"}, juan)
 
-	ana.Close(websocket.StatusNormalClosure, "")
-	expect(room.Message{Type: "left", Name: "Ana", Members: []string{"Juan", "Luis"}}, juan, luis)
+	otherJuan := open("Juan")
+	send(otherJuan, map[string]string{"type": "join", "room": id})
+	expect(joined(otherJuan, juan, ana, otherJuan), juan, ana, otherJuan)
 
-	flooder := join("Flooder")
-	expect(room.Message{Type: "joined", Name: "Flooder", Members: []string{"Juan", "Luis", "Flooder"}}, juan, luis, flooder)
-	wsjson.Write(ctx, flooder, map[string]string{"text": strings.Repeat("x", frameMaxBytes)})
-	if _, _, err := flooder.Read(ctx); websocket.CloseStatus(err) != websocket.StatusMessageTooBig {
+	send(otherJuan, map[string]string{"type": "join", "room": "unknown"})
+	expect(room.Message{Type: "error", Room: "unknown", Code: "gone"}, otherJuan)
+	send(otherJuan, map[string]string{"type": "message", "room": "unknown", "text": "nobody hears this"})
+	send(otherJuan, map[string]string{"type": "leave", "room": id})
+	expect(room.Message{Type: "left", Room: id, ID: otherJuan.person.ID, Name: "Juan", Members: []room.Person{juan.person, ana.person}}, juan, ana)
+
+	ana.conn.Close(websocket.StatusNormalClosure, "")
+	expect(room.Message{Type: "left", Room: id, ID: ana.person.ID, Name: "Ana", Members: []room.Person{juan.person}}, juan)
+
+	for range room.MaxChats - 1 {
+		send(juan, map[string]string{"type": "join", "room": create()})
+		if got := read(juan.conn); got.Type != "joined" {
+			t.Fatalf("joining another room: got %+v", got)
+		}
+	}
+	extra := create()
+	send(juan, map[string]string{"type": "join", "room": extra})
+	expect(room.Message{Type: "error", Room: extra, Code: "limit"}, juan)
+
+	flooder := open("Flooder")
+	send(flooder, map[string]string{"type": "join", "room": id})
+	expect(joined(flooder, juan, flooder), juan, flooder)
+	send(flooder, map[string]string{"text": strings.Repeat("x", frameMaxBytes)})
+	if _, _, err := flooder.conn.Read(ctx); websocket.CloseStatus(err) != websocket.StatusMessageTooBig {
 		t.Errorf("sending a frame over %d bytes closed with %v, want %d", frameMaxBytes, err, websocket.StatusMessageTooBig)
 	}
-	expect(room.Message{Type: "left", Name: "Flooder", Members: []string{"Juan", "Luis"}}, juan, luis)
+	expect(room.Message{Type: "left", Room: id, ID: flooder.person.ID, Name: "Flooder", Members: []room.Person{juan.person}}, juan)
 
-	impostor := join("JUAN")
-	if _, _, err := impostor.Read(ctx); websocket.CloseStatus(err) != statusNameTaken {
-		t.Errorf("joining as JUAN closed with %v, want %d", err, statusNameTaken)
-	}
-	wsjson.Write(ctx, luis, map[string]string{"text": "solo nosotros"})
-	expect(room.Message{Type: "message", Name: "Luis", Text: "solo nosotros"}, juan, luis)
+	send(juan, map[string]string{"type": "message", "room": id, "text": "still here"})
+	expect(said(juan, "still here"), juan)
 }
 
 func TestAPIOnlyWithoutStaticDir(t *testing.T) {

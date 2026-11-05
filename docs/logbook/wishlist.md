@@ -25,8 +25,8 @@ A link that only lets one person in, for the room's creator to hand out. Far fut
 ## [WL-007] Load test with real numbers
 Measure concurrent connections against RAM and latency (e.g. with `k6`) and publish the result in the README.
 
-## [WL-008] Identity by id, rename inside the room
-Each person in a room gets a fixed id from the server and can change their name anytime; the chat shows "A is now B" and messages follow the id, so two people may share a name and still be told apart. Replaces rejecting duplicate names (RM-006). RM-011 lays the ground: a tab id and ids in room events.
+## [WL-008] Rename inside the room
+Change your name anytime while the tab is open; the chat shows "A is now B". Ids already tell people apart (RM-011), so messages and members follow the id.
 
 ## [WL-010] Liquid glass avatars
 Avatars drawn as small glass lenses instead of flat tinted circles. The WebGL layer draws up to 8 lenses and a room holds 50 people, so it needs another approach (one lens for the list, or CSS glass).

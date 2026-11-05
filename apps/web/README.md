@@ -49,19 +49,20 @@ so reloading asks again. The room shows nothing else until there is a name.
 
 ## Real-time connection
 
-`src/app/room/room-socket.ts` joins the room once you've picked a name: one
-WebSocket to `/api/rooms/<id>/ws?name=<name>` on the page's own host (`ws://`
-or `wss://` to match the page). It sends `{"text": …}` and receives the room's
-events: messages from everyone (sender included) and who joined or left (see
-the [API](../api/README.md#room-chat)).
+`src/app/room/room-socket.ts` opens the tab's connection once you've picked a
+name: one WebSocket to `/api/ws?name=<name>` on the page's own host (`ws://`
+or `wss://` to match the page). The server answers with your id, and the
+socket joins the room and receives its events: messages from everyone (sender
+included) and who joined or left (see the [API](../api/README.md#room-chat)).
+People are `{id, name}`: your messages are the ones carrying your id, so two
+people may share a name.
 
 Its state is exposed as read-only signals, written only inside the service:
 `status` (`connecting`, `open`, `closed`), `events` (messages, notices and
 warnings such as sending too fast, in order, each stamped with its arrival
 time `at`: the server sends none), `members` (who is in the room, taken from the latest notice), and
-`nameTaken` / `roomGone` / `roomFull` (the API closed with `4009`, `4004` or
-`4029`: the room page reopens the name dialog, or shows "Room not found" or
-"Room is full").
+`me` (your id), and `roomGone` / `roomFull` (the join failed with code `gone`
+or `full`: the room page shows "Room not found" or "Room is full").
 
 `room/message-list` draws them as bubbles (yours on the right, a run of
 messages from one person grouped under one name) and follows new ones unless
@@ -80,8 +81,8 @@ seconds; others see "Ana is typing…" in place of "Connected" in the header
 for 3 seconds.
 
 When the connection drops the room shows a Reconnect button: it looks the
-room up again (the API answers a join to a missing room with a plain 404, not
-`4004`) and joins with the same name, or shows "Room not found". "Room not
+room up again and joins with the same name and a new id, or shows "Room not
+found". "Room not
 found" and "Room is full" share `room/room-notice`.
 
 The message input stops at 1000 characters (`maxlength`, the API's limit) and

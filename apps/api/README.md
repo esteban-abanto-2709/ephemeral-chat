@@ -46,7 +46,7 @@ Every API route lives under `/api/`, so it never collides with a web route.
 | `GET`  | `/api/health` | `ok` (health check) |
 | `POST` | `/api/rooms`  | `201` with `{"id": "..."}`: creates a room in memory |
 | `GET`  | `/api/rooms/{id}` | `204` if the room exists, `404` if not |
-| `GET`  | `/api/rooms/{id}/ws?name=…` | WebSocket: joins the room as `name` (see below) |
+| `GET`  | `/api/ws?name=…` | WebSocket: the tab's connection, for every chat it holds (see below) |
 | `GET`  | `/api/*`      | `404` for any other |
 
 A room id is 16 random bytes from `crypto/rand`, base64url-encoded: 22
@@ -57,23 +57,30 @@ default), which holds both in production and behind the `ng serve` proxy.
 
 ### Room chat
 
-Joining needs an existing room (`404` otherwise) and a name of 1 to 24
-characters once trimmed (`400` otherwise). A name already in the room
-(ignoring case) is accepted as a WebSocket and closed right away with status
-`4009`: a browser can't read the HTTP status of a failed handshake, but it can
-read a close code. A room dropped between the lookup and the join (see below)
-closes the same way with `4004`, and a room that already has 50 people
-(`MaxMembers`) with `4029`. Then, as JSON text frames:
+A browser tab opens one WebSocket, `GET /api/ws?name=…`, and every chat it
+holds travels over it. The name must be 1 to 24 characters once trimmed (`400`
+otherwise). The first frame gives the tab its id: 16 random bytes, like a room
+id, that lives while the connection does and is never stored. Two people may
+share a name; the id tells them apart. Then, as JSON text frames:
 
 ```
-client → server:   {"text": "hola"}
-                   {"type": "typing"}
-server → clients:  {"type": "message", "name": "Juan", "text": "hola"}
-                   {"type": "joined",  "name": "Ana",  "members": ["Juan", "Ana"]}
-                   {"type": "left",    "name": "Ana",  "members": ["Juan"]}
-server → sender:   {"type": "error",   "text": "Slow down: up to 5 messages per second."}
-server → others:   {"type": "typing",  "name": "Juan"}
+client → server:   {"type": "join",    "room": "…"}
+                   {"type": "message", "room": "…", "text": "hola"}
+                   {"type": "typing",  "room": "…"}
+                   {"type": "leave",   "room": "…"}
+server → client:   {"type": "ready",   "id": "…", "name": "Juan"}
+server → room:     {"type": "message", "room": "…", "id": "…", "name": "Juan", "text": "hola"}
+                   {"type": "joined",  "room": "…", "id": "…", "name": "Ana", "members": [{"id": "…", "name": "Juan"}, …]}
+                   {"type": "left",    "room": "…", "id": "…", "name": "Ana", "members": […]}
+server → others:   {"type": "typing",  "room": "…", "id": "…", "name": "Juan"}
+server → sender:   {"type": "error",   "room": "…", "text": "Slow down: up to 5 messages per second."}
+                   {"type": "error",   "room": "…", "code": "gone" | "full" | "limit"}
 ```
+
+A join that fails answers only that tab, with a `code`: `gone` for a room
+that doesn't exist or was just dropped (see below), `full` for a room that
+already has 50 people (`MaxMembers`), `limit` for a tab already in 20 chats
+(`MaxChats`). Frames for a room the tab hasn't joined are ignored.
 
 Every event goes to everyone connected to the room at that moment, sender and
 newcomer included. `joined` and `left` carry the full list of who is in, in
@@ -91,7 +98,7 @@ message over the limit is dropped and only its sender gets an `error` event.
 most once every 2 seconds per member (`TypingInterval`, its own token bucket,
 so typing never uses up the message limit); extra signals are dropped without
 an error. There is no "stopped typing": a client shows it for a few seconds
-after the last signal. It is never worth a disconnection: a member whose
+after the last signal. It is never worth a disconnection: a tab whose
 mailbox is full just misses it.
 
 ### Room lifecycle
@@ -120,15 +127,18 @@ its own goroutine), so its map is guarded by a mutex.
 
 How a room relays messages:
 
-- Each member has a **mailbox**: a buffered channel of 16 messages.
+- Each tab is a `room.Client` with one **mailbox**: a buffered channel of 32
+  messages, shared by every room it is in.
 - `Room.Send` drops a copy in every member's mailbox, without waiting. A
-  mailbox that is full means a client that can't keep up: that member is
-  removed and its mailbox closed (and announced as `left`), so one slow
-  connection never holds up the room.
+  mailbox that is full means a tab that can't keep up: it is removed from the
+  room (and announced as `left`) and disconnected, so one slow connection
+  never holds up a room. The mailbox is never closed, since other rooms may
+  still be writing to it; the client's `Gone()` channel is closed instead.
 - Each WebSocket runs two goroutines: the handler **reads** frames and calls
-  `Send`; a second one **writes** whatever lands in the mailbox. When the
-  mailbox closes (the member left or was too slow), the writer closes the
-  socket.
+  the rooms the tab joined (kept in a map only that goroutine touches); a
+  second one **writes** whatever lands in the mailbox, and closes the socket
+  once the client is gone. When the socket closes, the handler leaves every
+  room the tab was in.
 
 ## Serving the web
 

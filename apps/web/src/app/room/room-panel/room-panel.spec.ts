@@ -6,8 +6,11 @@ describe('RoomPanel', () => {
   async function render() {
     TestBed.configureTestingModule({ providers: [provideRouter([])] });
     const fixture = TestBed.createComponent(RoomPanel);
-    fixture.componentRef.setInput('members', ['Juan', 'Luis']);
-    fixture.componentRef.setInput('me', 'Juan');
+    fixture.componentRef.setInput('members', [
+      { id: 'j', name: 'Juan' },
+      { id: 'l', name: 'Luis' },
+    ]);
+    fixture.componentRef.setInput('me', 'j');
     await fixture.whenStable();
     return { fixture, panel: fixture.nativeElement as HTMLElement };
   }

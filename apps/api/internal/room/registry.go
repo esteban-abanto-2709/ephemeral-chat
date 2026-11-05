@@ -20,7 +20,7 @@ func (r *Registry) Create() string {
 
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	r.rooms[id] = newRoom(func() { r.drop(id) })
+	r.rooms[id] = newRoom(id, func() { r.drop(id) })
 	return id
 }
 

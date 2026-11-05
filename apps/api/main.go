@@ -18,12 +18,6 @@ import (
 
 const frameMaxBytes = 8 << 10
 
-const (
-	statusRoomGone  websocket.StatusCode = 4004
-	statusNameTaken websocket.StatusCode = 4009
-	statusRoomFull  websocket.StatusCode = 4029
-)
-
 func main() {
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -43,7 +37,7 @@ func newMux(staticDir string) *http.ServeMux {
 	})
 	mux.HandleFunc("POST /api/rooms", createRoom(rooms))
 	mux.HandleFunc("GET /api/rooms/{id}", findRoom(rooms))
-	mux.HandleFunc("GET /api/rooms/{id}/ws", joinRoom(rooms))
+	mux.HandleFunc("GET /api/ws", connect(rooms))
 	mux.HandleFunc("GET /api/", http.NotFound)
 
 	if staticDir != "" {
@@ -72,13 +66,8 @@ func findRoom(rooms *room.Registry) http.HandlerFunc {
 	}
 }
 
-func joinRoom(rooms *room.Registry) http.HandlerFunc {
+func connect(rooms *room.Registry) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		chat, ok := rooms.Get(r.PathValue("id"))
-		if !ok {
-			http.NotFound(w, r)
-			return
-		}
 		name := strings.TrimSpace(r.URL.Query().Get("name"))
 		if !room.ValidName(name) {
 			http.Error(w, "name must be 1 to 24 characters", http.StatusBadRequest)
@@ -92,48 +81,85 @@ func joinRoom(rooms *room.Registry) http.HandlerFunc {
 		defer conn.CloseNow()
 		conn.SetReadLimit(frameMaxBytes)
 
-		member, err := chat.Join(name)
-		if err != nil {
-			conn.Close(closeStatus(err), err.Error())
-			return
-		}
-		defer chat.Leave(member)
+		client := room.NewClient(name)
+		chats := make(map[string]chat)
+		defer func() {
+			for _, c := range chats {
+				c.room.Leave(c.member)
+			}
+		}()
 
 		go func() {
-			for message := range member.Messages() {
-				if err := wsjson.Write(r.Context(), conn, message); err != nil {
+			defer conn.CloseNow()
+			if wsjson.Write(r.Context(), conn, room.Message{Type: "ready", ID: client.ID, Name: client.Name}) != nil {
+				return
+			}
+			for {
+				select {
+				case message := <-client.Messages():
+					if wsjson.Write(r.Context(), conn, message) != nil {
+						return
+					}
+				case <-client.Gone():
+					return
+				case <-r.Context().Done():
 					return
 				}
 			}
-			conn.CloseNow()
 		}()
 
 		for {
 			var incoming struct {
 				Type string `json:"type"`
+				Room string `json:"room"`
 				Text string `json:"text"`
 			}
 			if err := wsjson.Read(r.Context(), conn, &incoming); err != nil {
 				return
 			}
-			if incoming.Type == "typing" {
-				chat.Typing(member)
-			} else {
-				chat.Send(member, incoming.Text)
+			c, in := chats[incoming.Room]
+			switch {
+			case incoming.Type == "join" && !in:
+				if c, ok := join(rooms, client, incoming.Room, len(chats)); ok {
+					chats[incoming.Room] = c
+				}
+			case incoming.Type == "leave" && in:
+				c.room.Leave(c.member)
+				delete(chats, incoming.Room)
+			case incoming.Type == "message" && in:
+				c.room.Send(c.member, incoming.Text)
+			case incoming.Type == "typing" && in:
+				c.room.Typing(c.member)
 			}
 		}
 	}
 }
 
-func closeStatus(err error) websocket.StatusCode {
-	switch {
-	case errors.Is(err, room.ErrNameTaken):
-		return statusNameTaken
-	case errors.Is(err, room.ErrRoomFull):
-		return statusRoomFull
-	default:
-		return statusRoomGone
+type chat struct {
+	room   *room.Room
+	member *room.Member
+}
+
+func join(rooms *room.Registry, client *room.Client, id string, open int) (chat, bool) {
+	fail := func(code string) (chat, bool) {
+		client.Notify(room.Message{Type: "error", Room: id, Code: code})
+		return chat{}, false
 	}
+	if open >= room.MaxChats {
+		return fail("limit")
+	}
+	r, ok := rooms.Get(id)
+	if !ok {
+		return fail("gone")
+	}
+	member, err := r.Join(client)
+	if errors.Is(err, room.ErrRoomFull) {
+		return fail("full")
+	}
+	if err != nil {
+		return fail("gone")
+	}
+	return chat{r, member}, true
 }
 
 func spa(files fs.FS) http.Handler {

@@ -2,13 +2,15 @@ import { TestBed } from '@angular/core/testing';
 import { MessageList } from './message-list';
 import { RoomEvent } from '../room-socket';
 
+const ana = { id: 'a', name: 'Ana' };
+const juan = { id: 'j', name: 'Juan' };
+
 describe('MessageList', () => {
   const at = new Date(2026, 10, 3, 21, 4).getTime();
 
   async function render(events: RoomEvent[]) {
     const fixture = TestBed.createComponent(MessageList);
     fixture.componentRef.setInput('events', events);
-    fixture.componentRef.setInput('me', 'Juan');
     fixture.componentRef.setInput('link', 'https://chat.test/room/abc');
     await fixture.whenStable();
     const list = fixture.nativeElement as HTMLElement;
@@ -17,9 +19,9 @@ describe('MessageList', () => {
 
   it('shows messages, who joined or left and warnings', async () => {
     const { items } = await render([
-      { type: 'joined', name: 'Ana', members: ['Ana'], at },
-      { type: 'message', name: 'Ana', text: 'hola', at },
-      { type: 'left', name: 'Ana', members: [], at },
+      { type: 'joined', ...ana, members: [ana], at },
+      { type: 'message', ...ana, own: false, text: 'hola', at },
+      { type: 'left', ...ana, members: [], at },
       { type: 'error', text: 'Slow down: up to 5 messages per second.', at },
     ]);
 
@@ -44,9 +46,9 @@ describe('MessageList', () => {
 
   it('puts your messages on the right and groups messages in a row', async () => {
     const { items } = await render([
-      { type: 'message', name: 'Ana', text: 'uno', at },
-      { type: 'message', name: 'Ana', text: 'dos', at },
-      { type: 'message', name: 'Juan', text: 'tres', at },
+      { type: 'message', ...ana, own: false, text: 'uno', at },
+      { type: 'message', ...ana, own: false, text: 'dos', at },
+      { type: 'message', ...juan, own: true, text: 'tres', at },
     ]);
 
     const names = items.map((li) => li.querySelector('p'));
@@ -68,7 +70,7 @@ describe('MessageList', () => {
   });
 
   it('follows new messages unless you are reading above', async () => {
-    const first: RoomEvent = { type: 'message', name: 'Ana', text: 'uno', at };
+    const first: RoomEvent = { type: 'message', ...ana, own: false, text: 'uno', at };
     const { fixture, list } = await render([first]);
     const scroller = list.firstElementChild as HTMLElement;
     Object.defineProperty(scroller, 'scrollHeight', { value: 1000, configurable: true });
@@ -85,7 +87,7 @@ describe('MessageList', () => {
     await fixture.whenStable();
     expect(scroller.scrollTop).toBe(100);
 
-    fixture.componentRef.setInput('events', [first, { ...first, name: 'Juan', text: 'mío' }]);
+    fixture.componentRef.setInput('events', [first, { ...first, ...juan, own: true, text: 'mío' }]);
     await fixture.whenStable();
     expect(scroller.scrollTop).toBe(1000);
   });
