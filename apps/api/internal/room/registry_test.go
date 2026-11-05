@@ -2,6 +2,7 @@ package room
 
 import (
 	"errors"
+	"reflect"
 	"regexp"
 	"sync"
 	"testing"
@@ -101,4 +102,82 @@ func TestRejoiningWithinTheMinuteKeepsTheRoom(t *testing.T) {
 		time.Sleep(time.Second)
 		assertExists(t, rooms, id, false)
 	})
+}
+
+func next(t *testing.T, client *Client) Message {
+	t.Helper()
+	select {
+	case message := <-client.Messages():
+		return message
+	default:
+		t.Fatalf("%s got nothing", client.Name)
+		return Message{}
+	}
+}
+
+func TestOpeningSomeonesIDStartsAPrivateChat(t *testing.T) {
+	rooms := NewRegistry()
+	sam, luis := rooms.Connect("Sam"), rooms.Connect("Luis")
+	both := []Person{sam.person(), luis.person()}
+
+	rooms.Open(sam, luis.ID)
+
+	if got, want := next(t, sam), (Message{Type: "joined", Room: luis.ID, ID: luis.ID, Name: "Luis", Title: "Luis", Private: true, Members: both}); !reflect.DeepEqual(got, want) {
+		t.Errorf("Sam got %+v, want %+v", got, want)
+	}
+	if got, want := next(t, luis), (Message{Type: "joined", Room: sam.ID, ID: sam.ID, Name: "Sam", Title: "Sam", Private: true, Members: both}); !reflect.DeepEqual(got, want) {
+		t.Errorf("Luis got %+v, want %+v", got, want)
+	}
+
+	sam.Send(luis.ID, "hola")
+	if got := next(t, luis); got.Room != sam.ID || got.Text != "hola" {
+		t.Errorf("Luis got %+v, want hola labeled with Sam's id", got)
+	}
+	if got := next(t, sam); got.Room != luis.ID {
+		t.Errorf("Sam got %+v, want it labeled with Luis's id", got)
+	}
+
+	rooms.Open(sam, luis.ID)
+	select {
+	case message := <-sam.Messages():
+		t.Errorf("opening the same person again sent %+v", message)
+	default:
+	}
+}
+
+func TestPrivateChatEndsWhenEitherLeaves(t *testing.T) {
+	rooms := NewRegistry()
+	sam, luis := rooms.Connect("Sam"), rooms.Connect("Luis")
+	rooms.Open(sam, luis.ID)
+	next(t, sam)
+	next(t, luis)
+
+	rooms.Disconnect(luis)
+
+	if got := next(t, sam); got.Type != "left" || got.Room != luis.ID || got.ID != luis.ID {
+		t.Errorf("Sam got %+v, want Luis left", got)
+	}
+	if _, ok := sam.chat(luis.ID); ok {
+		t.Error("Sam still holds the ended chat")
+	}
+	rooms.Open(sam, luis.ID)
+	if got := next(t, sam); got.Code != "gone" {
+		t.Errorf("opening a closed tab's id: got %+v, want gone", got)
+	}
+}
+
+func TestOpenRefusesWhatCannotBeOpened(t *testing.T) {
+	rooms := NewRegistry()
+	sam, luis := rooms.Connect("Sam"), rooms.Connect("Luis")
+	for range MaxChats {
+		rooms.Open(luis, rooms.Create("Group"))
+		next(t, luis)
+	}
+
+	for code, want := range map[string]string{"unknown": "gone", sam.ID: "self", luis.ID: "busy"} {
+		rooms.Open(sam, code)
+		if got := next(t, sam); got.Type != "error" || got.Code != want || got.Room != code {
+			t.Errorf("Open(%s): got %+v, want %s", code, got, want)
+		}
+	}
 }

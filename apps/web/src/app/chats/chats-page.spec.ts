@@ -23,6 +23,7 @@ describe('ChatsPage', () => {
     send: vi.fn(),
     sendTyping: vi.fn(),
     reconnect: vi.fn(),
+    remove: vi.fn(),
   };
 
   beforeEach(async () => {
@@ -33,6 +34,8 @@ describe('ChatsPage', () => {
     chats.set([
       {
         id: 'trip',
+        kind: 'group',
+        ended: false,
         title: 'Weekend trip',
         events: [{ type: 'message', ...ana, own: false, text: 'hola', at: 0 }],
         members: [juan, ana],
@@ -137,6 +140,22 @@ describe('ChatsPage', () => {
     await fixture.whenStable();
     [...page.querySelectorAll('button')].find((b) => b.textContent?.includes('Reconnect'))!.click();
     expect(fakeClient.reconnect).toHaveBeenCalled();
+  });
+
+  it('shows a private chat as read-only once the other one leaves', async () => {
+    const { fixture, page } = await openChat();
+    chats.update(([chat]) => [{ ...chat, kind: 'private', title: 'Ana', members: [juan, ana] }]);
+    await fixture.whenStable();
+    expect(page.querySelector('header [role="status"]')?.textContent).toContain('Online');
+    expect(page.querySelector('[aria-label="Copy group link"]')).toBeNull();
+    expect(page.querySelector('[aria-label="About this chat"] h2')?.textContent).toContain('Private chat with Ana');
+
+    chats.update(([chat]) => [{ ...chat, ended: true }]);
+    await fixture.whenStable();
+    expect(page.querySelector('#message')).toBeNull();
+    expect(page.querySelector('header [role="status"]')?.textContent).toContain('Left the chat');
+    [...page.querySelectorAll('button')].find((b) => b.textContent?.includes('Delete chat'))!.click();
+    expect(fakeClient.remove).toHaveBeenCalledWith('trip');
   });
 
   it('goes back to the list with Escape', async () => {

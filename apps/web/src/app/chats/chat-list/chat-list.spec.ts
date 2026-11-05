@@ -7,6 +7,8 @@ const code = 'aB3xQ9mK2pLt7vRw4ZcN8e';
 function chat(id: string, title: string, unread = 0): Chat {
   return {
     id,
+    kind: 'group',
+    ended: false,
     title,
     events: [{ type: 'message', id: 'a', name: 'Ana', text: `hi from ${title}`, own: false, at: 0 }],
     members: [],
@@ -64,7 +66,7 @@ describe('ChatList', () => {
   it('joins with a pasted link', async () => {
     const { list, opened, type } = await render();
     await type(`https://ephemeral.chat/room/${code}`);
-    expect(list.textContent).toContain('Join with this code');
+    expect(list.textContent).toContain('Open this code');
 
     list.querySelector('form')!.dispatchEvent(new Event('submit', { cancelable: true }));
     expect(opened).toEqual([code]);

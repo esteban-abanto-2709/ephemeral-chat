@@ -78,10 +78,18 @@ arrival time `at`: the server sends none), `members` (from the latest notice),
 who is `typing` and an `unread` count of messages that came in while it wasn't
 open.
 
-`join(id)` adds a chat and opens it; it is sent as soon as the connection is
-ready. `create(title)` asks the API for a group (`POST /api/rooms`) and joins
-it. A join the server refuses (`gone`, `full`, `limit`) drops the chat and
-shows why. A tab holds up to 20 chats, the API's limit.
+`join(code)` adds a chat and opens it; it is sent as soon as the connection is
+ready. The code may be a group's or someone's id: a person's opens a private
+chat (`kind: 'private'`), which also lands in the other tab's list, unopened.
+`create(title)` asks the API for a group (`POST /api/rooms`) and joins it. A
+join the server refuses (`gone`, `full`, `limit`, `self`, `busy`) drops the
+chat and shows why. A tab holds up to 20 chats, the API's limit.
+
+A private chat shows "Online" in the header and no join notices. When the
+other one leaves it is `ended`: the composer gives way to "Luis left. You can
+still read this chat." and Delete chat (`remove(id)`), which drops it from
+the list. Your name and ID sit at the bottom of the list, with a copy button;
+Copy my ID is also on the welcome side.
 
 `room/message-list` draws the events as bubbles (yours on the right, a run of
 messages from one person grouped under one name) and follows new ones unless
@@ -101,7 +109,8 @@ seconds; others see "Ana is typing…" in the header (up to "Ana and 2 more are
 typing…") until Ana sends, leaves or stays quiet for 3 seconds.
 
 When the connection drops the open chat shows a Reconnect button: it connects
-again with the same name and a new id, and rejoins every chat in the list.
+again with the same name and a new id, and rejoins every group in the list.
+Private chats were tied to the old id, so they end.
 
 The message input stops at 1000 characters (`maxlength`, the API's limit) and
 shows a counter from 900 on.
@@ -169,7 +178,8 @@ Backgrounds in `public/backdrops`, free under the Unsplash License:
 
 `/design` shows the app with sample data, no logic, in four frames at once:
 desktop (1280 × 800, scaled to fit) and mobile (390 × 844), each in light and
-dark, with a switch for the screen (start, chats, new group, group). Each
+dark, with a switch for the screen (start, chats, new group, group, private,
+left). Each
 frame is an `iframe` of `/design/frame?screen=…&theme=…`, so it has its own
 theme, its own liquid glass and a real viewport width. Visual changes are
 tried here first and moved into the app once approved; screens are the app's

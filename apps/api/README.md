@@ -73,13 +73,26 @@ server → room:     {"type": "message", "room": "…", "id": "…", "name": "Ju
                    {"type": "left",    "room": "…", "id": "…", "name": "Ana", "members": […]}
 server → others:   {"type": "typing",  "room": "…", "id": "…", "name": "Juan"}
 server → sender:   {"type": "error",   "room": "…", "text": "Slow down: up to 5 messages per second."}
-                   {"type": "error",   "room": "…", "code": "gone" | "full" | "limit"}
+                   {"type": "error",   "room": "…", "code": "gone" | "full" | "limit" | "self" | "busy"}
 ```
 
-A join that fails answers only that tab, with a `code`: `gone` for a room
-that doesn't exist or was just dropped (see below), `full` for a room that
-already has 50 people (`MaxMembers`), `limit` for a tab already in 20 chats
-(`MaxChats`). Frames for a room the tab hasn't joined are ignored.
+A join that fails answers only that tab, with a `code`: `gone` for a code
+that opens nothing (a room that doesn't exist or was just dropped, see below,
+or a tab that closed), `full` for a room that already has 50 people
+(`MaxMembers`), `limit` for a tab already in 20 chats (`MaxChats`). Frames for
+a chat the tab isn't in are ignored.
+
+### Private chats
+
+`join` also takes someone's id: it starts a private chat with that tab, with
+no prompt on their side. Both tabs get a `joined` with `"private": true`,
+where `room`, `id`, `name` and `title` are the other person: each side calls
+the chat by the other's id, and every event of that chat comes labeled that
+way. Nobody else can join it (its own id is never handed out), there are no
+`joined` notices for its members, and it ends when either one leaves: the
+other gets `left` and is taken out too, so the chat is over for both. Opening
+an id you already have a chat with does nothing; your own id answers `self`,
+and a tab already in 20 chats answers `busy`.
 
 Every event goes to everyone connected to the room at that moment, sender and
 newcomer included. `joined` also carries the group's name (`title`), fixed
@@ -134,11 +147,14 @@ How a room relays messages:
   room (and announced as `left`) and disconnected, so one slow connection
   never holds up a room. The mailbox is never closed, since other rooms may
   still be writing to it; the client's `Gone()` channel is closed instead.
-- Each WebSocket runs two goroutines: the handler **reads** frames and calls
-  the rooms the tab joined (kept in a map only that goroutine touches); a
-  second one **writes** whatever lands in the mailbox, and closes the socket
-  once the client is gone. When the socket closes, the handler leaves every
-  room the tab was in.
+- Each WebSocket runs two goroutines: the handler **reads** frames and hands
+  them to the client, which keeps its chats in a map by the name the tab uses
+  (a room id, or the other person's id), guarded by its own mutex since a
+  private chat is added from the other tab's goroutine; a second one
+  **writes** whatever lands in the mailbox, and closes the socket once the
+  client is gone. When the socket closes, the registry forgets the tab and it
+  leaves every chat.
+- Locks are always taken room first, then client, never the other way.
 
 ## Serving the web
 

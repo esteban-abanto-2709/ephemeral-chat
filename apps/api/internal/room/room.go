@@ -38,13 +38,24 @@ type Message struct {
 	Title   string   `json:"title,omitempty"`
 	Text    string   `json:"text,omitempty"`
 	Code    string   `json:"code,omitempty"`
+	Private bool     `json:"private,omitempty"`
 	Members []Person `json:"members,omitempty"`
 }
 
 type Member struct {
 	client  *Client
+	label   string
 	limiter *rate.Limiter
 	typing  *rate.Limiter
+}
+
+func newMember(client *Client, label string) *Member {
+	return &Member{
+		client:  client,
+		label:   label,
+		limiter: rate.NewLimiter(MessagesPerSecond, MessagesPerSecond),
+		typing:  rate.NewLimiter(rate.Every(TypingInterval), 1),
+	}
 }
 
 type Room struct {
@@ -53,6 +64,7 @@ type Room struct {
 	mu      sync.Mutex
 	members []*Member
 	closed  bool
+	private bool
 	expiry  *time.Timer
 }
 
@@ -64,12 +76,24 @@ func ValidName(name string) bool {
 	return strings.TrimSpace(name) != "" && utf8.RuneCountInString(name) <= NameMaxLength
 }
 
-func (r *Room) Join(client *Client) (*Member, error) {
-	member := &Member{
-		client:  client,
-		limiter: rate.NewLimiter(MessagesPerSecond, MessagesPerSecond),
-		typing:  rate.NewLimiter(rate.Every(TypingInterval), 1),
+func startPrivate(a, b *Client) {
+	r := &Room{ID: newID(), private: true, expiry: time.AfterFunc(emptyLifetime, func() {})}
+	ma, mb := newMember(a, b.ID), newMember(b, a.ID)
+	r.members = []*Member{ma, mb}
+	a.remember(b.ID, r, ma)
+	b.remember(a.ID, r, mb)
+
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	people := r.people()
+	for _, pair := range [][2]*Member{{ma, mb}, {mb, ma}} {
+		to, other := pair[0], pair[1]
+		r.deliver(to, Message{Type: "joined", ID: other.client.ID, Name: other.client.Name, Title: other.client.Name, Private: true, Members: people})
 	}
+}
+
+func (r *Room) Join(client *Client) (*Member, error) {
+	member := newMember(client, r.ID)
 
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -100,9 +124,7 @@ func (r *Room) Send(from *Member, text string) {
 		return
 	}
 	if !from.limiter.Allow() {
-		if !from.client.push(Message{Type: "error", Room: r.ID, Text: "Slow down: up to 5 messages per second."}) {
-			r.drop(from)
-		}
+		r.deliver(from, Message{Type: "error", Text: "Slow down: up to 5 messages per second."})
 		return
 	}
 	r.broadcast(Message{Type: "message", ID: from.client.ID, Name: from.client.Name, Text: text})
@@ -114,23 +136,31 @@ func (r *Room) Typing(from *Member) {
 	if !slices.Contains(r.members, from) || !from.typing.Allow() {
 		return
 	}
-	message := Message{Type: "typing", Room: r.ID, ID: from.client.ID, Name: from.client.Name}
+	message := Message{Type: "typing", ID: from.client.ID, Name: from.client.Name}
 	for _, member := range r.members {
 		if member != from {
+			message.Room = member.label
 			member.client.push(message)
 		}
 	}
 }
 
 func (r *Room) broadcast(message Message) {
-	message.Room = r.ID
 	var slow []*Member
 	for _, member := range r.members {
+		message.Room = member.label
 		if !member.client.push(message) {
 			slow = append(slow, member)
 		}
 	}
 	for _, member := range slow {
+		r.drop(member)
+	}
+}
+
+func (r *Room) deliver(member *Member, message Message) {
+	message.Room = member.label
+	if !member.client.push(message) {
 		r.drop(member)
 	}
 }
@@ -150,6 +180,12 @@ func (r *Room) remove(member *Member) {
 		r.expiry.Reset(emptyLifetime)
 	}
 	r.broadcast(Message{Type: "left", ID: member.client.ID, Name: member.client.Name, Members: r.people()})
+	if r.private {
+		for _, other := range r.members {
+			other.client.forget(other.label)
+		}
+		r.members = nil
+	}
 }
 
 func (r *Room) close() bool {

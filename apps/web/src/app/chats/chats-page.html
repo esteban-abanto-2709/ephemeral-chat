@@ -9,6 +9,8 @@
     [class.hidden]="active"
     [chats]="client.chats()"
     [active]="active?.id ?? null"
+    [me]="client.me()"
+    [name]="client.name()"
     (selected)="client.open($event)"
     (newGroup)="creating.set(true)"
     (opened)="client.join($event)"
@@ -18,6 +20,8 @@
     <app-room-chat
       [status]="client.status()"
       [title]="active.title"
+      [kind]="active.kind"
+      [ended]="active.ended"
       [events]="active.events"
       [members]="active.members"
       [me]="client.me()"
@@ -28,12 +32,14 @@
       (typed)="client.sendTyping(active.id)"
       (reconnect)="client.reconnect()"
       (closed)="client.open(null)"
+      (deleted)="client.remove(active.id)"
     />
   } @else {
     <app-chats-welcome
       class="hidden"
       [class.md:flex]="client.name() && !creating()"
       (newGroup)="creating.set(true)"
+      [me]="client.me()"
       (joinWithCode)="joinWithCode()"
     />
   }

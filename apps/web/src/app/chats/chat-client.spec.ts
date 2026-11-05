@@ -91,7 +91,7 @@ describe('ChatClient', () => {
     server.receive({ type: 'error', room: 'gone', code: 'gone' });
     expect(client.chats()).toEqual([]);
     expect(client.active()).toBeNull();
-    expect(TestBed.inject(Notice).text()).toContain("doesn't exist");
+    expect(TestBed.inject(Notice).text()).toContain('is gone');
   });
 
   it(`holds at most ${maxChats} chats`, () => {
@@ -113,10 +113,26 @@ describe('ChatClient', () => {
     expect(server.sent).toEqual([{ type: 'join', room: 'new' }]);
   });
 
-  it('rejoins every chat after reconnecting', () => {
+  it('gets private chats opened by others without opening them', () => {
+    ready();
+    server.receive({ type: 'joined', room: 'l', ...luis, title: 'Luis', private: true, members: [juan, luis] });
+    expect(client.chats()).toEqual([expect.objectContaining({ id: 'l', kind: 'private', title: 'Luis', events: [] })]);
+    expect(client.active()).toBeNull();
+
+    server.receive({ type: 'message', room: 'l', ...luis, text: 'hola' });
+    server.receive({ type: 'left', room: 'l', ...luis, members: [juan] });
+    expect(client.chats()[0]).toMatchObject({ ended: true, unread: 1 });
+
+    client.remove('l');
+    expect(client.chats()).toEqual([]);
+    expect(server.sent.at(-1)).toEqual({ type: 'leave', room: 'l' });
+  });
+
+  it('rejoins every group after reconnecting and ends private chats', () => {
     ready();
     client.join('one');
     client.join('two');
+    server.receive({ type: 'joined', room: 'l', ...luis, title: 'Luis', private: true, members: [juan, luis] });
     client.reconnect();
     server = FakeWebSocket.last;
     server.onopen?.();
@@ -125,6 +141,7 @@ describe('ChatClient', () => {
       { type: 'join', room: 'one' },
       { type: 'join', room: 'two' },
     ]);
+    expect(client.chats().find((chat) => chat.id === 'l')?.ended).toBe(true);
   });
 
   it('shows who is typing in each chat until they send, leave or go quiet', () => {

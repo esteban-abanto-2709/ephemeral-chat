@@ -1,11 +1,19 @@
 import { Component, ElementRef, computed, input, output, signal, viewChild } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { LucideHourglass, LucideKeyRound, LucidePlus, LucideSearch, LucideUsersRound } from '@lucide/angular';
+import {
+  LucideCopy,
+  LucideHourglass,
+  LucideKeyRound,
+  LucidePlus,
+  LucideSearch,
+  LucideUsersRound,
+} from '@lucide/angular';
+import { CopyLink } from '../../room/copy-link/copy-link';
 import { avatarHue } from '../../room/avatar-hue';
 import { ThemeToggle } from '../../theme/theme-toggle/theme-toggle';
 import { Chat } from '../chat-client';
 
-const filters = ['All', 'Unread', 'Groups'] as const;
+const filters = ['All', 'Unread', 'Groups', 'Private'] as const;
 type Filter = (typeof filters)[number];
 
 const codePattern = /(?:^|\/room\/)([A-Za-z0-9_-]{22})\/?$/;
@@ -15,13 +23,25 @@ export function codeIn(text: string): string | null {
 }
 
 @Component({
-  imports: [DatePipe, LucideHourglass, LucideKeyRound, LucidePlus, LucideSearch, LucideUsersRound, ThemeToggle],
+  imports: [
+    CopyLink,
+    DatePipe,
+    LucideCopy,
+    LucideHourglass,
+    LucideKeyRound,
+    LucidePlus,
+    LucideSearch,
+    LucideUsersRound,
+    ThemeToggle,
+  ],
   selector: 'app-chat-list',
   templateUrl: './chat-list.html',
 })
 export class ChatList {
   readonly chats = input.required<Chat[]>();
   readonly active = input<string | null>(null);
+  readonly me = input('');
+  readonly name = input<string | null>(null);
   readonly selected = output<string>();
   readonly newGroup = output();
   readonly opened = output<string>();
@@ -35,7 +55,11 @@ export class ChatList {
     const query = this.query().trim().toLowerCase();
     return this.chats().filter(
       (chat) =>
-        (this.filter() !== 'Unread' || chat.unread > 0) && (!query || chat.title.toLowerCase().includes(query)),
+        (this.filter() === 'All' ||
+          (this.filter() === 'Unread' && chat.unread > 0) ||
+          (this.filter() === 'Groups' && chat.kind === 'group') ||
+          (this.filter() === 'Private' && chat.kind === 'private')) &&
+        (!query || chat.title.toLowerCase().includes(query)),
     );
   });
 

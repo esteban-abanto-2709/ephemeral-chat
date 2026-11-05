@@ -2,7 +2,11 @@ import { Component, computed, input, output, signal } from '@angular/core';
 import {
   LucideArrowLeft,
   LucideCopy,
+  LucideLock,
+  LucideLogOut,
   LucideRefreshCw,
+  LucideShieldCheck,
+  LucideTrash2,
   LucideSendHorizontal,
   LucideUsersRound,
   LucideWifiOff,
@@ -27,7 +31,11 @@ const statusLabels = {
     Glass,
     LucideArrowLeft,
     LucideCopy,
+    LucideLock,
+    LucideLogOut,
     LucideRefreshCw,
+    LucideShieldCheck,
+    LucideTrash2,
     LucideSendHorizontal,
     LucideUsersRound,
     LucideWifiOff,
@@ -40,6 +48,8 @@ const statusLabels = {
 export class RoomChat {
   readonly status = input.required<SocketStatus>();
   readonly title = input.required<string>();
+  readonly kind = input<'group' | 'private'>('group');
+  readonly ended = input(false);
   readonly events = input.required<ChatEvent[]>();
   readonly members = input.required<Person[]>();
   readonly me = input.required<string>();
@@ -50,12 +60,16 @@ export class RoomChat {
   readonly reconnect = output();
   readonly typed = output();
   readonly closed = output();
+  readonly deleted = output();
 
   protected readonly avatarHue = avatarHue;
   protected readonly subtitle = computed(() => {
     const [first, second, ...rest] = this.typing().map((person) => person.name);
     if (this.status() !== 'open') {
       return statusLabels[this.status()];
+    }
+    if (!first && this.kind() === 'private') {
+      return this.ended() ? 'Left the chat' : 'Online';
     }
     if (!first) {
       const others = this.members().filter((member) => member.id !== this.me());

@@ -1,9 +1,10 @@
-import { Component, output } from '@angular/core';
-import { LucideHourglass, LucideKeyRound, LucideUsersRound } from '@lucide/angular';
+import { Component, input, output } from '@angular/core';
+import { LucideHourglass, LucideIdCard, LucideKeyRound, LucideUsersRound } from '@lucide/angular';
+import { CopyLink } from '../room/copy-link/copy-link';
 import { Glass } from '../glass/glass';
 
 @Component({
-  imports: [Glass, LucideHourglass, LucideKeyRound, LucideUsersRound],
+  imports: [CopyLink, Glass, LucideHourglass, LucideIdCard, LucideKeyRound, LucideUsersRound],
   selector: 'app-chats-welcome',
   host: { class: 'min-w-0 flex-1 items-center justify-center p-6' },
   template: `
@@ -16,7 +17,9 @@ import { Glass } from '../glass/glass';
       </span>
       <div class="flex flex-col gap-2">
         <h1 class="text-2xl font-semibold tracking-tight">Talk, then let it go</h1>
-        <p class="text-ink-soft">Nothing is stored. A chat vanishes when everyone leaves.</p>
+        <p class="text-ink-soft">
+          Nothing is stored. A chat vanishes when everyone leaves, and your ID when you close this tab.
+        </p>
       </div>
       <ul class="flex gap-6">
         <li>
@@ -51,11 +54,29 @@ import { Glass } from '../glass/glass';
             Join with code
           </button>
         </li>
+        <li>
+          <button
+            [appCopyLink]="me()"
+            copied="ID copied"
+            [disabled]="!me()"
+            class="group flex w-24 flex-col items-center gap-2 text-xs font-medium disabled:opacity-50"
+          >
+            <span
+              appGlass="bubble"
+              class="grid size-14 place-items-center rounded-full transition group-hover:scale-105"
+              aria-hidden="true"
+            >
+              <svg lucideIdCard class="size-5"></svg>
+            </span>
+            Copy my ID
+          </button>
+        </li>
       </ul>
     </section>
   `,
 })
 export class ChatsWelcome {
+  readonly me = input('');
   readonly newGroup = output();
   readonly joinWithCode = output();
 }

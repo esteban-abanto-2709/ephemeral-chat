@@ -17,6 +17,8 @@ export type ChatEvent = (
 
 export interface Chat {
   id: string;
+  kind: 'group' | 'private';
+  ended: boolean;
   title: string;
   events: ChatEvent[];
   members: Person[];
@@ -33,6 +35,7 @@ interface Frame {
   title?: string;
   text?: string;
   code?: string;
+  private?: boolean;
   members?: Person[];
 }
 
@@ -41,7 +44,9 @@ const typingShownFor = 3000;
 const typingSentEvery = 2000;
 
 const failures: Record<string, string> = {
-  gone: "That group doesn't exist anymore.",
+  gone: 'Nothing to open: that group or person is gone.',
+  self: "That's your own ID: share it so others can write to you.",
+  busy: `They're already in ${maxChats} chats and can't take another.`,
   full: 'That group is full: it already has 50 people.',
   limit: `You're in ${maxChats} chats, the most a tab can hold.`,
 };
@@ -110,11 +115,19 @@ export class ChatClient implements OnDestroy {
     }
     this._chats.update((chats) => [
       ...chats,
-      { id, title, events: [], members: [], typing: [], unread: 0, at: Date.now() },
+      this.newChat(id, title),
     ]);
     this.open(id);
     if (this.ready) {
       this.write({ type: 'join', room: id });
+    }
+  }
+
+  remove(id: string): void {
+    this.write({ type: 'leave', room: id });
+    this._chats.update((chats) => chats.filter((chat) => chat.id !== id));
+    if (this._active() === id) {
+      this._active.set(null);
     }
   }
 
@@ -154,7 +167,12 @@ export class ChatClient implements OnDestroy {
     if (frame.type === 'ready') {
       this._me.set(frame.id!);
       this.ready = true;
-      this._chats().forEach((chat) => this.write({ type: 'join', room: chat.id }));
+      this._chats.update((chats) =>
+        chats.map((chat) => (chat.kind === 'private' && !chat.ended ? { ...chat, ended: true } : chat)),
+      );
+      this._chats()
+        .filter((chat) => chat.kind === 'group')
+        .forEach((chat) => this.write({ type: 'join', room: chat.id }));
       return;
     }
     const room = frame.room!;
@@ -164,6 +182,19 @@ export class ChatClient implements OnDestroy {
       if (this._active() === room) {
         this._active.set(null);
       }
+      return;
+    }
+    if (frame.type === 'joined' && frame.private) {
+      if (!this._chats().some((chat) => chat.id === room)) {
+        this._chats.update((chats) => [...chats, this.newChat(room, '')]);
+      }
+      this.update(room, (chat) => ({
+        ...chat,
+        kind: 'private',
+        ended: false,
+        title: frame.title!,
+        members: frame.members!,
+      }));
       return;
     }
     if (frame.type === 'typing') {
@@ -183,11 +214,16 @@ export class ChatClient implements OnDestroy {
     }
     this.update(room, (chat) => ({
       ...chat,
+      ended: chat.ended || (chat.kind === 'private' && event.type === 'left'),
       title: frame.title || chat.title,
       members: event.type === 'joined' || event.type === 'left' ? event.members : chat.members,
       events: [...chat.events, event],
       unread: event.type === 'message' && !event.own && this._active() !== room ? chat.unread + 1 : chat.unread,
     }));
+  }
+
+  private newChat(id: string, title: string): Chat {
+    return { id, kind: 'group', ended: false, title, events: [], members: [], typing: [], unread: 0, at: Date.now() };
   }
 
   private update(id: string, change: (chat: Chat) => Chat): void {

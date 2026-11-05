@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"io/fs"
 	"log"
 	"net/http"
@@ -79,13 +78,8 @@ func connect(rooms *room.Registry) http.HandlerFunc {
 		defer conn.CloseNow()
 		conn.SetReadLimit(frameMaxBytes)
 
-		client := room.NewClient(name)
-		chats := make(map[string]chat)
-		defer func() {
-			for _, c := range chats {
-				c.room.Leave(c.member)
-			}
-		}()
+		client := rooms.Connect(name)
+		defer rooms.Disconnect(client)
 
 		go func() {
 			defer conn.CloseNow()
@@ -115,49 +109,18 @@ func connect(rooms *room.Registry) http.HandlerFunc {
 			if err := wsjson.Read(r.Context(), conn, &incoming); err != nil {
 				return
 			}
-			c, in := chats[incoming.Room]
-			switch {
-			case incoming.Type == "join" && !in:
-				if c, ok := join(rooms, client, incoming.Room, len(chats)); ok {
-					chats[incoming.Room] = c
-				}
-			case incoming.Type == "leave" && in:
-				c.room.Leave(c.member)
-				delete(chats, incoming.Room)
-			case incoming.Type == "message" && in:
-				c.room.Send(c.member, incoming.Text)
-			case incoming.Type == "typing" && in:
-				c.room.Typing(c.member)
+			switch incoming.Type {
+			case "join":
+				rooms.Open(client, incoming.Room)
+			case "leave":
+				client.Leave(incoming.Room)
+			case "message":
+				client.Send(incoming.Room, incoming.Text)
+			case "typing":
+				client.Typing(incoming.Room)
 			}
 		}
 	}
-}
-
-type chat struct {
-	room   *room.Room
-	member *room.Member
-}
-
-func join(rooms *room.Registry, client *room.Client, id string, open int) (chat, bool) {
-	fail := func(code string) (chat, bool) {
-		client.Notify(room.Message{Type: "error", Room: id, Code: code})
-		return chat{}, false
-	}
-	if open >= room.MaxChats {
-		return fail("limit")
-	}
-	r, ok := rooms.Get(id)
-	if !ok {
-		return fail("gone")
-	}
-	member, err := r.Join(client)
-	if errors.Is(err, room.ErrRoomFull) {
-		return fail("full")
-	}
-	if err != nil {
-		return fail("gone")
-	}
-	return chat{r, member}, true
 }
 
 func spa(files fs.FS) http.Handler {

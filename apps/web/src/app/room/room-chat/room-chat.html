@@ -11,11 +11,15 @@
     <svg lucideArrowLeft class="size-5" aria-hidden="true"></svg>
   </button>
   <span
-    class="avatar mr-2 grid size-9 shrink-0 place-items-center rounded-full"
+    class="avatar mr-2 grid size-9 shrink-0 place-items-center rounded-full text-sm font-semibold"
     [style.--hue]="avatarHue(title())"
     aria-hidden="true"
   >
-    <svg lucideUsersRound class="size-4"></svg>
+    @if (kind() === 'private') {
+      {{ title()[0] }}
+    } @else {
+      <svg lucideUsersRound class="size-4"></svg>
+    }
   </span>
   <div class="min-w-0 flex-1">
     <h1 class="truncate text-sm font-semibold">{{ title() || 'Joining…' }}</h1>
@@ -23,16 +27,43 @@
       {{ subtitle() }}
     </p>
   </div>
-  <button
-    [appCopyLink]="link()"
-    class="grid size-10 place-items-center rounded-full text-accent-ink transition hover:bg-glass-strong focus-visible:outline-2 focus-visible:outline-accent-ink"
-    aria-label="Copy group link"
-  >
-    <svg lucideCopy class="size-5" aria-hidden="true"></svg>
-  </button>
+  @if (kind() === 'group') {
+    <button
+      [appCopyLink]="link()"
+      class="grid size-10 place-items-center rounded-full text-accent-ink transition hover:bg-glass-strong focus-visible:outline-2 focus-visible:outline-accent-ink"
+      aria-label="Copy group link"
+    >
+      <svg lucideCopy class="size-5" aria-hidden="true"></svg>
+    </button>
+  }
 </header>
 
-<app-message-list [events]="events()" [title]="title()" [code]="code()" />
+@if (kind() === 'private') {
+  <app-message-list [events]="events()">
+    <section
+      appGlass="bubble"
+      class="mx-auto flex w-full max-w-sm flex-col items-center gap-3 rounded-3xl px-5 py-6 text-center"
+      aria-label="About this chat"
+    >
+      <span
+        class="grid size-14 place-items-center rounded-2xl border border-edge bg-glass-strong/50 text-accent-ink"
+        aria-hidden="true"
+      >
+        <svg lucideLock class="size-7"></svg>
+      </span>
+      <div class="flex flex-col gap-1">
+        <h2 class="font-semibold">Private chat with {{ title() }}</h2>
+        <p class="text-sm text-ink-soft">Just the two of you. No one else can join.</p>
+      </div>
+      <p class="flex items-start gap-1.5 text-xs text-ink-soft">
+        <svg lucideShieldCheck class="mt-px size-3.5 shrink-0" aria-hidden="true"></svg>
+        Nothing is stored. Messages vanish when one of you leaves.
+      </p>
+    </section>
+  </app-message-list>
+} @else {
+  <app-message-list [events]="events()" [title]="title()" [code]="code()" />
+}
 
 <div
   class="absolute inset-x-2 bottom-[calc(env(safe-area-inset-bottom)+0.5rem)] z-10 flex flex-col gap-2 md:inset-x-0 md:bottom-0"
@@ -52,6 +83,20 @@
     </div>
   }
 
+  @if (ended()) {
+    <p appGlass="bubble" class="flex items-center gap-3 rounded-2xl py-1.5 pr-1.5 pl-4 text-sm">
+      <svg lucideLogOut class="size-4 shrink-0 text-ink-soft" aria-hidden="true"></svg>
+      <span class="flex-1">{{ title() }} left. You can still read this chat.</span>
+      <button
+        type="button"
+        class="flex items-center gap-2 rounded-full px-3 py-1.5 font-medium text-danger-ink transition hover:bg-glass-strong focus-visible:outline-2 focus-visible:outline-accent-ink"
+        (click)="deleted.emit()"
+      >
+        <svg lucideTrash2 class="size-4" aria-hidden="true"></svg>
+        Delete chat
+      </button>
+    </p>
+  } @else {
   <form
     appGlass="composer"
     class="flex items-center gap-2 rounded-full py-1 pr-1 pl-5 has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-accent-ink"
@@ -81,4 +126,5 @@
       <svg lucideSendHorizontal class="size-5" aria-hidden="true"></svg>
     </button>
   </form>
+  }
 </div>
