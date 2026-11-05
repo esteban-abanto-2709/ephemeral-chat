@@ -1,6 +1,6 @@
 <header
   appGlass="header"
-  class="absolute inset-x-2 top-[calc(env(safe-area-inset-top)+0.5rem)] z-10 flex items-center gap-1 rounded-2xl py-1 pr-1 pl-1 md:inset-x-0 md:top-0 md:pl-2"
+  class="absolute inset-x-2 top-[calc(env(safe-area-inset-top)+0.5rem)] z-10 flex items-center gap-1 rounded-2xl py-1 pr-1 pl-1 md:inset-x-0 md:top-0 md:h-16 md:pr-3 md:pl-4"
 >
   <button
     type="button"
@@ -11,7 +11,7 @@
     <svg lucideArrowLeft class="size-5" aria-hidden="true"></svg>
   </button>
   <span
-    class="avatar mr-2 grid size-9 shrink-0 place-items-center rounded-full text-sm font-semibold"
+    class="avatar mr-2 grid size-9 shrink-0 place-items-center rounded-full text-sm font-semibold md:mr-3 md:size-10"
     [style.--hue]="avatarHue(title())"
     aria-hidden="true"
   >
@@ -22,8 +22,8 @@
     }
   </span>
   <div class="min-w-0 flex-1">
-    <h1 class="truncate text-sm font-semibold">{{ title() || 'Joining…' }}</h1>
-    <p role="status" class="truncate text-xs" [class]="typing().length ? 'text-accent-ink' : 'text-ink-soft'">
+    <h1 class="truncate text-sm font-semibold md:leading-tight">{{ title() || 'Joining…' }}</h1>
+    <p role="status" class="truncate text-xs md:leading-tight" [class]="typing().length ? 'text-accent-ink' : 'text-ink-soft'">
       {{ subtitle() }}
     </p>
   </div>
