@@ -74,6 +74,11 @@ which ignores that, gets the visible height from `visualViewport`
 keyboard opens, dragging the messages hides the keyboard, and the send button
 keeps it open.
 
+While you write, `RoomSocket.sendTyping()` tells the room at most every 2
+seconds; others see "Ana is typing…" in place of "Connected" in the header
+(up to "Ana and 2 more are typing…") until Ana sends, leaves or stays quiet
+for 3 seconds.
+
 When the connection drops the room shows a Reconnect button: it looks the
 room up again (the API answers a join to a missing room with a plain 404, not
 `4004`) and joins with the same name, or shows "Room not found". "Room not

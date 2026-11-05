@@ -12,6 +12,12 @@ Summary in ≤2 lines of what was done.
 
 ---
 
+## [RM-010] Comfort (v0.3) (2026-11-05 14:57)
+Clear background with glass bubbles, floating header and composer and no green fill; the room stays above the phone keyboard; typing indicator. Completes v0.3.
+
+## [WL-001] Typing indicator (2026-11-05 14:57)
+The API relays `typing` to everyone but the typist, once every 2 seconds per member; the header shows who is typing until they send, leave or go quiet.
+
 ## [TD-003] index.html is served without a cache policy (2026-11-04 17:25)
 The Go server sends `Cache-Control: no-cache` with `index.html`, so browsers revalidate it and pick up a new build's bundles right after a deploy.
 

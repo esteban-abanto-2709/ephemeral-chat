@@ -7,9 +7,6 @@ If an idea is promoted, it's deleted from here and a new `RM` is born.
 
 ---
 
-## [WL-001] Typing indicator
-"X is typing…" in the room. Candidate for v0.3.
-
 ## [WL-002] Send images
 Images relayed through the WebSocket like any message, never stored; needs a size limit. Candidate for v0.5.
 

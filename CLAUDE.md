@@ -25,11 +25,13 @@ clever shortcuts.
 
 ## Current state (2026-11)
 
-- **v0.2 is feature-complete**: v0.1's journey (create a room, share its
+- **v0.3 is feature-complete**: v0.1's journey (create a room, share its
   link, pick a name, see who is in, chat; rooms vanish a minute after they
   empty; limits on message length, rate and room size) with the glass
   redesign: WhatsApp Web layout, WebGL liquid glass with a frosted fallback,
-  light and dark themes. The protocol is in the
+  light and dark themes. v0.3 made it comfortable: a clear background with
+  glass bubbles and a floating header and composer, the room kept above the
+  phone keyboard, and a typing indicator. The protocol is in the
   [API README](./apps/api/README.md#room-chat), the look in the
   [web README](./apps/web/README.md#look-and-feel).
 - Next versions are ideas in `docs/logbook/wishlist.md` until committed to

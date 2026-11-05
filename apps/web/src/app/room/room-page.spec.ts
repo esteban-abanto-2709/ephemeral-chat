@@ -12,6 +12,8 @@ describe('RoomPage', () => {
     status: signal<SocketStatus>('open'),
     events: signal<RoomEvent[]>([{ type: 'message', name: 'Ana', text: 'hola', at: 0 }]),
     members: signal(['Juan', 'Luis']),
+    typing: signal<string[]>([]),
+    sendTyping: vi.fn(),
     nameTaken: signal(false),
     roomGone: signal(false),
     roomFull: signal(false),
@@ -160,6 +162,19 @@ describe('RoomPage', () => {
     page.querySelector('form')?.dispatchEvent(new Event('submit'));
     await fixture.whenStable();
     expect(page.querySelector('#message-length')).toBeNull();
+  });
+
+  it('says who is typing and signals your own typing', async () => {
+    const { fixture, page } = await render();
+    fakeSocket.typing.set(['Ana', 'Luis', 'Eva']);
+    await fixture.whenStable();
+    expect(page.querySelector('[role="status"]')?.textContent).toContain('Ana and 2 more are typing…');
+    fakeSocket.typing.set([]);
+
+    const input = page.querySelector('#message') as HTMLInputElement;
+    input.value = 'h';
+    input.dispatchEvent(new Event('input'));
+    expect(fakeSocket.sendTyping).toHaveBeenCalled();
   });
 
   it('sends the typed text and clears the input', async () => {

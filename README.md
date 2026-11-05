@@ -43,8 +43,9 @@ everything you had is gone.
 
 ## Status
 
-**v0.2**: the journey above, text only, deployed, with a glass redesign in
-light and dark. A typing indicator, images, voice messages, stickers and
+**v0.3**: the journey above, text only, deployed, with a glass design in
+light and dark, a room that stays above the phone keyboard and a typing
+indicator. Several chats at once, images, voice messages, stickers and
 end-to-end encryption are ideas for later versions.
 
 The detail and the order are in the [roadmap](./docs/logbook/roadmap.md).

@@ -23,10 +23,11 @@ const events: RoomEvent[] = [
 @Component({
   imports: [RoomChat],
   selector: 'app-design-room',
-  template: `<app-room-chat status="open" [events]="events" [members]="members" me="Sam" [link]="link" />`,
+  template: `<app-room-chat status="open" [events]="events" [members]="members" me="Sam" [link]="link" [typing]="typing" />`,
 })
 export class DesignRoom {
   protected readonly events = events;
   protected readonly members = members;
+  protected readonly typing = ['Ana'];
   protected readonly link = 'https://ephemeral.chat/room/4g6uAftAF4ic8F0W';
 }

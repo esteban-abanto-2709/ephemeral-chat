@@ -18,13 +18,13 @@
     >
       <div class="min-w-0 flex-1">
         <h1 class="text-sm font-semibold">Private room</h1>
-        <p class="flex items-center gap-1.5 text-xs text-ink-soft">
+        <p class="flex min-w-0 items-center gap-1.5 text-xs text-ink-soft">
           <span
             class="size-1.5 shrink-0 rounded-full"
             [class]="status() === 'open' ? 'bg-accent-ink' : 'bg-ink-soft'"
             aria-hidden="true"
           ></span>
-          <span role="status">{{ statusLabel() }}</span>
+          <span role="status" class="truncate" [class.text-accent-ink]="typing().length">{{ statusLabel() }}</span>
         </p>
       </div>
       <button
@@ -88,7 +88,7 @@
           placeholder="Write a message"
           autocomplete="off"
           [maxLength]="messageMaxLength"
-          (input)="length.set(input.value.length)"
+          (input)="write(input)"
         />
         @if (length() >= counterFrom) {
           <span class="text-xs text-ink-soft" id="message-length">{{ length() }} / {{ messageMaxLength }}</span>

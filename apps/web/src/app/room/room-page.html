@@ -16,6 +16,8 @@
       [members]="socket.members()"
       [me]="me"
       [link]="link()"
+      [typing]="socket.typing()"
+      (typed)="socket.sendTyping()"
       (sent)="socket.send($event)"
       (reconnect)="reconnect()"
     />

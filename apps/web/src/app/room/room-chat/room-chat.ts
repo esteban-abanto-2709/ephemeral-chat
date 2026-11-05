@@ -45,16 +45,34 @@ export class RoomChat {
   readonly members = input.required<string[]>();
   readonly me = input.required<string>();
   readonly link = input.required<string>();
+  readonly typing = input<string[]>([]);
   readonly sent = output<string>();
   readonly reconnect = output();
+  readonly typed = output();
 
   protected readonly copied = inject(CopyNotice).visible;
-  protected readonly statusLabel = computed(() => statusLabels[this.status()]);
+  protected readonly statusLabel = computed(() => {
+    const [first, second, ...rest] = this.typing();
+    if (this.status() !== 'open' || !first) {
+      return statusLabels[this.status()];
+    }
+    if (!second) {
+      return `${first} is typing…`;
+    }
+    return rest.length ? `${first} and ${rest.length + 1} more are typing…` : `${first} and ${second} are typing…`;
+  });
   protected readonly panelOpen = signal(false);
 
   protected readonly messageMaxLength = messageMaxLength;
   protected readonly counterFrom = messageMaxLength - 100;
   protected readonly length = signal(0);
+
+  protected write(input: HTMLInputElement): void {
+    this.length.set(input.value.length);
+    if (input.value.trim()) {
+      this.typed.emit();
+    }
+  }
 
   protected send(event: Event, input: HTMLInputElement): void {
     event.preventDefault();
