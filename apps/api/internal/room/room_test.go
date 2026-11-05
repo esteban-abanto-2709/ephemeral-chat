@@ -229,6 +229,78 @@ func TestSendingTooFastIsRefusedToTheSenderOnly(t *testing.T) {
 	})
 }
 
+func TestTypingReachesEveryoneButTheTypist(t *testing.T) {
+	room := newRoom(func() {})
+	juan, ana, luis := join(t, room, "Juan"), join(t, room, "Ana"), join(t, room, "Luis")
+	drain(juan)
+	drain(ana)
+	drain(luis)
+
+	room.Typing(juan)
+
+	want := Message{Type: "typing", Name: "Juan"}
+	expect(t, ana, want)
+	expect(t, luis, want)
+	assertEmpty(t, juan)
+}
+
+func TestTypingIsRelayedOncePerInterval(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		room := newRoom(func() {})
+		juan, ana := join(t, room, "Juan"), join(t, room, "Ana")
+		drain(juan)
+		drain(ana)
+
+		room.Typing(juan)
+		receive(t, ana)
+		room.Typing(juan)
+		assertEmpty(t, ana)
+		assertEmpty(t, juan)
+
+		time.Sleep(TypingInterval)
+		room.Typing(juan)
+		expect(t, ana, Message{Type: "typing", Name: "Juan"})
+	})
+}
+
+func TestTypingLeavesTheMessageLimitAlone(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		room := newRoom(func() {})
+		juan, ana := join(t, room, "Juan"), join(t, room, "Ana")
+		drain(juan)
+		drain(ana)
+
+		room.Typing(juan)
+		receive(t, ana)
+		for range MessagesPerSecond {
+			room.Send(juan, "hola")
+			expect(t, ana, Message{Type: "message", Name: "Juan", Text: "hola"})
+			receive(t, juan)
+		}
+	})
+}
+
+func TestTypingNeverDisconnectsASlowMember(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		room := newRoom(func() {})
+		juan, ana := join(t, room, "Juan"), join(t, room, "Ana")
+		drain(juan)
+		for range mailboxSize - 1 {
+			room.Send(ana, "hola")
+			time.Sleep(time.Second)
+		}
+		drain(ana)
+
+		room.Typing(ana)
+		time.Sleep(TypingInterval)
+		room.Typing(ana)
+
+		if got := room.names(); !reflect.DeepEqual(got, []string{"Juan", "Ana"}) {
+			t.Errorf("members = %v, want Juan and Ana", got)
+		}
+	})
+}
+
 func TestValidName(t *testing.T) {
 	cases := map[string]bool{
 		"Juan":                  true,

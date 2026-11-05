@@ -16,6 +16,7 @@ const (
 	MessageMaxLength  = 1000
 	MessagesPerSecond = 5
 	MaxMembers        = 50
+	TypingInterval    = 2 * time.Second
 	mailboxSize       = 16
 	emptyLifetime     = time.Minute
 )
@@ -37,6 +38,7 @@ type Member struct {
 	Name    string
 	mailbox chan Message
 	limiter *rate.Limiter
+	typing  *rate.Limiter
 }
 
 func (m *Member) Messages() <-chan Message {
@@ -63,6 +65,7 @@ func (r *Room) Join(name string) (*Member, error) {
 		Name:    name,
 		mailbox: make(chan Message, mailboxSize),
 		limiter: rate.NewLimiter(MessagesPerSecond, MessagesPerSecond),
+		typing:  rate.NewLimiter(rate.Every(TypingInterval), 1),
 	}
 
 	r.mu.Lock()
@@ -100,6 +103,24 @@ func (r *Room) Send(from *Member, text string) {
 		return
 	}
 	r.broadcast(Message{Type: "message", Name: from.Name, Text: text})
+}
+
+func (r *Room) Typing(from *Member) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if !slices.Contains(r.members, from) || !from.typing.Allow() {
+		return
+	}
+	message := Message{Type: "typing", Name: from.Name}
+	for _, member := range r.members {
+		if member == from {
+			continue
+		}
+		select {
+		case member.mailbox <- message:
+		default:
+		}
+	}
 }
 
 func (r *Room) deliver(member *Member, message Message) {

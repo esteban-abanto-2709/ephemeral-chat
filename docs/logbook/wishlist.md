@@ -39,3 +39,6 @@ Avatars drawn as small glass lenses instead of flat tinted circles. The WebGL la
 
 ## [WL-011] A logo that says "message"
 The hourglass says ephemeral but not chat; a mark that reads as a message that fades. Tried on `/design` first.
+
+## [WL-012] Installable app (PWA)
+A manifest and icons so the app installs to the home screen and opens full screen, without a service worker. Dropped from v0.3: it pays off once WL-009 keeps several chats in one page, since iOS opens shared links in Safari, not in the installed app.

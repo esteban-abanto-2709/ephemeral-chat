@@ -67,10 +67,12 @@ closes the same way with `4004`, and a room that already has 50 people
 
 ```
 client → server:   {"text": "hola"}
+                   {"type": "typing"}
 server → clients:  {"type": "message", "name": "Juan", "text": "hola"}
                    {"type": "joined",  "name": "Ana",  "members": ["Juan", "Ana"]}
                    {"type": "left",    "name": "Ana",  "members": ["Juan"]}
 server → sender:   {"type": "error",   "text": "Slow down: up to 5 messages per second."}
+server → others:   {"type": "typing",  "name": "Juan"}
 ```
 
 Every event goes to everyone connected to the room at that moment, sender and
@@ -84,6 +86,13 @@ even read, so no client can make the server buffer a huge message.
 Each member may send 5 messages per second (`MessagesPerSecond`), with bursts
 of up to 5: a token bucket from `golang.org/x/time/rate`, one per member. A
 message over the limit is dropped and only its sender gets an `error` event.
+
+`typing` says someone is writing. It goes to everyone except the typist, at
+most once every 2 seconds per member (`TypingInterval`, its own token bucket,
+so typing never uses up the message limit); extra signals are dropped without
+an error. There is no "stopped typing": a client shows it for a few seconds
+after the last signal. It is never worth a disconnection: a member whose
+mailbox is full just misses it.
 
 ### Room lifecycle
 

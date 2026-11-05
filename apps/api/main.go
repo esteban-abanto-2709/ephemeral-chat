@@ -110,12 +110,17 @@ func joinRoom(rooms *room.Registry) http.HandlerFunc {
 
 		for {
 			var incoming struct {
+				Type string `json:"type"`
 				Text string `json:"text"`
 			}
 			if err := wsjson.Read(r.Context(), conn, &incoming); err != nil {
 				return
 			}
-			chat.Send(member, incoming.Text)
+			if incoming.Type == "typing" {
+				chat.Typing(member)
+			} else {
+				chat.Send(member, incoming.Text)
+			}
 		}
 	}
 }
