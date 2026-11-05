@@ -7,16 +7,16 @@
 >
   <form class="flex flex-col gap-4" [formRoot]="nameForm">
     <div class="flex flex-col gap-1">
-      <h2 id="name-title" class="text-xl font-semibold">What's your name?</h2>
-      <p class="text-sm text-ink-soft">It's how others will see you in this room.</p>
+      <h2 id="name-title" class="text-xl font-semibold">{{ heading() }}</h2>
+      <p class="text-sm text-ink-soft">{{ hint() }}</p>
     </div>
 
     <div class="flex flex-col gap-2">
-      <label for="name" class="text-xs font-medium text-ink-soft">Name</label>
+      <label for="name" class="text-xs font-medium text-ink-soft">{{ label() }}</label>
       <input
         id="name"
         class="rounded-full border border-edge bg-glass-strong/50 px-5 py-3 placeholder:text-ink-soft focus-visible:outline-2 focus-visible:outline-accent-ink"
-        placeholder="Ana"
+        [placeholder]="placeholder()"
         autocomplete="off"
         [formField]="nameForm.name"
       />
@@ -33,7 +33,7 @@
       appGlass="primary"
       class="rounded-full px-6 py-3 font-semibold shadow-lift transition hover:scale-[1.02] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink"
     >
-      Join
+      {{ action() }}
     </button>
   </form>
 </dialog>

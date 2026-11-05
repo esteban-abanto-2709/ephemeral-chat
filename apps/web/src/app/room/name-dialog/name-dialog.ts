@@ -11,6 +11,11 @@ export const nameMaxLength = 24;
 })
 export class NameDialog {
   readonly taken = input<string | null>(null);
+  readonly heading = input("What's your name?");
+  readonly label = input('Name');
+  readonly placeholder = input('Ana');
+  readonly hint = input("It's how others will see you in this room.");
+  readonly action = input('Join');
   readonly chosen = output<string>();
 
   protected readonly maxLength = nameMaxLength;

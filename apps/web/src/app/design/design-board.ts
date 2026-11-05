@@ -51,7 +51,7 @@ import { DesignScreen, designScreens } from './design-frame';
 export class DesignBoard {
   protected readonly screens = designScreens;
   protected readonly themes = ['light', 'dark'] as const;
-  protected readonly screen = signal<DesignScreen>('room');
+  protected readonly screen = signal<DesignScreen>('chats');
   private readonly query = computed(() => `/design/frame?screen=${this.screen()}`);
 
   protected frame(theme: string): string {

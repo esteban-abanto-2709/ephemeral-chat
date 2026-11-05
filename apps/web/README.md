@@ -155,7 +155,8 @@ Backgrounds in `public/backdrops`, free under the Unsplash License:
 
 `/design` shows the app with sample data, no logic, in four frames at once:
 desktop (1280 × 800, scaled to fit) and mobile (390 × 844), each in light and
-dark, with a switch for the screen (home, room). Each frame is an `iframe` of
+dark, with a switch for the screen (home, room, and the v0.4 proposal: start,
+chats, new group, group, private, left). Each frame is an `iframe` of
 `/design/frame?screen=…&theme=…`, so it has its own theme, its own liquid glass
 and a real viewport width. Visual changes are tried here first and moved into
 the app once approved; screens reuse the app's components (the room is

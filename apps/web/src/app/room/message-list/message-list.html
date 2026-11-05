@@ -4,34 +4,36 @@
   (scroll)="follow()"
   (touchmove)="dismissKeyboard()"
 >
-  <section
-    appGlass="bubble"
-    class="mx-auto flex w-full max-w-sm flex-col items-center gap-3 rounded-3xl px-5 py-6 text-center"
-    aria-label="About this room"
-  >
-    <span
-      class="grid size-14 place-items-center rounded-2xl border border-edge bg-glass-strong/50 text-accent-ink"
-      aria-hidden="true"
+  <ng-content>
+    <section
+      appGlass="bubble"
+      class="mx-auto flex w-full max-w-sm flex-col items-center gap-3 rounded-3xl px-5 py-6 text-center"
+      aria-label="About this room"
     >
-      <svg lucideHourglass class="size-7"></svg>
-    </span>
-    <div class="flex flex-col gap-1">
-      <h2 class="font-semibold">Private room</h2>
-      <p class="text-sm text-ink-soft">Anyone with this link can join.</p>
-    </div>
-    <button
-      [appCopyLink]="link()"
-      class="flex w-full items-center gap-2 rounded-full border border-edge bg-glass-strong/50 px-4 py-2.5 text-sm transition hover:bg-glass-strong focus-visible:outline-2 focus-visible:outline-accent-ink"
-      aria-label="Copy room link"
-    >
-      <span class="min-w-0 flex-1 truncate text-left">{{ link() }}</span>
-      <svg lucideCopy class="size-4 shrink-0 text-accent-ink" aria-hidden="true"></svg>
-    </button>
-    <p class="flex items-start gap-1.5 text-xs text-ink-soft">
-      <svg lucideShieldCheck class="mt-px size-3.5 shrink-0" aria-hidden="true"></svg>
-      Nothing is stored. Messages vanish when everyone leaves.
-    </p>
-  </section>
+      <span
+        class="grid size-14 place-items-center rounded-2xl border border-edge bg-glass-strong/50 text-accent-ink"
+        aria-hidden="true"
+      >
+        <svg lucideHourglass class="size-7"></svg>
+      </span>
+      <div class="flex flex-col gap-1">
+        <h2 class="font-semibold">Private room</h2>
+        <p class="text-sm text-ink-soft">Anyone with this link can join.</p>
+      </div>
+      <button
+        [appCopyLink]="link()"
+        class="flex w-full items-center gap-2 rounded-full border border-edge bg-glass-strong/50 px-4 py-2.5 text-sm transition hover:bg-glass-strong focus-visible:outline-2 focus-visible:outline-accent-ink"
+        aria-label="Copy room link"
+      >
+        <span class="min-w-0 flex-1 truncate text-left">{{ link() }}</span>
+        <svg lucideCopy class="size-4 shrink-0 text-accent-ink" aria-hidden="true"></svg>
+      </button>
+      <p class="flex items-start gap-1.5 text-xs text-ink-soft">
+        <svg lucideShieldCheck class="mt-px size-3.5 shrink-0" aria-hidden="true"></svg>
+        Nothing is stored. Messages vanish when everyone leaves.
+      </p>
+    </section>
+  </ng-content>
 
   <ul class="flex flex-col gap-1" aria-label="Messages" aria-live="polite">
     @for (item of items(); track $index) {

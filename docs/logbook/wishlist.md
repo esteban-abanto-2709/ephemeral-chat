@@ -26,10 +26,7 @@ A link that only lets one person in, for the room's creator to hand out. Far fut
 Measure concurrent connections against RAM and latency (e.g. with `k6`) and publish the result in the README.
 
 ## [WL-008] Identity by id, rename inside the room
-Each person in a room gets a fixed id from the server and can change their name anytime; the chat shows "A is now B" and messages follow the id, so two people may share a name and still be told apart. Replaces rejecting duplicate names (RM-006).
-
-## [WL-009] Several chats at once
-A list of open rooms beside the chat, as in WhatsApp Web, to talk in more than one at a time; each room still lives only in memory. The v0.2 layout leaves the sidebar ready for it. Candidate for v0.4.
+Each person in a room gets a fixed id from the server and can change their name anytime; the chat shows "A is now B" and messages follow the id, so two people may share a name and still be told apart. Replaces rejecting duplicate names (RM-006). RM-011 lays the ground: a tab id and ids in room events.
 
 ## [WL-010] Liquid glass avatars
 Avatars drawn as small glass lenses instead of flat tinted circles. The WebGL layer draws up to 8 lenses and a room holds 50 people, so it needs another approach (one lens for the list, or CSS glass).
@@ -38,4 +35,4 @@ Avatars drawn as small glass lenses instead of flat tinted circles. The WebGL la
 The hourglass says ephemeral but not chat; a mark that reads as a message that fades. Tried on `/design` first.
 
 ## [WL-012] Installable app (PWA)
-A manifest and icons so the app installs to the home screen and opens full screen, without a service worker. Dropped from v0.3: it pays off once WL-009 keeps several chats in one page, since iOS opens shared links in Safari, not in the installed app.
+A manifest and icons so the app installs to the home screen and opens full screen, without a service worker. Dropped from v0.3: it pays off once RM-011 keeps several chats in one page, since iOS opens shared links in Safari, not in the installed app.
