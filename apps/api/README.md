@@ -84,11 +84,14 @@ a chat the tab isn't in are ignored.
 
 ### Private chats
 
-`join` also takes someone's id: it starts a private chat with that tab, with
-no prompt on their side. Both tabs get a `joined` with `"private": true`,
-where `room`, `id`, `name` and `title` are the other person: each side calls
-the chat by the other's id, and every event of that chat comes labeled that
-way. Nobody else can join it (its own id is never handed out), there are no
+`join` also takes someone's id. That only looks them up: the tab that asked
+gets a `joined` with `"private": true`, where `room`, `id`, `name` and
+`title` are the other person, and the other tab hears nothing, not even
+`typing`. The chat starts with the first `message` to that id: the server
+creates it, the other tab gets its own `joined` (with no prompt on their
+side) and then the message. If they left in between, the message fails with
+`gone`. Each side calls the chat by the other's id, and every event of that
+chat comes labeled that way. Nobody else can join it (its own id is never handed out), there are no
 `joined` notices for its members, and it ends when either one leaves: the
 other gets `left` and is taken out too, so the chat is over for both. Opening
 an id you already have a chat with does nothing; your own id answers `self`,

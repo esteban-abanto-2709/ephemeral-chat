@@ -115,42 +115,68 @@ func next(t *testing.T, client *Client) Message {
 	}
 }
 
-func TestOpeningSomeonesIDStartsAPrivateChat(t *testing.T) {
+func assertNothing(t *testing.T, client *Client) {
+	t.Helper()
+	select {
+	case message := <-client.Messages():
+		t.Errorf("%s got %+v, want nothing", client.Name, message)
+	default:
+	}
+}
+
+func TestOpeningSomeonesIDTellsThemNothingUntilTheFirstMessage(t *testing.T) {
 	rooms := NewRegistry()
 	sam, luis := rooms.Connect("Sam"), rooms.Connect("Luis")
 	both := []Person{sam.person(), luis.person()}
 
 	rooms.Open(sam, luis.ID)
-
-	if got, want := next(t, sam), (Message{Type: "joined", Room: luis.ID, ID: luis.ID, Name: "Luis", Title: "Luis", Private: true, Members: both}); !reflect.DeepEqual(got, want) {
+	want := Message{Type: "joined", Room: luis.ID, ID: luis.ID, Name: "Luis", Title: "Luis", Private: true, Members: both}
+	if got := next(t, sam); !reflect.DeepEqual(got, want) {
 		t.Errorf("Sam got %+v, want %+v", got, want)
 	}
+	sam.Typing(luis.ID)
+	rooms.Send(sam, luis.ID, "   ")
+	assertNothing(t, luis)
+
+	rooms.Send(sam, luis.ID, "hola")
 	if got, want := next(t, luis), (Message{Type: "joined", Room: sam.ID, ID: sam.ID, Name: "Sam", Title: "Sam", Private: true, Members: both}); !reflect.DeepEqual(got, want) {
 		t.Errorf("Luis got %+v, want %+v", got, want)
 	}
-
-	sam.Send(luis.ID, "hola")
 	if got := next(t, luis); got.Room != sam.ID || got.Text != "hola" {
 		t.Errorf("Luis got %+v, want hola labeled with Sam's id", got)
 	}
-	if got := next(t, sam); got.Room != luis.ID {
-		t.Errorf("Sam got %+v, want it labeled with Luis's id", got)
+	next(t, sam)
+	if got := next(t, sam); got.Room != luis.ID || got.Text != "hola" {
+		t.Errorf("Sam got %+v, want hola labeled with Luis's id", got)
 	}
 
+	rooms.Send(luis, sam.ID, "qué tal")
+	if got := next(t, sam); got.Text != "qué tal" {
+		t.Errorf("Sam got %+v, want Luis's reply", got)
+	}
+	next(t, luis)
+	assertNothing(t, luis)
+}
+
+func TestFirstMessageToSomeoneGoneFails(t *testing.T) {
+	rooms := NewRegistry()
+	sam, luis := rooms.Connect("Sam"), rooms.Connect("Luis")
 	rooms.Open(sam, luis.ID)
-	select {
-	case message := <-sam.Messages():
-		t.Errorf("opening the same person again sent %+v", message)
-	default:
+	next(t, sam)
+
+	rooms.Disconnect(luis)
+	rooms.Send(sam, luis.ID, "hola")
+	if got := next(t, sam); got.Type != "error" || got.Code != "gone" || got.Room != luis.ID {
+		t.Errorf("Sam got %+v, want gone", got)
 	}
 }
 
 func TestPrivateChatEndsWhenEitherLeaves(t *testing.T) {
 	rooms := NewRegistry()
 	sam, luis := rooms.Connect("Sam"), rooms.Connect("Luis")
-	rooms.Open(sam, luis.ID)
-	next(t, sam)
-	next(t, luis)
+	rooms.Send(sam, luis.ID, "hola")
+	drainClient(sam)
+	drainClient(luis)
 
 	rooms.Disconnect(luis)
 
@@ -163,6 +189,16 @@ func TestPrivateChatEndsWhenEitherLeaves(t *testing.T) {
 	rooms.Open(sam, luis.ID)
 	if got := next(t, sam); got.Code != "gone" {
 		t.Errorf("opening a closed tab's id: got %+v, want gone", got)
+	}
+}
+
+func drainClient(client *Client) {
+	for {
+		select {
+		case <-client.Messages():
+		default:
+			return
+		}
 	}
 }
 

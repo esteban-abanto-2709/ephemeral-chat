@@ -55,19 +55,45 @@ func (r *Registry) Open(client *Client, code string) {
 		}
 		return
 	}
+	other, reason := r.peer(client, code)
+	if other == nil {
+		fail(reason)
+		return
+	}
+	client.Notify(Message{Type: "joined", Room: other.ID, ID: other.ID, Name: other.Name, Title: other.Name, Private: true, Members: []Person{client.person(), other.person()}})
+}
+
+func (r *Registry) Send(client *Client, label, text string) {
+	if _, ok := client.chat(label); !ok && validText(text) {
+		other, reason := r.peer(client, label)
+		if other == nil {
+			client.Notify(Message{Type: "error", Room: label, Code: reason})
+			return
+		}
+		r.mu.Lock()
+		if _, ok := client.chat(label); !ok {
+			startPrivate(client, other)
+		}
+		r.mu.Unlock()
+	}
+	client.Send(label, text)
+}
+
+func (r *Registry) peer(client *Client, id string) (*Client, string) {
 	r.mu.Lock()
-	other, ok := r.clients[code]
+	other, ok := r.clients[id]
 	r.mu.Unlock()
 	switch {
 	case !ok:
-		fail("gone")
+		return nil, "gone"
 	case other == client:
-		fail("self")
+		return nil, "self"
+	case client.count() >= MaxChats:
+		return nil, "limit"
 	case other.count() >= MaxChats:
-		fail("busy")
-	default:
-		startPrivate(client, other)
+		return nil, "busy"
 	}
+	return other, ""
 }
 
 func (r *Registry) Create(name string) string {

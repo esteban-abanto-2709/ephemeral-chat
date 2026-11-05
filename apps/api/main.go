@@ -115,7 +115,7 @@ func connect(rooms *room.Registry) http.HandlerFunc {
 			case "leave":
 				client.Leave(incoming.Room)
 			case "message":
-				client.Send(incoming.Room, incoming.Text)
+				rooms.Send(client, incoming.Room, incoming.Text)
 			case "typing":
 				client.Typing(incoming.Room)
 			}

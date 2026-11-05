@@ -80,7 +80,8 @@ open.
 
 `join(code)` adds a chat and opens it; it is sent as soon as the connection is
 ready. The code may be a group's or someone's id: a person's opens a private
-chat (`kind: 'private'`), which also lands in the other tab's list, unopened.
+chat (`kind: 'private'`). The other tab learns nothing until your first
+message, which lands the chat in their list, unopened.
 `create(title)` asks the API for a group (`POST /api/rooms`) and joins it. A
 join the server refuses (`gone`, `full`, `limit`, `self`, `busy`) drops the
 chat and shows why. A tab holds up to 20 chats, the API's limit.

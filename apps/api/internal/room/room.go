@@ -114,8 +114,12 @@ func (r *Room) Leave(member *Member) {
 	r.remove(member)
 }
 
+func validText(text string) bool {
+	return strings.TrimSpace(text) != "" && utf8.RuneCountInString(text) <= MessageMaxLength
+}
+
 func (r *Room) Send(from *Member, text string) {
-	if strings.TrimSpace(text) == "" || utf8.RuneCountInString(text) > MessageMaxLength {
+	if !validText(text) {
 		return
 	}
 	r.mu.Lock()
