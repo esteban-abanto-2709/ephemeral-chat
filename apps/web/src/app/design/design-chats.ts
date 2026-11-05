@@ -1,45 +1,22 @@
 import { Component, computed, input } from '@angular/core';
-import {
-  LucideArrowLeft,
-  LucideCopy,
-  LucideHourglass,
-  LucideIdCard,
-  LucideInfo,
-  LucideKeyRound,
-  LucideLock,
-  LucideLogOut,
-  LucidePlus,
-  LucideSearch,
-  LucideSendHorizontal,
-  LucideShieldCheck,
-  LucideUsersRound,
-  LucideTrash2,
-} from '@lucide/angular';
+import { Chat, ChatEvent } from '../chats/chat-client';
+import { ChatList } from '../chats/chat-list/chat-list';
+import { ChatsWelcome } from '../chats/chats-welcome';
 import { Glass } from '../glass/glass';
-import { avatarHue } from '../room/avatar-hue';
-import { MessageList } from '../room/message-list/message-list';
 import { NameDialog } from '../room/name-dialog/name-dialog';
-import { RoomEvent } from '../room/room-socket';
-import { ThemeToggle } from '../theme/theme-toggle/theme-toggle';
+import { RoomChat } from '../room/room-chat/room-chat';
 
-export type ChatsState = 'start' | 'chats' | 'new group' | 'group' | 'private' | 'left';
-
-interface ChatPreview {
-  kind: 'group' | 'private';
-  name: string;
-  last: string;
-  time: string;
-  unread: number;
-}
+export const chatsStates = ['start', 'chats', 'new group', 'group'] as const;
+export type ChatsState = (typeof chatsStates)[number];
 
 const start = new Date(2026, 10, 4, 14, 2).getTime();
 const minute = 60_000;
 const ana = { id: 'ana', name: 'Ana' };
 const juan = { id: 'juan', name: 'Juan' };
 const sam = { id: 'sam', name: 'Sam' };
-const luis = { id: 'luis', name: 'Luis' };
+const eva = { id: 'eva', name: 'Eva' };
 
-const groupEvents: RoomEvent[] = [
+const tripEvents: ChatEvent[] = [
   { type: 'joined', ...ana, members: [ana], at: start },
   { type: 'joined', ...juan, members: [ana, juan], at: start },
   { type: 'joined', ...sam, members: [ana, juan, sam], at: start },
@@ -49,70 +26,82 @@ const groupEvents: RoomEvent[] = [
   { type: 'message', ...sam, own: true, text: 'Got it, I am in', at: start + 3 * minute },
 ];
 
-const privateEvents: RoomEvent[] = [
-  { type: 'message', ...luis, own: false, text: 'Hey, got your id from the group', at: start + minute },
-  { type: 'message', ...sam, own: true, text: 'Nice, this one is just us two', at: start + 2 * minute },
-  { type: 'message', ...luis, own: false, text: 'And it is gone once we close the tab', at: start + 2 * minute },
-];
-
-const chats: ChatPreview[] = [
-  { kind: 'group', name: 'Weekend trip', last: 'Sam: Got it, I am in', time: '14:05', unread: 0 },
-  { kind: 'private', name: 'Luis', last: 'And it is gone once we close the tab', time: '14:04', unread: 0 },
-  { kind: 'private', name: 'Ana', last: 'Is the link working for you?', time: '13:58', unread: 2 },
-  { kind: 'group', name: 'Book club', last: 'Eva: Chapter 4 by Friday', time: '12:15', unread: 5 },
+const chats: Chat[] = [
+  {
+    id: 'aB3xQ9mK2pLt7vRw4ZcN8e',
+    title: 'Weekend trip',
+    events: tripEvents,
+    members: [ana, juan, sam],
+    typing: [ana],
+    unread: 0,
+    at: start,
+  },
+  {
+    id: 'Zt4pQ8mW2xLk7vRn3YcB6d',
+    title: 'Book club',
+    events: [{ type: 'message', ...eva, own: false, text: 'Chapter 4 by Friday', at: start - 110 * minute }],
+    members: [eva, sam],
+    typing: [],
+    unread: 5,
+    at: start,
+  },
+  {
+    id: 'Qm7rT2kX9pLs4vWn8ZbC3f',
+    title: 'Study group',
+    events: [{ type: 'message', ...sam, own: true, text: 'See you at 6', at: start - 300 * minute }],
+    members: [juan, sam],
+    typing: [],
+    unread: 0,
+    at: start,
+  },
 ];
 
 @Component({
-  imports: [
-    Glass,
-    LucideArrowLeft,
-    LucideCopy,
-    LucideHourglass,
-    LucideIdCard,
-    LucideInfo,
-    LucideKeyRound,
-    LucideLock,
-    LucideLogOut,
-    LucidePlus,
-    LucideSearch,
-    LucideSendHorizontal,
-    LucideShieldCheck,
-    LucideUsersRound,
-    LucideTrash2,
-    MessageList,
-    NameDialog,
-    ThemeToggle,
-  ],
+  imports: [ChatList, ChatsWelcome, Glass, NameDialog, RoomChat],
   selector: 'app-design-chats',
-  templateUrl: './design-chats.html',
+  template: `
+    <div class="relative flex h-dvh md:gap-4 md:p-4">
+      <app-chat-list
+        appGlass
+        class="m-2 min-w-0 flex-1 flex-col gap-4 rounded-3xl p-4 md:m-0 md:flex md:w-96 md:flex-none"
+        [class.flex]="!open()"
+        [class.hidden]="open()"
+        [chats]="chats()"
+        [active]="open()?.id ?? null"
+      />
+      @if (open(); as chat) {
+        <app-room-chat
+          status="open"
+          [title]="chat.title"
+          [events]="chat.events"
+          [members]="chat.members"
+          me="sam"
+          [code]="chat.id"
+          [link]="'https://ephemeral.chat/room/' + chat.id"
+          [typing]="chat.typing"
+        />
+      } @else {
+        <app-chats-welcome class="hidden" [class.md:flex]="state() === 'chats'" />
+      }
+      @if (state() === 'start') {
+        <app-name-dialog hint="It's how others see you in every chat. It lasts until you close this tab." />
+      }
+      @if (state() === 'new group') {
+        <app-name-dialog
+          heading="New group"
+          label="Group name"
+          placeholder="Weekend trip"
+          hint="It can't be changed later, and the group vanishes once everyone leaves."
+          action="Create group"
+          [cancelable]="true"
+        />
+      }
+    </div>
+  `,
 })
 export class DesignChats {
   readonly state = input<ChatsState>('chats');
 
-  protected readonly avatarHue = avatarHue;
-  protected readonly me = 'Sam';
-  protected readonly myId = 'u7Qm2xKp9RtLw4Zb8NcVhA';
-  protected readonly code = 'aB3xQ9mK2pLt7vRw4ZcN8e';
-  protected readonly filters = ['All', 'Unread', 'Groups', 'Private'];
-  protected readonly left = computed(() => this.state() === 'left');
-  protected readonly chats = computed(() => {
-    const state = this.state();
-    if (state === 'start') {
-      return [];
-    }
-    return this.left() ? chats.map((chat) => (chat.name === 'Luis' ? { ...chat, last: 'Luis left' } : chat)) : chats;
-  });
-  protected readonly open = computed(() => {
-    const state = this.state();
-    return state === 'group' ? this.chats()[0] : state === 'private' || state === 'left' ? this.chats()[1] : null;
-  });
-  protected readonly events = computed(() => {
-    const state = this.state();
-    if (state === 'group') {
-      return groupEvents;
-    }
-    return this.left()
-      ? [...privateEvents, { type: 'left', ...luis, members: [sam], at: start + 5 * minute } as RoomEvent]
-      : privateEvents;
-  });
+  protected readonly chats = computed(() => (this.state() === 'start' ? [] : chats));
+  protected readonly open = computed(() => (this.state() === 'group' ? chats[0] : null));
 }

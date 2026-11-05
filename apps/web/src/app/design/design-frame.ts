@@ -1,33 +1,18 @@
-import { Component, computed, effect, inject, input } from '@angular/core';
-import { HomePage } from '../home/home-page';
+import { Component, effect, inject, input } from '@angular/core';
 import { Theme, ThemeMode } from '../theme/theme';
-import { ChatsState, DesignChats } from './design-chats';
-import { DesignRoom } from './design-room';
+import { ChatsState, DesignChats, chatsStates } from './design-chats';
 
-export const designScreens = ['home', 'room', 'start', 'chats', 'new group', 'group', 'private', 'left'] as const;
-export type DesignScreen = (typeof designScreens)[number];
+export const designScreens = chatsStates;
+export type DesignScreen = ChatsState;
 
 @Component({
-  imports: [DesignChats, DesignRoom, HomePage],
+  imports: [DesignChats],
   selector: 'app-design-frame',
-  template: `
-    @switch (screen()) {
-      @case ('home') {
-        <app-home-page />
-      }
-      @case ('room') {
-        <app-design-room />
-      }
-      @default {
-        <app-design-chats [state]="chatsState()" />
-      }
-    }
-  `,
+  template: `<app-design-chats [state]="screen()" />`,
 })
 export class DesignFrame {
-  readonly screen = input<DesignScreen>('room');
+  readonly screen = input<DesignScreen>('chats');
   readonly theme = input<ThemeMode>('light');
-  protected readonly chatsState = computed(() => this.screen() as ChatsState);
 
   constructor() {
     const theme = inject(Theme);

@@ -8,24 +8,26 @@
     <section
       appGlass="bubble"
       class="mx-auto flex w-full max-w-sm flex-col items-center gap-3 rounded-3xl px-5 py-6 text-center"
-      aria-label="About this room"
+      aria-label="About this chat"
     >
       <span
         class="grid size-14 place-items-center rounded-2xl border border-edge bg-glass-strong/50 text-accent-ink"
         aria-hidden="true"
       >
-        <svg lucideHourglass class="size-7"></svg>
+        <svg lucideUsersRound class="size-7"></svg>
       </span>
       <div class="flex flex-col gap-1">
-        <h2 class="font-semibold">Private room</h2>
-        <p class="text-sm text-ink-soft">Anyone with this link can join.</p>
+        <h2 class="font-semibold">{{ title() || 'Group' }}</h2>
+        <p class="text-sm text-ink-soft">Anyone with the link or this code can join.</p>
       </div>
       <button
-        [appCopyLink]="link()"
+        [appCopyLink]="code()"
+        copied="Code copied"
         class="flex w-full items-center gap-2 rounded-full border border-edge bg-glass-strong/50 px-4 py-2.5 text-sm transition hover:bg-glass-strong focus-visible:outline-2 focus-visible:outline-accent-ink"
-        aria-label="Copy room link"
+        aria-label="Copy group code"
       >
-        <span class="min-w-0 flex-1 truncate text-left">{{ link() }}</span>
+        <svg lucideKeyRound class="size-4 shrink-0 text-ink-soft" aria-hidden="true"></svg>
+        <span class="min-w-0 flex-1 truncate text-left font-mono">{{ code() }}</span>
         <svg lucideCopy class="size-4 shrink-0 text-accent-ink" aria-hidden="true"></svg>
       </button>
       <p class="flex items-start gap-1.5 text-xs text-ink-soft">

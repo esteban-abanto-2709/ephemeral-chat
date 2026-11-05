@@ -10,10 +10,13 @@ import (
 	"time"
 )
 
-const roomID = "room-1"
+const (
+	roomID    = "room-1"
+	roomTitle = "Weekend trip"
+)
 
 func newTestRoom() *Room {
-	return newRoom(roomID, func() {})
+	return newRoom(roomID, roomTitle, func() {})
 }
 
 func join(t *testing.T, room *Room, name string) *Member {
@@ -85,7 +88,7 @@ func people(members ...*Member) []Person {
 }
 
 func joined(who *Member, members ...*Member) Message {
-	return Message{Type: "joined", Room: roomID, ID: who.client.ID, Name: who.client.Name, Members: people(members...)}
+	return Message{Type: "joined", Room: roomID, ID: who.client.ID, Name: who.client.Name, Title: roomTitle, Members: people(members...)}
 }
 
 func left(who *Member, members ...*Member) Message {

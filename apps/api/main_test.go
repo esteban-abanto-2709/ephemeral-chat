@@ -32,6 +32,7 @@ func TestRouting(t *testing.T) {
 		{"GET", "/api/health", 200, "ok"},
 		{"GET", "/api/missing", 404, "404"},
 		{"GET", "/api/rooms/unknown", 404, "404"},
+		{"POST", "/api/rooms", 400, "name must be"},
 		{"GET", "/api/rooms/unknown/ws?name=Juan", 404, "404"},
 		{"GET", "/api/ws", 400, "name must be"},
 		{"POST", "/api/health", 405, ""},
@@ -65,35 +66,26 @@ func TestIndexIsNeverCached(t *testing.T) {
 }
 
 func TestCreateRoom(t *testing.T) {
-	rec := httptest.NewRecorder()
-	newMux("").ServeHTTP(rec, httptest.NewRequest("POST", "/api/rooms", nil))
-
-	if rec.Code != http.StatusCreated {
-		t.Fatalf("POST /api/rooms = %d, want 201", rec.Code)
+	mux := newMux("")
+	for body, status := range map[string]int{`{"name": " Trip "}`: 201, `{"name": "  "}`: 400, ``: 400, `{"name": "` + strings.Repeat("x", 25) + `"}`: 400} {
+		rec := httptest.NewRecorder()
+		mux.ServeHTTP(rec, httptest.NewRequest("POST", "/api/rooms", strings.NewReader(body)))
+		if rec.Code != status {
+			t.Errorf("POST /api/rooms %s = %d, want %d", body, rec.Code, status)
+		}
 	}
+
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, httptest.NewRequest("POST", "/api/rooms", strings.NewReader(`{"name": "Trip"}`)))
 	if got := rec.Header().Get("Content-Type"); got != "application/json" {
 		t.Errorf("Content-Type = %q, want application/json", got)
 	}
-	var body struct{ ID string }
-	if err := json.NewDecoder(rec.Body).Decode(&body); err != nil {
+	var created struct{ ID string }
+	if err := json.NewDecoder(rec.Body).Decode(&created); err != nil {
 		t.Fatal(err)
 	}
-	if len(body.ID) != 22 {
-		t.Errorf("id = %q, want 22 characters", body.ID)
-	}
-}
-
-func TestFindRoom(t *testing.T) {
-	mux := newMux("")
-	rec := httptest.NewRecorder()
-	mux.ServeHTTP(rec, httptest.NewRequest("POST", "/api/rooms", nil))
-	var created struct{ ID string }
-	json.NewDecoder(rec.Body).Decode(&created)
-
-	rec = httptest.NewRecorder()
-	mux.ServeHTTP(rec, httptest.NewRequest("GET", "/api/rooms/"+created.ID, nil))
-	if rec.Code != http.StatusNoContent {
-		t.Errorf("GET an existing room = %d, want 204", rec.Code)
+	if len(created.ID) != 22 {
+		t.Errorf("id = %q, want 22 characters", created.ID)
 	}
 }
 
@@ -105,7 +97,7 @@ func TestChat(t *testing.T) {
 	defer cancel()
 
 	create := func() string {
-		resp, err := http.Post(server.URL+"/api/rooms", "", nil)
+		resp, err := http.Post(server.URL+"/api/rooms", "application/json", strings.NewReader(`{"name": "Trip"}`))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -159,7 +151,7 @@ func TestChat(t *testing.T) {
 		for i, member := range members {
 			people[i] = member.person
 		}
-		return room.Message{Type: "joined", Room: id, ID: who.person.ID, Name: who.person.Name, Members: people}
+		return room.Message{Type: "joined", Room: id, ID: who.person.ID, Name: who.person.Name, Title: "Trip", Members: people}
 	}
 	said := func(who tab, text string) room.Message {
 		return room.Message{Type: "message", Room: id, ID: who.person.ID, Name: who.person.Name, Text: text}

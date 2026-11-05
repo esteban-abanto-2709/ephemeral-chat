@@ -35,6 +35,7 @@ type Message struct {
 	Room    string   `json:"room,omitempty"`
 	ID      string   `json:"id,omitempty"`
 	Name    string   `json:"name,omitempty"`
+	Title   string   `json:"title,omitempty"`
 	Text    string   `json:"text,omitempty"`
 	Code    string   `json:"code,omitempty"`
 	Members []Person `json:"members,omitempty"`
@@ -48,14 +49,15 @@ type Member struct {
 
 type Room struct {
 	ID      string
+	Name    string
 	mu      sync.Mutex
 	members []*Member
 	closed  bool
 	expiry  *time.Timer
 }
 
-func newRoom(id string, onExpire func()) *Room {
-	return &Room{ID: id, expiry: time.AfterFunc(emptyLifetime, onExpire)}
+func newRoom(id, name string, onExpire func()) *Room {
+	return &Room{ID: id, Name: name, expiry: time.AfterFunc(emptyLifetime, onExpire)}
 }
 
 func ValidName(name string) bool {
@@ -78,7 +80,7 @@ func (r *Room) Join(client *Client) (*Member, error) {
 		return nil, ErrRoomFull
 	}
 	r.members = append(r.members, member)
-	r.broadcast(Message{Type: "joined", ID: client.ID, Name: client.Name, Members: r.people()})
+	r.broadcast(Message{Type: "joined", ID: client.ID, Name: client.Name, Title: r.Name, Members: r.people()})
 	return member, nil
 }
 

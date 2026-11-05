@@ -13,9 +13,11 @@ export class NameDialog {
   readonly heading = input("What's your name?");
   readonly label = input('Name');
   readonly placeholder = input('Ana');
-  readonly hint = input("It's how others will see you in this room.");
-  readonly action = input('Join');
+  readonly hint = input("It's how others see you. It lasts until you close this tab.");
+  readonly action = input('Start chatting');
+  readonly cancelable = input(false);
   readonly chosen = output<string>();
+  readonly dismissed = output();
 
   protected readonly maxLength = nameMaxLength;
   private readonly dialog = viewChild.required<ElementRef<HTMLDialogElement>>('dialog');
@@ -37,6 +39,14 @@ export class NameDialog {
       },
     },
   );
+
+  protected cancel(event: Event): void {
+    event.preventDefault();
+    if (this.cancelable()) {
+      this.dialog().nativeElement.close();
+      this.dismissed.emit();
+    }
+  }
 
   constructor() {
     afterNextRender(() => this.dialog().nativeElement.showModal());

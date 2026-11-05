@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { MessageList } from './message-list';
-import { RoomEvent } from '../room-socket';
+import { ChatEvent } from '../../chats/chat-client';
 
 const ana = { id: 'a', name: 'Ana' };
 const juan = { id: 'j', name: 'Juan' };
@@ -8,10 +8,11 @@ const juan = { id: 'j', name: 'Juan' };
 describe('MessageList', () => {
   const at = new Date(2026, 10, 3, 21, 4).getTime();
 
-  async function render(events: RoomEvent[]) {
+  async function render(events: ChatEvent[]) {
     const fixture = TestBed.createComponent(MessageList);
     fixture.componentRef.setInput('events', events);
-    fixture.componentRef.setInput('link', 'https://chat.test/room/abc');
+    fixture.componentRef.setInput('title', 'Weekend trip');
+    fixture.componentRef.setInput('code', 'abc');
     await fixture.whenStable();
     const list = fixture.nativeElement as HTMLElement;
     return { fixture, list, items: [...list.querySelectorAll('[aria-label="Messages"] li')] };
@@ -34,14 +35,13 @@ describe('MessageList', () => {
     expect(items[3].getAttribute('role')).toBe('alert');
   });
 
-  it('opens with the room link and a reminder that nothing is stored', async () => {
+  it('opens with the group name, its code and a reminder that nothing is stored', async () => {
     const { list } = await render([]);
-    const about = list.querySelector('[aria-label="About this room"]')!;
+    const about = list.querySelector('[aria-label="About this chat"]')!;
 
+    expect(about.querySelector('h2')?.textContent).toContain('Weekend trip');
     expect(about.textContent).toContain('Nothing is stored');
-    expect(about.querySelector('[aria-label="Copy room link"]')?.textContent).toContain(
-      'https://chat.test/room/abc',
-    );
+    expect(about.querySelector('[aria-label="Copy group code"]')?.textContent).toContain('abc');
   });
 
   it('puts your messages on the right and groups messages in a row', async () => {
@@ -70,7 +70,7 @@ describe('MessageList', () => {
   });
 
   it('follows new messages unless you are reading above', async () => {
-    const first: RoomEvent = { type: 'message', ...ana, own: false, text: 'uno', at };
+    const first: ChatEvent = { type: 'message', ...ana, own: false, text: 'uno', at };
     const { fixture, list } = await render([first]);
     const scroller = list.firstElementChild as HTMLElement;
     Object.defineProperty(scroller, 'scrollHeight', { value: 1000, configurable: true });

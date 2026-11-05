@@ -11,23 +11,24 @@ import {
   viewChild,
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { LucideCopy, LucideHourglass, LucideShieldCheck } from '@lucide/angular';
+import { LucideCopy, LucideKeyRound, LucideShieldCheck, LucideUsersRound } from '@lucide/angular';
 import { Glass } from '../../glass/glass';
 import { CopyLink } from '../copy-link/copy-link';
 import { avatarHue } from '../avatar-hue';
-import { RoomEvent } from '../room-socket';
+import { ChatEvent } from '../../chats/chat-client';
 
 const stickyDistance = 80;
 
 @Component({
-  imports: [CopyLink, DatePipe, Glass, LucideCopy, LucideHourglass, LucideShieldCheck],
+  imports: [CopyLink, DatePipe, Glass, LucideCopy, LucideKeyRound, LucideShieldCheck, LucideUsersRound],
   selector: 'app-message-list',
   host: { class: 'flex min-h-0 flex-1 flex-col' },
   templateUrl: './message-list.html',
 })
 export class MessageList {
-  readonly events = input.required<RoomEvent[]>();
-  readonly link = input.required<string>();
+  readonly events = input.required<ChatEvent[]>();
+  readonly title = input('');
+  readonly code = input('');
 
   protected readonly avatarHue = avatarHue;
   protected readonly items = computed(() =>

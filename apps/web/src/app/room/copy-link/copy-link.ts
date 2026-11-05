@@ -1,17 +1,5 @@
-import { DOCUMENT, Directive, Service, inject, input, signal } from '@angular/core';
-
-@Service()
-export class CopyNotice {
-  private readonly _visible = signal(false);
-  readonly visible = this._visible.asReadonly();
-  private timer?: ReturnType<typeof setTimeout>;
-
-  show(): void {
-    this._visible.set(true);
-    clearTimeout(this.timer);
-    this.timer = setTimeout(() => this._visible.set(false), 2000);
-  }
-}
+import { DOCUMENT, Directive, inject, input } from '@angular/core';
+import { Notice } from '../../notice';
 
 @Directive({
   selector: 'button[appCopyLink]',
@@ -19,11 +7,14 @@ export class CopyNotice {
 })
 export class CopyLink {
   readonly appCopyLink = input.required<string>();
+  readonly copied = input('Link copied');
 
-  private readonly notice = inject(CopyNotice);
+  private readonly notice = inject(Notice);
   private readonly document = inject(DOCUMENT);
 
   protected copy(): void {
-    this.document.defaultView?.navigator.clipboard.writeText(this.appCopyLink()).then(() => this.notice.show());
+    this.document.defaultView?.navigator.clipboard
+      .writeText(this.appCopyLink())
+      .then(() => this.notice.show(this.copied(), true));
   }
 }

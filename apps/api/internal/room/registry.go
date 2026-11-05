@@ -15,12 +15,12 @@ func NewRegistry() *Registry {
 	return &Registry{rooms: make(map[string]*Room)}
 }
 
-func (r *Registry) Create() string {
+func (r *Registry) Create(name string) string {
 	id := newID()
 
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	r.rooms[id] = newRoom(id, func() { r.drop(id) })
+	r.rooms[id] = newRoom(id, name, func() { r.drop(id) })
 	return id
 }
 

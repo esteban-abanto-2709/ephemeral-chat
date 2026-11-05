@@ -13,7 +13,7 @@ var urlSafeID = regexp.MustCompile(`^[A-Za-z0-9_-]{22}$`)
 
 func TestCreateGivesUniqueURLSafeIDs(t *testing.T) {
 	rooms := NewRegistry()
-	first, second := rooms.Create(), rooms.Create()
+	first, second := rooms.Create("Trip"), rooms.Create("Trip")
 
 	for _, id := range []string{first, second} {
 		if !urlSafeID.MatchString(id) {
@@ -34,7 +34,7 @@ func TestCreateFromManyGoroutines(t *testing.T) {
 
 	var wg sync.WaitGroup
 	for range n {
-		wg.Go(func() { rooms.Create() })
+		wg.Go(func() { rooms.Create("Trip") })
 	}
 	wg.Wait()
 
@@ -54,7 +54,7 @@ func assertExists(t *testing.T, rooms *Registry, id string, want bool) {
 func TestEmptyRoomIsDroppedAfterAMinute(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
 		rooms := NewRegistry()
-		id := rooms.Create()
+		id := rooms.Create("Trip")
 		room, _ := rooms.Get(id)
 
 		time.Sleep(emptyLifetime - time.Second)
@@ -79,7 +79,7 @@ func TestEmptyRoomIsDroppedAfterAMinute(t *testing.T) {
 func TestUnusedRoomIsDroppedAfterAMinute(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
 		rooms := NewRegistry()
-		id := rooms.Create()
+		id := rooms.Create("Trip")
 
 		time.Sleep(emptyLifetime)
 		assertExists(t, rooms, id, false)
@@ -89,7 +89,7 @@ func TestUnusedRoomIsDroppedAfterAMinute(t *testing.T) {
 func TestRejoiningWithinTheMinuteKeepsTheRoom(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
 		rooms := NewRegistry()
-		id := rooms.Create()
+		id := rooms.Create("Trip")
 		room, _ := rooms.Get(id)
 
 		room.Leave(join(t, room, "Juan"))

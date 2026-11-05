@@ -44,8 +44,7 @@ Every API route lives under `/api/`, so it never collides with a web route.
 | Method | Path          | Response            |
 | ------ | ------------- | ------------------- |
 | `GET`  | `/api/health` | `ok` (health check) |
-| `POST` | `/api/rooms`  | `201` with `{"id": "..."}`: creates a room in memory |
-| `GET`  | `/api/rooms/{id}` | `204` if the room exists, `404` if not |
+| `POST` | `/api/rooms`  | Body `{"name": "…"}`: creates a group in memory, `201` with `{"id": "..."}`; `400` without a name of 1 to 24 characters |
 | `GET`  | `/api/ws?name=…` | WebSocket: the tab's connection, for every chat it holds (see below) |
 | `GET`  | `/api/*`      | `404` for any other |
 
@@ -70,7 +69,7 @@ client → server:   {"type": "join",    "room": "…"}
                    {"type": "leave",   "room": "…"}
 server → client:   {"type": "ready",   "id": "…", "name": "Juan"}
 server → room:     {"type": "message", "room": "…", "id": "…", "name": "Juan", "text": "hola"}
-                   {"type": "joined",  "room": "…", "id": "…", "name": "Ana", "members": [{"id": "…", "name": "Juan"}, …]}
+                   {"type": "joined",  "room": "…", "id": "…", "name": "Ana", "title": "Weekend trip", "members": [{"id": "…", "name": "Juan"}, …]}
                    {"type": "left",    "room": "…", "id": "…", "name": "Ana", "members": […]}
 server → others:   {"type": "typing",  "room": "…", "id": "…", "name": "Juan"}
 server → sender:   {"type": "error",   "room": "…", "text": "Slow down: up to 5 messages per second."}
@@ -83,7 +82,8 @@ already has 50 people (`MaxMembers`), `limit` for a tab already in 20 chats
 (`MaxChats`). Frames for a room the tab hasn't joined are ignored.
 
 Every event goes to everyone connected to the room at that moment, sender and
-newcomer included. `joined` and `left` carry the full list of who is in, in
+newcomer included. `joined` also carries the group's name (`title`), fixed
+when it was created. `joined` and `left` carry the full list of who is in, in
 order of arrival, so a client never has to work it out. Nothing is stored:
 whoever joins later sees only what comes after. Blank messages and messages
 over 1000 characters (`MessageMaxLength`) are dropped; the web never sends
@@ -106,8 +106,8 @@ mailbox is full just misses it.
 A room lives while someone is in it. Once it is empty, including right after
 it's created, it has one minute (`emptyLifetime`) before it is dropped from the
 registry; anyone joining inside that minute keeps it, so reloading the page
-while alone doesn't lose the room. A dropped room is gone for good: its id
-answers `404` like any unknown one.
+while alone doesn't lose the room. A dropped room is gone for good: joining it
+fails with `gone` like any unknown id.
 
 Each room carries a `time.AfterFunc` timer, re-armed when the last member
 leaves. When it fires, the registry drops the room only if it's still empty,

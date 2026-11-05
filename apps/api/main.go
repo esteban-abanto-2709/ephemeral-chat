@@ -36,7 +36,6 @@ func newMux(staticDir string) *http.ServeMux {
 		w.Write([]byte("ok"))
 	})
 	mux.HandleFunc("POST /api/rooms", createRoom(rooms))
-	mux.HandleFunc("GET /api/rooms/{id}", findRoom(rooms))
 	mux.HandleFunc("GET /api/ws", connect(rooms))
 	mux.HandleFunc("GET /api/", http.NotFound)
 
@@ -48,21 +47,20 @@ func newMux(staticDir string) *http.ServeMux {
 
 func createRoom(rooms *room.Registry) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var body struct {
+			Name string `json:"name"`
+		}
+		json.NewDecoder(http.MaxBytesReader(w, r.Body, frameMaxBytes)).Decode(&body)
+		name := strings.TrimSpace(body.Name)
+		if !room.ValidName(name) {
+			http.Error(w, "name must be 1 to 24 characters", http.StatusBadRequest)
+			return
+		}
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
 		json.NewEncoder(w).Encode(struct {
 			ID string `json:"id"`
-		}{rooms.Create()})
-	}
-}
-
-func findRoom(rooms *room.Registry) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if _, ok := rooms.Get(r.PathValue("id")); !ok {
-			http.NotFound(w, r)
-			return
-		}
-		w.WriteHeader(http.StatusNoContent)
+		}{rooms.Create(name)})
 	}
 }
 

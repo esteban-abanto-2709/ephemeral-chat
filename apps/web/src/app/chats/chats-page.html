@@ -1,0 +1,75 @@
+@let active = client.active();
+<div appVisibleViewport class="relative flex h-dvh md:gap-4 md:p-4">
+  <app-chat-list
+    appGlass
+    role="navigation"
+    aria-label="Chats"
+    class="m-2 min-w-0 flex-1 flex-col gap-4 rounded-3xl p-4 md:m-0 md:flex md:w-96 md:flex-none"
+    [class.flex]="!active"
+    [class.hidden]="active"
+    [chats]="client.chats()"
+    [active]="active?.id ?? null"
+    (selected)="client.open($event)"
+    (newGroup)="creating.set(true)"
+    (opened)="client.join($event)"
+  />
+
+  @if (active) {
+    <app-room-chat
+      [status]="client.status()"
+      [title]="active.title"
+      [events]="active.events"
+      [members]="active.members"
+      [me]="client.me()"
+      [code]="active.id"
+      [link]="link(active.id)"
+      [typing]="active.typing"
+      (sent)="client.send(active.id, $event)"
+      (typed)="client.sendTyping(active.id)"
+      (reconnect)="client.reconnect()"
+      (closed)="client.open(null)"
+    />
+  } @else {
+    <app-chats-welcome
+      class="hidden"
+      [class.md:flex]="client.name() && !creating()"
+      (newGroup)="creating.set(true)"
+      (joinWithCode)="joinWithCode()"
+    />
+  }
+
+  @if (notice.text(); as text) {
+    <p
+      appGlass="bubble"
+      role="status"
+      class="absolute top-[calc(env(safe-area-inset-top)+4.5rem)] left-1/2 z-20 flex max-w-[calc(100%-2rem)] -translate-x-1/2 animate-appear items-center gap-2 rounded-full px-4 py-2 text-sm font-medium motion-reduce:animate-none md:top-20"
+    >
+      @if (notice.done()) {
+        <svg lucideCheck class="size-4 shrink-0 text-accent-ink" aria-hidden="true"></svg>
+      } @else {
+        <svg lucideInfo class="size-4 shrink-0 text-ink-soft" aria-hidden="true"></svg>
+      }
+      {{ text }}
+    </p>
+  }
+
+  @if (!client.name()) {
+    <app-name-dialog
+      hint="It's how others see you in every chat. It lasts until you close this tab."
+      (chosen)="start($event)"
+    />
+  }
+
+  @if (creating()) {
+    <app-name-dialog
+      heading="New group"
+      label="Group name"
+      placeholder="Weekend trip"
+      hint="It can't be changed later, and the group vanishes once everyone leaves."
+      action="Create group"
+      [cancelable]="true"
+      (chosen)="create($event)"
+      (dismissed)="creating.set(false)"
+    />
+  }
+</div>

@@ -3,7 +3,7 @@
   appGlass
   class="m-auto w-[calc(100%-1.5rem)] max-w-sm rounded-[2rem] p-6 text-ink animate-appear backdrop:animate-fade backdrop:bg-scrim motion-reduce:animate-none motion-reduce:backdrop:animate-none md:p-8"
   aria-labelledby="name-title"
-  (cancel)="$event.preventDefault()"
+  (cancel)="cancel($event)"
 >
   <form class="flex flex-col gap-4" [formRoot]="nameForm">
     <div class="flex flex-col gap-1">
@@ -32,5 +32,14 @@
     >
       {{ action() }}
     </button>
+    @if (cancelable()) {
+      <button
+        type="button"
+        class="-mt-1 rounded-full px-6 py-2 text-sm font-medium text-ink-soft transition hover:bg-glass-strong focus-visible:outline-2 focus-visible:outline-accent-ink"
+        (click)="cancel($event)"
+      >
+        Cancel
+      </button>
+    }
   </form>
 </dialog>

@@ -1,0 +1,161 @@
+import { TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { Notice } from '../notice';
+import { ChatClient, maxChats } from './chat-client';
+
+class FakeWebSocket {
+  static readonly OPEN = 1;
+  static last: FakeWebSocket;
+  readyState = FakeWebSocket.OPEN;
+  sent: object[] = [];
+  onopen?: () => void;
+  onclose?: () => void;
+  onmessage?: (message: { data: string }) => void;
+
+  constructor(readonly url: string) {
+    FakeWebSocket.last = this;
+  }
+
+  send(data: string): void {
+    this.sent.push(JSON.parse(data));
+  }
+
+  close(): void {}
+
+  receive(data: object): void {
+    this.onmessage?.({ data: JSON.stringify(data) });
+  }
+}
+
+const ana = { id: 'a', name: 'Ana' };
+const luis = { id: 'l', name: 'Luis' };
+const juan = { id: 'j', name: 'Juan' };
+
+describe('ChatClient', () => {
+  let client: ChatClient;
+  let server: FakeWebSocket;
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.stubGlobal('WebSocket', FakeWebSocket);
+    TestBed.configureTestingModule({ providers: [ChatClient, provideHttpClient(), provideHttpClientTesting()] });
+    client = TestBed.inject(ChatClient);
+    client.connect('Juan');
+    server = FakeWebSocket.last;
+    server.onopen?.();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+  });
+
+  function ready(): void {
+    server.receive({ type: 'ready', ...juan });
+  }
+
+  it('joins the chats picked before the connection was ready', () => {
+    expect(server.url).toContain('/api/ws?name=Juan');
+    client.join('abc');
+    expect(server.sent).toEqual([]);
+
+    ready();
+    expect(client.me()).toBe('j');
+    expect(server.sent).toEqual([{ type: 'join', room: 'abc' }]);
+    expect(client.active()?.id).toBe('abc');
+  });
+
+  it('keeps each chat apart and counts unread messages in the ones not open', () => {
+    ready();
+    client.join('one');
+    client.join('two');
+    server.receive({ type: 'joined', room: 'one', ...juan, title: 'Trip', members: [juan] });
+    server.receive({ type: 'message', room: 'one', ...ana, text: 'hola' });
+    vi.advanceTimersByTime(1000);
+    server.receive({ type: 'message', room: 'two', ...juan, text: 'mine' });
+
+    const [two, one] = client.chats();
+    expect(one.title).toBe('Trip');
+    expect(one.members).toEqual([juan]);
+    expect(one.unread).toBe(1);
+    expect(two.events.map((event) => event.type === 'message' && event.own)).toEqual([true]);
+
+    client.open('one');
+    expect(client.chats().find((chat) => chat.id === 'one')?.unread).toBe(0);
+  });
+
+  it('drops a chat the server refuses and says why', () => {
+    ready();
+    client.join('gone');
+    server.receive({ type: 'error', room: 'gone', code: 'gone' });
+    expect(client.chats()).toEqual([]);
+    expect(client.active()).toBeNull();
+    expect(TestBed.inject(Notice).text()).toContain("doesn't exist");
+  });
+
+  it(`holds at most ${maxChats} chats`, () => {
+    ready();
+    for (let i = 0; i <= maxChats; i++) {
+      client.join(`room-${i}`);
+    }
+    expect(client.chats()).toHaveLength(maxChats);
+    expect(TestBed.inject(Notice).text()).toContain(`${maxChats} chats`);
+  });
+
+  it('creates a group and opens it', () => {
+    ready();
+    client.create('Trip');
+    TestBed.inject(HttpTestingController)
+      .expectOne({ method: 'POST', url: '/api/rooms' })
+      .flush({ id: 'new' });
+    expect(client.active()).toMatchObject({ id: 'new', title: 'Trip' });
+    expect(server.sent).toEqual([{ type: 'join', room: 'new' }]);
+  });
+
+  it('rejoins every chat after reconnecting', () => {
+    ready();
+    client.join('one');
+    client.join('two');
+    client.reconnect();
+    server = FakeWebSocket.last;
+    server.onopen?.();
+    server.receive({ type: 'ready', id: 'j2', name: 'Juan' });
+    expect(server.sent).toEqual([
+      { type: 'join', room: 'one' },
+      { type: 'join', room: 'two' },
+    ]);
+  });
+
+  it('shows who is typing in each chat until they send, leave or go quiet', () => {
+    ready();
+    client.join('one');
+    server.receive({ type: 'typing', room: 'one', ...ana });
+    server.receive({ type: 'typing', room: 'one', ...luis });
+    expect(client.active()?.typing).toEqual([ana, luis]);
+
+    server.receive({ type: 'message', room: 'one', ...ana, text: 'hola' });
+    expect(client.active()?.typing).toEqual([luis]);
+
+    vi.advanceTimersByTime(3000);
+    expect(client.active()?.typing).toEqual([]);
+  });
+
+  it('signals your typing at most every 2 seconds per chat', () => {
+    ready();
+    client.join('one');
+    server.sent = [];
+    client.sendTyping('one');
+    client.sendTyping('one');
+    expect(server.sent).toEqual([{ type: 'typing', room: 'one' }]);
+
+    vi.advanceTimersByTime(2000);
+    client.sendTyping('one');
+    expect(server.sent).toHaveLength(2);
+
+    client.send('one', 'hola');
+    expect(server.sent.at(-1)).toEqual({ type: 'message', room: 'one', text: 'hola' });
+    client.sendTyping('one');
+    expect(server.sent.at(-1)).toEqual({ type: 'typing', room: 'one' });
+  });
+});

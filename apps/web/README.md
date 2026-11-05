@@ -30,73 +30,86 @@ the page connects to it on load.
 
 | Route       | Page                  | What it does |
 | ----------- | --------------------- | ------------ |
-| `/`         | `home/home-page`      | **Create room**: asks the API for a room (`POST /api/rooms`) and goes to it |
-| `/room/:id` | `room/room-page`      | The room: checks it exists ("Room not found" otherwise), asks for your name, then `room/room-chat`: a side panel (`room/room-panel`: who is in, theme) and the chat, with its header and composer floating over the messages; it opens with a card holding the link to share, and every `room/copy-link` button shows a "Link copied" notice; on phones the panel replaces the chat |
-
+| `/`         | `chats/chats-page`    | The app, as in WhatsApp Web: asks your name, then the chat list beside the open chat |
+| `/room/:id` | `chats/chats-page`    | The same page, joining that group as soon as you pick a name: a shared link works at first click |
 | `/design`   | `design/design-board` | Development only: the design board (see [Design board](#design-board)) |
 
-Both pages are lazy-loaded. The router binds `:id` straight to the page's
-`id` input (`withComponentInputBinding`). Any id shows a room for now; a room
-that doesn't exist will say so later in the roadmap.
+Pages are lazy-loaded. The router binds `:id` straight to the page's `id`
+input (`withComponentInputBinding`). The page never changes the URL, so moving
+between chats never reloads it.
+
+The page is built from:
+
+- `chats/chat-list`: the side panel. The search box filters chats by name;
+  when it holds a group code, or a link with one, it offers "Join with this
+  code" (also on Enter). Filters show all chats, the unread ones or groups.
+  Chats are sorted by their last event, with an unread count.
+- `room/room-chat`: the open chat, with its header (group name, who is in or
+  who is typing, copy link) and composer floating over the messages. On phones
+  the list and the chat take turns, with a back arrow; `Esc` closes the chat.
+- `chats/chats-welcome`: what the right side shows with no chat open: New
+  group and Join with code.
+- `room/name-dialog`: a native `<dialog>` (`showModal()`) with a Signal Forms
+  form (`@angular/forms/signals`) for a non-blank name of up to 24 characters.
+  It asks your name (`Esc` blocked) and, with `cancelable`, a new group's name.
+- `notice.ts`: one short message at the top ("Link copied", "That group
+  doesn't exist anymore."), shown by `room/copy-link` buttons and the client.
 
 ## Your name
 
-Entering a room opens `room/name-dialog`: a native `<dialog>` (`showModal()`,
-`Esc` blocked) with a Signal Forms form (`@angular/forms/signals`) that
-requires a non-blank name of up to 24 characters. It emits the name through
-an `output()`, and the room page keeps it in a signal: it lives only in memory,
-so reloading asks again. The room shows nothing else until there is a name.
+The page shows nothing else until you pick a name. It lives only in memory,
+for every chat in the tab, so reloading asks again. A group's name is picked
+when it is created and never changes.
 
 ## Real-time connection
 
-`src/app/room/room-socket.ts` opens the tab's connection once you've picked a
-name: one WebSocket to `/api/ws?name=<name>` on the page's own host (`ws://`
-or `wss://` to match the page). The server answers with your id, and the
-socket joins the room and receives its events: messages from everyone (sender
-included) and who joined or left (see the [API](../api/README.md#room-chat)).
-People are `{id, name}`: your messages are the ones carrying your id, so two
-people may share a name.
+`chats/chat-client.ts` opens the tab's connection once you've picked a name:
+one WebSocket to `/api/ws?name=<name>` on the page's own host (`ws://` or
+`wss://` to match the page). The server answers with your id, and every chat
+travels over that socket (see the [API](../api/README.md#room-chat)). People
+are `{id, name}`: your messages are the ones carrying your id, so two people
+may share a name.
 
 Its state is exposed as read-only signals, written only inside the service:
-`status` (`connecting`, `open`, `closed`), `events` (messages, notices and
-warnings such as sending too fast, in order, each stamped with its arrival
-time `at`: the server sends none), `members` (who is in the room, taken from the latest notice), and
-`me` (your id), and `roomGone` / `roomFull` (the join failed with code `gone`
-or `full`: the room page shows "Room not found" or "Room is full").
+`status` (`connecting`, `open`, `closed`), `name`, `me` (your id), `chats` and
+`active` (the open chat). Each chat holds its `title`, `events` (messages,
+notices and warnings such as sending too fast, in order, each stamped with its
+arrival time `at`: the server sends none), `members` (from the latest notice),
+who is `typing` and an `unread` count of messages that came in while it wasn't
+open.
 
-`room/message-list` draws them as bubbles (yours on the right, a run of
+`join(id)` adds a chat and opens it; it is sent as soon as the connection is
+ready. `create(title)` asks the API for a group (`POST /api/rooms`) and joins
+it. A join the server refuses (`gone`, `full`, `limit`) drops the chat and
+shows why. A tab holds up to 20 chats, the API's limit.
+
+`room/message-list` draws the events as bubbles (yours on the right, a run of
 messages from one person grouped under one name) and follows new ones unless
-you scrolled up to read; sending always brings you back down.
+you scrolled up to read; sending always brings you back down. It opens with a
+card holding the group's name and code; a chat can pass its own card as
+content instead.
 
-On phones the room fits above the keyboard, as in WhatsApp: Android resizes
+On phones the page fits above the keyboard, as in WhatsApp: Android resizes
 the page (`interactive-widget=resizes-content` in the viewport meta) and iOS,
 which ignores that, gets the visible height from `visualViewport`
 (`room/room-chat/visible-viewport.ts`). The last message stays in view when the
 keyboard opens, dragging the messages hides the keyboard, and the send button
 keeps it open.
 
-While you write, `RoomSocket.sendTyping()` tells the room at most every 2
-seconds; others see "Ana is typing…" in place of "Connected" in the header
-(up to "Ana and 2 more are typing…") until Ana sends, leaves or stays quiet
-for 3 seconds.
+While you write, `ChatClient.sendTyping()` tells the chat at most every 2
+seconds; others see "Ana is typing…" in the header (up to "Ana and 2 more are
+typing…") until Ana sends, leaves or stays quiet for 3 seconds.
 
-When the connection drops the room shows a Reconnect button: it looks the
-room up again and joins with the same name and a new id, or shows "Room not
-found". "Room not
-found" and "Room is full" share `room/room-notice`.
+When the connection drops the open chat shows a Reconnect button: it connects
+again with the same name and a new id, and rejoins every chat in the list.
 
 The message input stops at 1000 characters (`maxlength`, the API's limit) and
 shows a counter from 900 on.
 
-Before asking for a name, the room page looks the room up with `httpResource`
-(`GET /api/rooms/<id>`): a signal-based request that follows the `id` input
-and exposes `status()` and `error()` to the template.
-
-It is provided by the room page itself (`providers: [RoomSocket]`), not at the
-root: each room page gets its own socket, and leaving the page destroys the
-service, which closes the connection (`ngOnDestroy`). Tests replace it with
-`TestBed.overrideComponent`, since a component-level provider wins over the
-test module's.
+The client is provided by the page itself (`providers: [ChatClient]`), not at
+the root, so leaving the page closes the connection (`ngOnDestroy`). Tests
+replace it with `TestBed.overrideComponent`, since a component-level provider
+wins over the test module's.
 
 ## Commands
 
@@ -156,12 +169,12 @@ Backgrounds in `public/backdrops`, free under the Unsplash License:
 
 `/design` shows the app with sample data, no logic, in four frames at once:
 desktop (1280 × 800, scaled to fit) and mobile (390 × 844), each in light and
-dark, with a switch for the screen (home, room, and the v0.4 proposal: start,
-chats, new group, group, private, left). Each frame is an `iframe` of
-`/design/frame?screen=…&theme=…`, so it has its own theme, its own liquid glass
-and a real viewport width. Visual changes are tried here first and moved into
-the app once approved; screens reuse the app's components (the room is
-`room/room-chat` fed with sample events), so the board never drifts from the app.
+dark, with a switch for the screen (start, chats, new group, group). Each
+frame is an `iframe` of `/design/frame?screen=…&theme=…`, so it has its own
+theme, its own liquid glass and a real viewport width. Visual changes are
+tried here first and moved into the app once approved; screens are the app's
+own components fed with sample chats (`design/design-chats.ts`), so the board
+never drifts from the app.
 
 It exists only in development: the `DESIGN` build constant (`define` in
 `angular.json`) is `true` in the development configuration and `false`

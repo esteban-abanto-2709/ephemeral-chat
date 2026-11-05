@@ -1,18 +1,17 @@
-import { Component, computed, inject, input, output, signal } from '@angular/core';
+import { Component, computed, input, output, signal } from '@angular/core';
 import {
-  LucideCheck,
+  LucideArrowLeft,
   LucideCopy,
   LucideRefreshCw,
   LucideSendHorizontal,
-  LucideUsers,
+  LucideUsersRound,
   LucideWifiOff,
 } from '@lucide/angular';
+import { ChatEvent, Person, SocketStatus } from '../../chats/chat-client';
 import { Glass } from '../../glass/glass';
-import { CopyLink, CopyNotice } from '../copy-link/copy-link';
+import { avatarHue } from '../avatar-hue';
+import { CopyLink } from '../copy-link/copy-link';
 import { MessageList } from '../message-list/message-list';
-import { RoomPanel } from '../room-panel/room-panel';
-import { Person, RoomEvent, SocketStatus } from '../room-socket';
-import { VisibleViewport } from './visible-viewport';
 
 const messageMaxLength = 1000;
 
@@ -26,42 +25,47 @@ const statusLabels = {
   imports: [
     CopyLink,
     Glass,
-    LucideCheck,
+    LucideArrowLeft,
     LucideCopy,
     LucideRefreshCw,
     LucideSendHorizontal,
-    LucideUsers,
+    LucideUsersRound,
     LucideWifiOff,
     MessageList,
-    RoomPanel,
-    VisibleViewport,
   ],
   selector: 'app-room-chat',
+  host: { class: 'relative flex min-w-0 flex-1 flex-col' },
   templateUrl: './room-chat.html',
 })
 export class RoomChat {
   readonly status = input.required<SocketStatus>();
-  readonly events = input.required<RoomEvent[]>();
+  readonly title = input.required<string>();
+  readonly events = input.required<ChatEvent[]>();
   readonly members = input.required<Person[]>();
   readonly me = input.required<string>();
+  readonly code = input.required<string>();
   readonly link = input.required<string>();
-  readonly typing = input<string[]>([]);
+  readonly typing = input<Person[]>([]);
   readonly sent = output<string>();
   readonly reconnect = output();
   readonly typed = output();
+  readonly closed = output();
 
-  protected readonly copied = inject(CopyNotice).visible;
-  protected readonly statusLabel = computed(() => {
-    const [first, second, ...rest] = this.typing();
-    if (this.status() !== 'open' || !first) {
+  protected readonly avatarHue = avatarHue;
+  protected readonly subtitle = computed(() => {
+    const [first, second, ...rest] = this.typing().map((person) => person.name);
+    if (this.status() !== 'open') {
       return statusLabels[this.status()];
+    }
+    if (!first) {
+      const others = this.members().filter((member) => member.id !== this.me());
+      return [...others.map((member) => member.name), 'you'].join(', ');
     }
     if (!second) {
       return `${first} is typing…`;
     }
     return rest.length ? `${first} and ${rest.length + 1} more are typing…` : `${first} and ${second} are typing…`;
   });
-  protected readonly panelOpen = signal(false);
 
   protected readonly messageMaxLength = messageMaxLength;
   protected readonly counterFrom = messageMaxLength - 100;

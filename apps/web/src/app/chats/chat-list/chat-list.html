@@ -1,0 +1,117 @@
+<div class="flex items-center justify-between gap-2">
+  <p class="flex items-center gap-2 pl-1 text-base font-semibold">
+    <svg lucideHourglass class="size-5 text-accent-ink" aria-hidden="true"></svg>
+    Ephemeral
+  </p>
+  <div class="flex items-center gap-2">
+    <app-theme-toggle />
+    <button
+      type="button"
+      class="grid size-10 place-items-center rounded-full border border-edge bg-glass-strong/50 transition hover:bg-glass-strong focus-visible:outline-2 focus-visible:outline-accent-ink"
+      aria-label="New group"
+      (click)="newGroup.emit()"
+    >
+      <svg lucidePlus class="size-5" aria-hidden="true"></svg>
+    </button>
+  </div>
+</div>
+
+<form
+  class="flex items-center gap-3 rounded-full border border-edge bg-glass-strong/50 px-4 has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-accent-ink"
+  (submit)="$event.preventDefault(); open()"
+>
+  <svg lucideSearch class="size-4 shrink-0 text-ink-soft" aria-hidden="true"></svg>
+  <label for="search" class="sr-only">Search, or paste a code or link</label>
+  <input
+    #search
+    id="search"
+    class="min-w-0 flex-1 bg-transparent py-2.5 text-sm outline-none placeholder:text-ink-soft"
+    placeholder="Search, or paste a code or link"
+    autocomplete="off"
+    enterkeyhint="go"
+    [value]="query()"
+    (input)="query.set(search.value)"
+  />
+</form>
+
+<div class="flex gap-1.5" role="radiogroup" aria-label="Show">
+  @for (option of filters; track option) {
+    <button
+      type="button"
+      role="radio"
+      class="rounded-full border border-edge px-3 py-1 text-xs transition hover:bg-glass-strong"
+      [class.bg-glass-strong]="filter() === option"
+      [class.font-semibold]="filter() === option"
+      [attr.aria-checked]="filter() === option"
+      (click)="filter.set(option)"
+    >
+      {{ option }}
+    </button>
+  }
+</div>
+
+<ul class="scroll-glass relative -mx-2 flex min-h-0 flex-1 flex-col overflow-y-auto" aria-label="Your chats">
+  @if (code()) {
+    <li>
+      <button
+        type="button"
+        class="flex w-full items-center gap-3 rounded-2xl px-2 py-2.5 text-left transition hover:bg-glass-strong/50"
+        (click)="open()"
+      >
+        <span class="grid size-11 shrink-0 place-items-center rounded-full border border-edge bg-glass-strong/50 text-accent-ink" aria-hidden="true">
+          <svg lucideKeyRound class="size-5"></svg>
+        </span>
+        <span class="flex min-w-0 flex-col">
+          <span class="font-medium">Join with this code</span>
+          <span class="truncate font-mono text-xs text-ink-soft">{{ code() }}</span>
+        </span>
+      </button>
+    </li>
+  }
+  @for (chat of shown(); track chat.id) {
+    <li>
+      <button
+        type="button"
+        class="flex w-full items-center gap-3 rounded-2xl px-2 py-2.5 text-left transition hover:bg-glass-strong/50"
+        [class.bg-glass-strong]="chat.id === active()"
+        [attr.aria-current]="chat.id === active() || null"
+        (click)="selected.emit(chat.id)"
+      >
+        <span
+          class="avatar grid size-11 shrink-0 place-items-center rounded-full"
+          [style.--hue]="avatarHue(chat.title)"
+          aria-hidden="true"
+        >
+          <svg lucideUsersRound class="size-5"></svg>
+        </span>
+        <span class="flex min-w-0 flex-1 flex-col gap-0.5">
+          <span class="flex items-baseline gap-2">
+            <span class="flex-1 truncate font-medium">{{ chat.title || 'Joining…' }}</span>
+            <time class="text-xs" [class]="chat.unread ? 'font-semibold text-accent-ink' : 'text-ink-soft'">{{
+              lastAt(chat) | date: 'HH:mm'
+            }}</time>
+          </span>
+          <span class="flex items-center gap-2">
+            <span class="flex-1 truncate text-sm text-ink-soft">{{ preview(chat) }}</span>
+            @if (chat.unread) {
+              <span
+                class="grid h-5 min-w-5 place-items-center rounded-full bg-accent-ink px-1.5 text-xs font-semibold text-canvas"
+                >{{ chat.unread }}<span class="sr-only"> unread</span></span
+              >
+            }
+          </span>
+        </span>
+      </button>
+    </li>
+  } @empty {
+    @if (!code()) {
+      <li class="m-auto max-w-56 text-center text-sm text-ink-soft">
+        @if (chats().length) {
+          Nothing matches.
+        } @else {
+          No chats yet. Create a group, or paste a code or link above.
+        }
+      </li>
+    }
+  }
+</ul>
