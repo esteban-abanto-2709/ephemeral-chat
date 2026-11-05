@@ -1,4 +1,15 @@
-import { Component, ElementRef, afterRenderEffect, computed, input, viewChild } from '@angular/core';
+import {
+  Component,
+  DOCUMENT,
+  DestroyRef,
+  ElementRef,
+  afterNextRender,
+  afterRenderEffect,
+  computed,
+  inject,
+  input,
+  viewChild,
+} from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { LucideCopy, LucideHourglass, LucideShieldCheck } from '@lucide/angular';
 import { Glass } from '../../glass/glass';
@@ -38,8 +49,18 @@ export class MessageList {
 
   private readonly list = viewChild.required<ElementRef<HTMLElement>>('list');
   private sticky = true;
+  private readonly document = inject(DOCUMENT);
 
   constructor() {
+    const resizes = new ResizeObserver(() => {
+      if (this.sticky) {
+        const list = this.list().nativeElement;
+        list.scrollTop = list.scrollHeight;
+      }
+    });
+    afterNextRender(() => resizes.observe(this.list().nativeElement));
+    inject(DestroyRef).onDestroy(() => resizes.disconnect());
+
     afterRenderEffect(() => {
       const last = this.items().at(-1);
       if (this.sticky || last?.own) {
@@ -48,6 +69,13 @@ export class MessageList {
         this.sticky = true;
       }
     });
+  }
+
+  protected dismissKeyboard(): void {
+    const focused = this.document.activeElement;
+    if (focused instanceof HTMLInputElement) {
+      focused.blur();
+    }
   }
 
   protected follow(): void {

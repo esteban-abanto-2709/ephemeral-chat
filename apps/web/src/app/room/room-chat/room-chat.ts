@@ -12,6 +12,7 @@ import { CopyLink, CopyNotice } from '../copy-link/copy-link';
 import { MessageList } from '../message-list/message-list';
 import { RoomPanel } from '../room-panel/room-panel';
 import { RoomEvent, SocketStatus } from '../room-socket';
+import { VisibleViewport } from './visible-viewport';
 
 const messageMaxLength = 1000;
 
@@ -33,6 +34,7 @@ const statusLabels = {
     LucideWifiOff,
     MessageList,
     RoomPanel,
+    VisibleViewport,
   ],
   selector: 'app-room-chat',
   templateUrl: './room-chat.html',

@@ -67,6 +67,13 @@ time `at`: the server sends none), `members` (who is in the room, taken from the
 messages from one person grouped under one name) and follows new ones unless
 you scrolled up to read; sending always brings you back down.
 
+On phones the room fits above the keyboard, as in WhatsApp: Android resizes
+the page (`interactive-widget=resizes-content` in the viewport meta) and iOS,
+which ignores that, gets the visible height from `visualViewport`
+(`room/room-chat/visible-viewport.ts`). The last message stays in view when the
+keyboard opens, dragging the messages hides the keyboard, and the send button
+keeps it open.
+
 When the connection drops the room shows a Reconnect button: it looks the
 room up again (the API answers a join to a missing room with a plain 404, not
 `4004`) and joins with the same name, or shows "Room not found". "Room not

@@ -1,4 +1,4 @@
-<div class="flex h-dvh md:gap-4 md:p-4">
+<div appVisibleViewport class="flex h-dvh md:gap-4 md:p-4">
   <app-room-panel
     appGlass
     role="complementary"
@@ -97,6 +97,7 @@
           type="submit"
           class="grid size-10 shrink-0 place-items-center rounded-full text-ink-soft transition hover:scale-110 disabled:opacity-50 disabled:hover:scale-100 focus-visible:outline-2 focus-visible:outline-accent-ink"
           aria-label="Send"
+          (mousedown)="$event.preventDefault()"
           [class.text-ink]="length() > 0"
           [disabled]="status() !== 'open'"
         >

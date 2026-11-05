@@ -56,6 +56,17 @@ describe('MessageList', () => {
     expect(items[2].textContent).toContain('You:');
   });
 
+  it('hides the keyboard when you drag the messages', async () => {
+    const { list } = await render([]);
+    const input = document.body.appendChild(document.createElement('input'));
+    input.focus();
+
+    list.firstElementChild!.dispatchEvent(new Event('touchmove'));
+
+    expect(document.activeElement).not.toBe(input);
+    input.remove();
+  });
+
   it('follows new messages unless you are reading above', async () => {
     const first: RoomEvent = { type: 'message', name: 'Ana', text: 'uno', at };
     const { fixture, list } = await render([first]);
