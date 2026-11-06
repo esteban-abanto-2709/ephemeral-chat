@@ -23,6 +23,7 @@ describe('ChatsPage', () => {
     create: vi.fn(),
     send: vi.fn(),
     sendTyping: vi.fn(),
+    sendFiles: vi.fn(),
     reconnect: vi.fn(),
     remove: vi.fn(),
   };
@@ -141,6 +142,15 @@ describe('ChatsPage', () => {
     input.form!.dispatchEvent(new Event('submit'));
     expect(fakeClient.send).toHaveBeenCalledWith('trip', 'hola');
     expect(input.value).toBe('');
+  });
+
+  it('sends the files picked with the clip', async () => {
+    const { page } = await openChat();
+    const picker = page.querySelector('input[type="file"]') as HTMLInputElement;
+    const file = new File(['hola'], 'notes.txt');
+    Object.defineProperty(picker, 'files', { value: [file] });
+    picker.dispatchEvent(new Event('change'));
+    expect(fakeClient.sendFiles).toHaveBeenCalledWith('trip', [file]);
   });
 
   it('offers to reconnect when the connection drops', async () => {

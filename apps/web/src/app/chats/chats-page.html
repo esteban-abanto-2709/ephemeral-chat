@@ -30,6 +30,7 @@
       [typing]="active.typing"
       [focus]="joined() === active.id"
       (sent)="client.send(active.id, $event)"
+      (attached)="client.sendFiles(active.id, $event)"
       (typed)="client.sendTyping(active.id)"
       (reconnect)="client.reconnect()"
       (closed)="client.open(null)"

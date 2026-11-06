@@ -46,9 +46,13 @@ interface Frame {
   code?: string;
   private?: boolean;
   members?: Person[];
+  data?: string;
+  file?: { kind: 'image' | 'file'; name: string; mime?: string; size: number; data: string };
 }
 
 export const maxChats = 20;
+export const fileMaxBytes = 5 * 1024 * 1024;
+const fileNameMaxLength = 120;
 const typingShownFor = 3000;
 const typingSentEvery = 2000;
 
@@ -137,6 +141,7 @@ export class ChatClient implements OnDestroy {
 
   remove(id: string): void {
     this.write({ type: 'leave', room: id });
+    this.release(this._chats().filter((chat) => chat.id === id));
     this._chats.update((chats) => chats.filter((chat) => chat.id !== id));
     if (this._active() === id) {
       this._active.set(null);
@@ -155,6 +160,27 @@ export class ChatClient implements OnDestroy {
     this.typingSentAt.delete(room);
   }
 
+  sendFiles(room: string, files: File[]): void {
+    if (files.some((file) => file.size > fileMaxBytes)) {
+      this.notice.show('Files up to 5 MB.');
+    }
+    files.filter((file) => file.size <= fileMaxBytes).forEach((file) => this.sendFile(room, file));
+  }
+
+  private sendFile(room: string, file: File): void {
+    const reader = new FileReader();
+    reader.onload = () =>
+      this.write({
+        type: 'file',
+        room,
+        name: Array.from(file.name || 'file')
+          .slice(-fileNameMaxLength)
+          .join(''),
+        data: String(reader.result).split(',')[1],
+      });
+    reader.readAsDataURL(file);
+  }
+
   sendTyping(room: string): void {
     const now = Date.now();
     if (!this.ready || now - (this.typingSentAt.get(room) ?? 0) < typingSentEvery) {
@@ -166,6 +192,7 @@ export class ChatClient implements OnDestroy {
 
   ngOnDestroy(): void {
     this.clearTyping();
+    this.release(this._chats());
     this.socket?.close();
   }
 
@@ -222,8 +249,9 @@ export class ChatClient implements OnDestroy {
             type: 'message',
             id: frame.id,
             name: frame.name,
-            text: frame.text,
+            text: frame.text ?? '',
             own: frame.id === this._me(),
+            file: frame.file && this.attach(frame.file),
             at,
           }
         : frame.type === 'error'
@@ -244,6 +272,25 @@ export class ChatClient implements OnDestroy {
           ? chat.unread + 1
           : chat.unread,
     }));
+  }
+
+  private attach(file: NonNullable<Frame['file']>): Attachment {
+    const bytes = Uint8Array.from(atob(file.data), (char) => char.charCodeAt(0));
+    const type = file.kind === 'image' ? file.mime : 'application/octet-stream';
+    return {
+      kind: file.kind,
+      name: file.name,
+      size: file.size,
+      url: URL.createObjectURL(new Blob([bytes], { type })),
+    };
+  }
+
+  private release(chats: Chat[]): void {
+    for (const event of chats.flatMap((chat) => chat.events)) {
+      if (event.type === 'message' && event.file) {
+        URL.revokeObjectURL(event.file.url);
+      }
+    }
   }
 
   private newChat(id: string, title: string): Chat {

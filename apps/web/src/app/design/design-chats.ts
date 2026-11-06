@@ -209,7 +209,7 @@ const chats: Chat[] = [
       />
       @if (open(); as chat) {
         <app-room-chat
-          [media]="true"
+          [voice]="true"
           [recording]="state() === 'media' ? 12 : null"
           [replying]="state() === 'group' ? replying : null"
           status="open"

@@ -63,7 +63,11 @@ const statusLabels = {
     QuoteCard,
   ],
   selector: 'app-room-chat',
-  host: { class: 'relative flex min-w-0 flex-1 flex-col' },
+  host: {
+    class: 'relative flex min-w-0 flex-1 flex-col',
+    '(dragover)': '$event.preventDefault()',
+    '(drop)': 'drop($event)',
+  },
   templateUrl: './room-chat.html',
 })
 export class RoomChat {
@@ -78,10 +82,11 @@ export class RoomChat {
   readonly link = input.required<string>();
   readonly typing = input<Person[]>([]);
   readonly focus = input(false);
-  readonly media = input(false);
+  readonly voice = input(false);
   readonly recording = input<number | null>(null);
   readonly replying = input<Quote | null>(null);
   readonly sent = output<string>();
+  readonly attached = output<File[]>();
   readonly reconnect = output();
   readonly typed = output();
   readonly closed = output();
@@ -131,6 +136,29 @@ export class RoomChat {
     this.length.set(input.value.length);
     if (input.value.trim()) {
       this.typed.emit();
+    }
+  }
+
+  protected pick(picker: HTMLInputElement): void {
+    this.attach(picker.files);
+    picker.value = '';
+  }
+
+  protected paste(event: ClipboardEvent): void {
+    if (event.clipboardData?.files.length) {
+      event.preventDefault();
+      this.attach(event.clipboardData.files);
+    }
+  }
+
+  protected drop(event: DragEvent): void {
+    event.preventDefault();
+    this.attach(event.dataTransfer?.files);
+  }
+
+  private attach(files: FileList | null | undefined): void {
+    if (files?.length && this.status() === 'open' && !this.ended()) {
+      this.attached.emit([...files]);
     }
   }
 

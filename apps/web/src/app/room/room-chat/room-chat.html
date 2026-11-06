@@ -144,19 +144,19 @@
     }
     <form
       appGlass="composer"
-      class="flex items-center gap-2 rounded-full py-1 pr-1 has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-accent-ink"
-      [class]="media() ? 'pl-1' : 'pl-5'"
+      class="flex items-center gap-2 rounded-full py-1 pr-1 pl-1 has-[#message:focus-visible]:outline-2 has-[#message:focus-visible]:outline-accent-ink"
       (submit)="send($event, input)"
     >
-      @if (media()) {
-        <button
-          type="button"
-          class="grid size-10 shrink-0 place-items-center rounded-full text-ink-soft transition hover:bg-glass-strong hover:text-ink focus-visible:outline-2 focus-visible:outline-accent-ink"
-          aria-label="Attach a photo or file"
-        >
-          <svg lucidePaperclip class="size-5" aria-hidden="true"></svg>
-        </button>
-      }
+      <button
+        type="button"
+        class="grid size-10 shrink-0 place-items-center rounded-full text-ink-soft transition hover:bg-glass-strong hover:text-ink disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-accent-ink"
+        aria-label="Attach a photo or file"
+        [disabled]="status() !== 'open'"
+        (click)="picker.click()"
+      >
+        <svg lucidePaperclip class="size-5" aria-hidden="true"></svg>
+      </button>
+      <input #picker type="file" class="hidden" multiple tabindex="-1" (change)="pick(picker)" />
       <label for="message" class="sr-only">Message</label>
       <input
         #input
@@ -166,13 +166,14 @@
         autocomplete="off"
         [maxLength]="messageMaxLength"
         (input)="write(input)"
+        (paste)="paste($event)"
       />
       @if (length() >= counterFrom) {
         <span class="text-xs text-ink-soft" id="message-length"
           >{{ length() }} / {{ messageMaxLength }}</span
         >
       }
-      @if (media() && length() === 0) {
+      @if (voice() && length() === 0) {
         <button
           type="button"
           class="grid size-10 shrink-0 place-items-center rounded-full text-ink-soft transition hover:scale-110 hover:text-ink disabled:opacity-50 disabled:hover:scale-100 focus-visible:outline-2 focus-visible:outline-accent-ink"

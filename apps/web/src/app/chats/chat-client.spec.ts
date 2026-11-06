@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { Notice } from '../notice';
-import { ChatClient, maxChats } from './chat-client';
+import { ChatClient, fileMaxBytes, maxChats } from './chat-client';
 
 class FakeWebSocket {
   static readonly OPEN = 1;
@@ -192,5 +192,49 @@ describe('ChatClient', () => {
     expect(server.sent.at(-1)).toEqual({ type: 'message', room: 'one', text: 'hola' });
     client.sendTyping('one');
     expect(server.sent.at(-1)).toEqual({ type: 'typing', room: 'one' });
+  });
+
+  it('sends files in base64 and refuses the ones over 5 MB', async () => {
+    vi.useRealTimers();
+    ready();
+    client.join('one');
+    server.sent = [];
+    const big = new File(['x'], 'big.bin');
+    Object.defineProperty(big, 'size', { value: fileMaxBytes + 1 });
+
+    client.sendFiles('one', [new File(['hola'], 'notes.txt'), big]);
+    expect(TestBed.inject(Notice).text()).toBe('Files up to 5 MB.');
+    await vi.waitFor(() =>
+      expect(server.sent).toEqual([
+        { type: 'file', room: 'one', name: 'notes.txt', data: btoa('hola') },
+      ]),
+    );
+  });
+
+  it('turns a received file into a link and lets it go with the chat', () => {
+    const createObjectURL = vi.fn(() => 'blob:photo');
+    const revokeObjectURL = vi.fn();
+    vi.stubGlobal('URL', Object.assign(URL, { createObjectURL, revokeObjectURL }));
+    ready();
+    client.join('one');
+    server.receive({
+      type: 'message',
+      room: 'one',
+      ...ana,
+      file: { kind: 'image', name: 'a.png', mime: 'image/png', size: 4, data: btoa('hola') },
+    });
+
+    const [event] = client.active()!.events;
+    expect(event).toMatchObject({
+      text: '',
+      file: { kind: 'image', name: 'a.png', size: 4, url: 'blob:photo' },
+    });
+    expect((createObjectURL.mock.calls[0] as unknown[])[0]).toMatchObject({
+      type: 'image/png',
+      size: 4,
+    });
+
+    client.remove('one');
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:photo');
   });
 });
