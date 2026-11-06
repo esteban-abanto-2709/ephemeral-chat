@@ -1,7 +1,9 @@
 package room
 
 import (
+	"encoding/base64"
 	"errors"
+	"net/http"
 	"slices"
 	"strings"
 	"sync"
@@ -17,8 +19,14 @@ const (
 	MessagesPerSecond = 5
 	MaxMembers        = 50
 	TypingInterval    = 2 * time.Second
+	FileMaxBytes      = 5 << 20
+	FileNameMaxLength = 120
+	FileInterval      = 2 * time.Second
+	FileBurst         = 3
 	emptyLifetime     = time.Minute
 )
+
+var imageTypes = []string{"image/png", "image/jpeg", "image/gif", "image/webp"}
 
 var (
 	ErrRoomGone = errors.New("room no longer exists")
@@ -40,12 +48,38 @@ type Message struct {
 	Code    string   `json:"code,omitempty"`
 	Private bool     `json:"private,omitempty"`
 	Members []Person `json:"members,omitempty"`
+	File    *File    `json:"file,omitempty"`
+}
+
+type File struct {
+	Kind string `json:"kind"`
+	Name string `json:"name"`
+	Mime string `json:"mime,omitempty"`
+	Size int    `json:"size"`
+	Data string `json:"data"`
+}
+
+func NewFile(name, data string) (*File, bool) {
+	name = strings.TrimSpace(name)
+	if name == "" || utf8.RuneCountInString(name) > FileNameMaxLength || base64.StdEncoding.DecodedLen(len(data)) > FileMaxBytes+2 {
+		return nil, false
+	}
+	raw, err := base64.StdEncoding.DecodeString(data)
+	if err != nil || len(raw) == 0 || len(raw) > FileMaxBytes {
+		return nil, false
+	}
+	file := &File{Kind: "file", Name: name, Size: len(raw), Data: data}
+	if mime := http.DetectContentType(raw); slices.Contains(imageTypes, mime) {
+		file.Kind, file.Mime = "image", mime
+	}
+	return file, true
 }
 
 type Member struct {
 	client  *Client
 	label   string
 	limiter *rate.Limiter
+	files   *rate.Limiter
 	typing  *rate.Limiter
 }
 
@@ -54,6 +88,7 @@ func newMember(client *Client, label string) *Member {
 		client:  client,
 		label:   label,
 		limiter: rate.NewLimiter(MessagesPerSecond, MessagesPerSecond),
+		files:   rate.NewLimiter(rate.Every(FileInterval), FileBurst),
 		typing:  rate.NewLimiter(rate.Every(TypingInterval), 1),
 	}
 }
@@ -119,19 +154,27 @@ func validText(text string) bool {
 }
 
 func (r *Room) Send(from *Member, text string) {
-	if !validText(text) {
-		return
+	if validText(text) {
+		r.post(from, Message{Text: text}, from.limiter, "Slow down: up to 5 messages per second.")
 	}
+}
+
+func (r *Room) SendFile(from *Member, file *File) {
+	r.post(from, Message{File: file}, from.files, "Slow down: one file every 2 seconds.")
+}
+
+func (r *Room) post(from *Member, message Message, limiter *rate.Limiter, slow string) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	if !slices.Contains(r.members, from) {
 		return
 	}
-	if !from.limiter.Allow() {
-		r.deliver(from, Message{Type: "error", Text: "Slow down: up to 5 messages per second."})
+	if !limiter.Allow() {
+		r.deliver(from, Message{Type: "error", Text: slow})
 		return
 	}
-	r.broadcast(Message{Type: "message", ID: from.client.ID, Name: from.client.Name, Text: text})
+	message.Type, message.ID, message.Name = "message", from.client.ID, from.client.Name
+	r.broadcast(message)
 }
 
 func (r *Room) Typing(from *Member) {

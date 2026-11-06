@@ -52,6 +52,12 @@ func (c *Client) Send(label, text string) {
 	}
 }
 
+func (c *Client) SendFile(label string, file *File) {
+	if chat, ok := c.chat(label); ok {
+		chat.room.SendFile(chat.member, file)
+	}
+}
+
 func (c *Client) Typing(label string) {
 	if chat, ok := c.chat(label); ok {
 		chat.room.Typing(chat.member)

@@ -45,6 +45,8 @@ The link can reach anyone, so the server protects itself from day one:
 |---|---|
 | Message length | 1000 characters |
 | Messages per person | 5 per second |
+| File size | 5 MB |
+| Files per person | 3 at once, then one every 2 seconds |
 | Name length | 24 characters |
 | People per group | 50 |
 | Chats per tab | 20 |

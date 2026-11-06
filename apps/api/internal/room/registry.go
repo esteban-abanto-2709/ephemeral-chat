@@ -64,19 +64,32 @@ func (r *Registry) Open(client *Client, code string) {
 }
 
 func (r *Registry) Send(client *Client, label, text string) {
-	if _, ok := client.chat(label); !ok && validText(text) {
-		other, reason := r.peer(client, label)
-		if other == nil {
-			client.Notify(Message{Type: "error", Room: label, Code: reason})
-			return
-		}
-		r.mu.Lock()
-		if _, ok := client.chat(label); !ok {
-			startPrivate(client, other)
-		}
-		r.mu.Unlock()
+	if validText(text) && r.reach(client, label) {
+		client.Send(label, text)
 	}
-	client.Send(label, text)
+}
+
+func (r *Registry) SendFile(client *Client, label, name, data string) {
+	if file, ok := NewFile(name, data); ok && r.reach(client, label) {
+		client.SendFile(label, file)
+	}
+}
+
+func (r *Registry) reach(client *Client, label string) bool {
+	if _, ok := client.chat(label); ok {
+		return true
+	}
+	other, reason := r.peer(client, label)
+	if other == nil {
+		client.Notify(Message{Type: "error", Room: label, Code: reason})
+		return false
+	}
+	r.mu.Lock()
+	if _, ok := client.chat(label); !ok {
+		startPrivate(client, other)
+	}
+	r.mu.Unlock()
+	return true
 }
 
 func (r *Registry) peer(client *Client, id string) (*Client, string) {

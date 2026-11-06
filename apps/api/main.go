@@ -17,7 +17,10 @@ import (
 	"github.com/esteban-abanto-2709/ephemeral-chat/apps/api/internal/room"
 )
 
-const frameMaxBytes = 8 << 10
+const (
+	bodyMaxBytes  = 8 << 10
+	frameMaxBytes = 7 << 20
+)
 
 const pingInterval = 30 * time.Second
 
@@ -53,7 +56,7 @@ func createRoom(rooms *room.Registry) http.HandlerFunc {
 		var body struct {
 			Name string `json:"name"`
 		}
-		json.NewDecoder(http.MaxBytesReader(w, r.Body, frameMaxBytes)).Decode(&body)
+		json.NewDecoder(http.MaxBytesReader(w, r.Body, bodyMaxBytes)).Decode(&body)
 		name := strings.TrimSpace(body.Name)
 		if !room.ValidName(name) {
 			http.Error(w, "name must be 1 to 24 characters", http.StatusBadRequest)
@@ -111,6 +114,8 @@ func connect(rooms *room.Registry, ping time.Duration) http.HandlerFunc {
 				Type string `json:"type"`
 				Room string `json:"room"`
 				Text string `json:"text"`
+				Name string `json:"name"`
+				Data string `json:"data"`
 			}
 			if err := wsjson.Read(r.Context(), conn, &incoming); err != nil {
 				return
@@ -122,6 +127,8 @@ func connect(rooms *room.Registry, ping time.Duration) http.HandlerFunc {
 				client.Leave(incoming.Room)
 			case "message":
 				rooms.Send(client, incoming.Room, incoming.Text)
+			case "file":
+				rooms.SendFile(client, incoming.Room, incoming.Name, incoming.Data)
 			case "typing":
 				client.Typing(incoming.Room)
 			}

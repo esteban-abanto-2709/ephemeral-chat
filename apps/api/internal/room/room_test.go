@@ -1,6 +1,7 @@
 package room
 
 import (
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"reflect"
@@ -344,4 +345,67 @@ func TestValidName(t *testing.T) {
 			t.Errorf("ValidName(%q) = %v, want %v", name, got, want)
 		}
 	}
+}
+
+func encode(raw []byte) string {
+	return base64.StdEncoding.EncodeToString(raw)
+}
+
+func TestNewFileChecksWhatItHolds(t *testing.T) {
+	png := []byte("\x89PNG\r\n\x1a\nrest of the image")
+	cases := []struct {
+		label, name, data string
+		ok                bool
+		kind, mime        string
+	}{
+		{"a png", " photo.png ", encode(png), true, "image", "image/png"},
+		{"text", "notes.txt", encode([]byte("hola")), true, "file", ""},
+		{"an svg, never shown inline", "logo.svg", encode([]byte("<svg xmlns='http://www.w3.org/2000/svg'><script>x</script></svg>")), true, "file", ""},
+		{"the largest allowed", "big.bin", encode(make([]byte, FileMaxBytes)), true, "file", ""},
+		{"one byte too many", "big.bin", encode(make([]byte, FileMaxBytes+1)), false, "", ""},
+		{"no name", "  ", encode(png), false, "", ""},
+		{"a name too long", strings.Repeat("ñ", FileNameMaxLength+1), encode(png), false, "", ""},
+		{"no data", "empty.txt", "", false, "", ""},
+		{"not base64", "x.txt", "not base64!", false, "", ""},
+	}
+	for _, c := range cases {
+		file, ok := NewFile(c.name, c.data)
+		if ok != c.ok {
+			t.Errorf("%s: ok = %v, want %v", c.label, ok, c.ok)
+			continue
+		}
+		if ok && (file.Kind != c.kind || file.Mime != c.mime || file.Name != strings.TrimSpace(c.name) || file.Data != c.data) {
+			t.Errorf("%s: got %s %q %q, want %s %q", c.label, file.Kind, file.Mime, file.Name, c.kind, c.mime)
+		}
+	}
+	if file, _ := NewFile("photo.png", encode(png)); file.Size != len(png) {
+		t.Errorf("Size = %d, want %d", file.Size, len(png))
+	}
+}
+
+func TestFilesReachEveryoneWithinTheirOwnLimit(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		room := newTestRoom()
+		juan, ana := join(t, room, "Juan"), join(t, room, "Ana")
+		drain(juan)
+		drain(ana)
+		file, _ := NewFile("notes.txt", encode([]byte("hola")))
+		sent := Message{Type: "message", Room: roomID, ID: juan.client.ID, Name: "Juan", File: file}
+
+		for range FileBurst {
+			room.SendFile(juan, file)
+			expect(t, juan, sent)
+			expect(t, ana, sent)
+		}
+		room.SendFile(juan, file)
+		expect(t, juan, Message{Type: "error", Room: roomID, Text: "Slow down: one file every 2 seconds."})
+		assertEmpty(t, ana)
+
+		room.Send(juan, "text still flows")
+		expect(t, ana, said(juan, "text still flows"))
+
+		time.Sleep(FileInterval)
+		room.SendFile(juan, file)
+		expect(t, ana, sent)
+	})
 }

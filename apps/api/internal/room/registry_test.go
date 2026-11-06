@@ -217,3 +217,19 @@ func TestOpenRefusesWhatCannotBeOpened(t *testing.T) {
 		}
 	}
 }
+
+func TestAFileCanStartAPrivateChat(t *testing.T) {
+	rooms := NewRegistry()
+	sam, luis := rooms.Connect("Sam"), rooms.Connect("Luis")
+
+	rooms.SendFile(sam, luis.ID, "x.txt", "not base64!")
+	assertNothing(t, luis)
+
+	rooms.SendFile(sam, luis.ID, "notes.txt", "aG9sYQ==")
+	if got := next(t, luis); got.Type != "joined" || !got.Private {
+		t.Errorf("Luis got %+v, want the private chat", got)
+	}
+	if got := next(t, luis); got.Room != sam.ID || got.File == nil || got.File.Name != "notes.txt" {
+		t.Errorf("Luis got %+v, want notes.txt from Sam", got)
+	}
+}
