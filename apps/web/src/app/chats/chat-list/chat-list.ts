@@ -75,7 +75,10 @@ export class ChatList {
       return 'No messages yet';
     }
     if (last.type === 'message') {
-      return `${last.own ? 'You' : last.name}: ${last.text}`;
+      if (last.own) {
+        return `You: ${last.text}`;
+      }
+      return chat.kind === 'private' ? last.text : `${last.name}: ${last.text}`;
     }
     return `${last.name} ${last.type}`;
   }

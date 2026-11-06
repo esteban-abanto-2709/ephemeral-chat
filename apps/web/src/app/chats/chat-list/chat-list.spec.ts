@@ -50,6 +50,15 @@ describe('ChatList', () => {
     ]);
   });
 
+  it('leaves the name out of a private chat, where it is the chat itself', async () => {
+    const fixture = TestBed.createComponent(ChatList);
+    fixture.componentRef.setInput('chats', [{ ...chat('3', 'Ana'), kind: 'private' }]);
+    await fixture.whenStable();
+    const row = (fixture.nativeElement as HTMLElement).querySelector('[aria-label="Your chats"] li');
+    expect(row?.textContent).toContain('hi from Ana');
+    expect(row?.textContent).not.toContain('Ana:');
+  });
+
   it('filters by name and by unread', async () => {
     const { fixture, list, titles, type } = await render();
     await type('book');
