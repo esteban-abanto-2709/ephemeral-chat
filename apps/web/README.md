@@ -124,6 +124,16 @@ Private chats were tied to the old id, so they end.
 The message input stops at 1000 characters (`maxlength`, the API's limit) and
 shows a counter from 900 on.
 
+Photos and files go through the clip, a paste into the input or a drop on the
+chat; `ChatClient.sendFiles()` sends each one as a `file` frame in base64.
+JPEG, PNG and WebP photos are first redrawn on an `OffscreenCanvas`
+(`chats/compress-photo.ts`): 1600 px on the long side, JPEG at quality 0.8,
+which takes a 5 MB phone photo to a few hundred KB and drops its metadata,
+location included. GIFs, other files and anything the browser can't redraw go
+as they are. Whatever is still over 5 MB isn't sent ("Files up to 5 MB.").
+Received files become `blob:` URLs, released when the chat is deleted: photos
+keep their image type to show inline, everything else is a plain download.
+
 The client is provided by the page itself (`providers: [ChatClient]`), not at
 the root, so leaving the page closes the connection (`ngOnDestroy`). Tests
 replace it with `TestBed.overrideComponent`, since a component-level provider

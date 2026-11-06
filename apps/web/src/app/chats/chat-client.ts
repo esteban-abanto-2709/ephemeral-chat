@@ -2,6 +2,7 @@ import { DOCUMENT, OnDestroy, Service, computed, inject, signal } from '@angular
 import { HttpClient } from '@angular/common/http';
 import { Notice } from '../notice';
 import { Attachment, Quote } from './attachment';
+import { compressPhoto } from './compress-photo';
 
 export type SocketStatus = 'connecting' | 'open' | 'closed';
 
@@ -160,11 +161,15 @@ export class ChatClient implements OnDestroy {
     this.typingSentAt.delete(room);
   }
 
-  sendFiles(room: string, files: File[]): void {
-    if (files.some((file) => file.size > fileMaxBytes)) {
-      this.notice.show('Files up to 5 MB.');
+  async sendFiles(room: string, files: File[]): Promise<void> {
+    for (const file of files) {
+      const ready = await compressPhoto(file);
+      if (ready.size > fileMaxBytes) {
+        this.notice.show('Files up to 5 MB.');
+      } else {
+        this.sendFile(room, ready);
+      }
     }
-    files.filter((file) => file.size <= fileMaxBytes).forEach((file) => this.sendFile(room, file));
   }
 
   private sendFile(room: string, file: File): void {

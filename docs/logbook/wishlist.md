@@ -30,3 +30,15 @@ A private chat's preview still starts with "You:" when the last message is yours
 
 ## [WL-015] Read receipts
 Checks on your messages saying they arrived and were read, as in WhatsApp. Open product question: does "seen" fit an ephemeral chat, or is not knowing part of the point? Decide before building.
+
+## [WL-016] Photo viewer in the page
+Tapping a photo opens it full screen over the chat (close with X, Escape or a tap outside), as in WhatsApp, instead of a new tab.
+
+## [WL-017] Review before sending a photo or file
+Picking, pasting or dropping files opens a preview first: remove the wrong one, write a caption, then send; dragging over the chat shows a "Drop to send" overlay. The same screen can offer "send as file" to skip compression and keep the original (up to 5 MB).
+
+## [WL-018] Don't send your own file back to you
+The server relays every file to the whole chat, sender included, so you upload it and download it again. Showing your local copy would save that trip, but your message would no longer wait for the server like text does, so order could differ between people.
+
+## [WL-019] Files in binary frames
+Files travel as base64 inside JSON text frames, about 33% bigger than the file. Binary WebSocket frames would carry the raw bytes, at the cost of a small header of our own for the chat and the file name.

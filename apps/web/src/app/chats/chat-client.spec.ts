@@ -202,7 +202,7 @@ describe('ChatClient', () => {
     const big = new File(['x'], 'big.bin');
     Object.defineProperty(big, 'size', { value: fileMaxBytes + 1 });
 
-    client.sendFiles('one', [new File(['hola'], 'notes.txt'), big]);
+    await client.sendFiles('one', [new File(['hola'], 'notes.txt'), big]);
     expect(TestBed.inject(Notice).text()).toBe('Files up to 5 MB.');
     await vi.waitFor(() =>
       expect(server.sent).toEqual([
