@@ -12,6 +12,9 @@ Summary in ≤2 lines of what was done.
 
 ---
 
+## [WL-018] Don't send your own file back to you (2026-11-06 10:34)
+The sender gets a file receipt without its data, in the chat's order, and shows the copy it already has; one upload, no download.
+
 ## [TD-005] Idle connections get dropped (2026-11-06 09:07)
 The server pings every tab every 30 seconds, so proxies keep quiet WebSockets open, and drops a tab that stops answering.
 

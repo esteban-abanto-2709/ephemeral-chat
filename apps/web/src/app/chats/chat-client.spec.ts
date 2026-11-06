@@ -237,4 +237,28 @@ describe('ChatClient', () => {
     client.remove('one');
     expect(revokeObjectURL).toHaveBeenCalledWith('blob:photo');
   });
+
+  it('shows your own file from the local copy when the server confirms it', async () => {
+    vi.useRealTimers();
+    const createObjectURL = vi.fn((blob: Blob) => `blob:${blob.size}`);
+    vi.stubGlobal('URL', Object.assign(URL, { createObjectURL, revokeObjectURL: vi.fn() }));
+    ready();
+    client.join('one');
+    await client.sendFiles('one', [new File(['hola'], ' notes.txt ')]);
+    await vi.waitFor(() => expect(server.sent.at(-1)).toMatchObject({ name: 'notes.txt' }));
+
+    server.receive({
+      type: 'message',
+      room: 'one',
+      ...juan,
+      file: { kind: 'file', name: 'notes.txt', size: 4 },
+    });
+    expect(client.active()!.events.at(-1)).toMatchObject({
+      own: true,
+      file: { kind: 'file', name: 'notes.txt', size: 4, url: 'blob:4' },
+    });
+    expect((createObjectURL.mock.calls[0] as unknown[])[0]).toMatchObject({
+      type: 'application/octet-stream',
+    });
+  });
 });

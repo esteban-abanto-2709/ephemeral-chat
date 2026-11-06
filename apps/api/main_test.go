@@ -205,7 +205,7 @@ func TestChat(t *testing.T) {
 	expect(said(juan, "still here"), juan)
 
 	send(juan, map[string]string{"type": "file", "room": id, "name": "notes.txt", "data": "aG9sYQ=="})
-	expect(room.Message{Type: "message", Room: id, ID: juan.person.ID, Name: "Juan", File: &room.File{Kind: "file", Name: "notes.txt", Size: 4, Data: "aG9sYQ=="}}, juan)
+	expect(room.Message{Type: "message", Room: id, ID: juan.person.ID, Name: "Juan", File: &room.File{Kind: "file", Name: "notes.txt", Size: 4}}, juan)
 }
 
 func TestAPIOnlyWithoutStaticDir(t *testing.T) {

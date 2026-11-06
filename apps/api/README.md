@@ -71,6 +71,7 @@ client → server:   {"type": "join",    "room": "…"}
 server → client:   {"type": "ready",   "id": "…", "name": "Juan"}
 server → room:     {"type": "message", "room": "…", "id": "…", "name": "Juan", "text": "hola"}
                    {"type": "message", "room": "…", "id": "…", "name": "Juan", "file": {"kind": "image", "name": "photo.jpg", "mime": "image/jpeg", "size": 48213, "data": "<base64>"}}
+                   (the sender gets the same file event without "data")
                    {"type": "joined",  "room": "…", "id": "…", "name": "Ana", "title": "Weekend trip", "members": [{"id": "…", "name": "Juan"}, …]}
                    {"type": "left",    "room": "…", "id": "…", "name": "Ana", "members": […]}
 server → others:   {"type": "typing",  "room": "…", "id": "…", "name": "Juan"}
@@ -121,7 +122,9 @@ The server decodes it to measure it and sniffs its first bytes
 `"kind": "file"`, to be downloaded and never opened in the page, so an SVG or
 HTML file can't run script in the app's origin. A file goes to every member
 like a message, as one value shared by every mailbox, so a group of 50 holds
-it in memory once. Each member may send 3 files at once and then one every 2
+it in memory once. The sender gets it back without `data`: a receipt in the
+chat's order, so their tab shows its own copy and never downloads what it just
+uploaded. Each member may send 3 files at once and then one every 2
 seconds (`FileBurst`, `FileInterval`, a bucket apart from messages); over that
 only the sender gets `"Slow down: one file every 2 seconds."` A file also
 starts a private chat, like a first message.

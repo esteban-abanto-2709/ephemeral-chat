@@ -131,6 +131,8 @@ JPEG, PNG and WebP photos are first redrawn on an `OffscreenCanvas`
 which takes a 5 MB phone photo to a few hundred KB and drops its metadata,
 location included. GIFs, other files and anything the browser can't redraw go
 as they are. Whatever is still over 5 MB isn't sent ("Files up to 5 MB.").
+Your own files come back from the server without their bytes, so the tab keeps
+what it sent and shows it when that receipt arrives, matched by name and size.
 Received files become `blob:` URLs, released when the chat is deleted: photos
 keep their image type to show inline, everything else is a plain download.
 

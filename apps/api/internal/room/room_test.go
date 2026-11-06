@@ -391,10 +391,12 @@ func TestFilesReachEveryoneWithinTheirOwnLimit(t *testing.T) {
 		drain(ana)
 		file, _ := NewFile("notes.txt", encode([]byte("hola")))
 		sent := Message{Type: "message", Room: roomID, ID: juan.client.ID, Name: "Juan", File: file}
+		receipt := sent
+		receipt.File = &File{Kind: "file", Name: "notes.txt", Size: 4}
 
 		for range FileBurst {
 			room.SendFile(juan, file)
-			expect(t, juan, sent)
+			expect(t, juan, receipt)
 			expect(t, ana, sent)
 		}
 		room.SendFile(juan, file)

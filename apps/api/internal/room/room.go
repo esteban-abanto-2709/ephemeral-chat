@@ -56,7 +56,7 @@ type File struct {
 	Name string `json:"name"`
 	Mime string `json:"mime,omitempty"`
 	Size int    `json:"size"`
-	Data string `json:"data"`
+	Data string `json:"data,omitempty"`
 }
 
 func NewFile(name, data string) (*File, bool) {
@@ -174,7 +174,20 @@ func (r *Room) post(from *Member, message Message, limiter *rate.Limiter, slow s
 		return
 	}
 	message.Type, message.ID, message.Name = "message", from.client.ID, from.client.Name
-	r.broadcast(message)
+	if message.File == nil {
+		r.broadcast(message)
+		return
+	}
+	receipt := *message.File
+	receipt.Data = ""
+	r.each(func(member *Member) Message {
+		if member == from {
+			mine := message
+			mine.File = &receipt
+			return mine
+		}
+		return message
+	})
 }
 
 func (r *Room) Typing(from *Member) {
@@ -193,10 +206,15 @@ func (r *Room) Typing(from *Member) {
 }
 
 func (r *Room) broadcast(message Message) {
+	r.each(func(*Member) Message { return message })
+}
+
+func (r *Room) each(message func(*Member) Message) {
 	var slow []*Member
 	for _, member := range r.members {
-		message.Room = member.label
-		if !member.client.push(message) {
+		sent := message(member)
+		sent.Room = member.label
+		if !member.client.push(sent) {
 			slow = append(slow, member)
 		}
 	}
