@@ -69,9 +69,9 @@ func (r *Registry) Send(client *Client, label, text string) {
 	}
 }
 
-func (r *Registry) SendFile(client *Client, label, name, data string) {
-	if file, ok := NewFile(name, data); ok && r.reach(client, label) {
-		client.SendFile(label, file)
+func (r *Registry) SendFile(client *Client, label, name, data, caption string) {
+	if file, ok := NewFile(name, data); ok && validCaption(caption) && r.reach(client, label) {
+		client.SendFile(label, file, caption)
 	}
 }
 

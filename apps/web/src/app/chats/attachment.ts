@@ -6,6 +6,11 @@ export interface Attachment {
   seconds?: number;
 }
 
+export interface Outgoing {
+  file: Attachment;
+  caption: string;
+}
+
 export interface Quote {
   name: string;
   own: boolean;

@@ -202,13 +202,52 @@ describe('ChatClient', () => {
     const big = new File(['x'], 'big.bin');
     Object.defineProperty(big, 'size', { value: fileMaxBytes + 1 });
 
-    await client.sendFiles('one', [new File(['hola'], 'notes.txt'), big]);
+    await client.sendFiles('one', [
+      { file: new File(['hola'], 'notes.txt'), caption: '' },
+      { file: big, caption: '' },
+    ]);
     expect(TestBed.inject(Notice).text()).toBe('Files up to 5 MB.');
     await vi.waitFor(() =>
       expect(server.sent).toEqual([
         { type: 'file', room: 'one', name: 'notes.txt', data: btoa('hola') },
       ]),
     );
+  });
+
+  it('holds picked files for review and sends the ones kept, with their captions', async () => {
+    vi.useRealTimers();
+    let count = 0;
+    const createObjectURL = vi.fn(() => `blob:${++count}`);
+    const revokeObjectURL = vi.fn();
+    vi.stubGlobal('URL', Object.assign(URL, { createObjectURL, revokeObjectURL }));
+    ready();
+    client.join('one');
+    server.sent = [];
+
+    client.pick('one', [new File(['hola'], 'notes.txt')]);
+    client.pick('one', [new File(['png'], 'a.png', { type: 'image/png' })]);
+    expect(server.sent).toEqual([]);
+    const [notes, photo] = client.picked();
+    expect(notes).toMatchObject({ kind: 'file', name: 'notes.txt', url: 'blob:1' });
+    expect(photo).toMatchObject({ kind: 'image', name: 'a.png', url: 'blob:2' });
+
+    client.open(null);
+    expect(client.picked()).toEqual([]);
+    client.open('one');
+
+    await client.sendPicked([{ file: notes, caption: ' for Saturday ' }], true);
+    expect(client.picked()).toEqual([]);
+    expect(revokeObjectURL.mock.calls).toEqual([['blob:1'], ['blob:2']]);
+    await vi.waitFor(() =>
+      expect(server.sent).toEqual([
+        { type: 'file', room: 'one', name: 'notes.txt', data: btoa('hola'), text: 'for Saturday' },
+      ]),
+    );
+
+    client.pick('one', [new File(['hola'], 'notes.txt')]);
+    client.discardPicked();
+    expect(revokeObjectURL).toHaveBeenLastCalledWith('blob:3');
+    expect(client.picked()).toEqual([]);
   });
 
   it('turns a received file into a link and lets it go with the chat', () => {
@@ -244,7 +283,7 @@ describe('ChatClient', () => {
     vi.stubGlobal('URL', Object.assign(URL, { createObjectURL, revokeObjectURL: vi.fn() }));
     ready();
     client.join('one');
-    await client.sendFiles('one', [new File(['hola'], ' notes.txt ')]);
+    await client.sendFiles('one', [{ file: new File(['hola'], ' notes.txt '), caption: '' }]);
     await vi.waitFor(() => expect(server.sent.at(-1)).toMatchObject({ name: 'notes.txt' }));
 
     server.receive({

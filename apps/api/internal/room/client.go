@@ -52,9 +52,9 @@ func (c *Client) Send(label, text string) {
 	}
 }
 
-func (c *Client) SendFile(label string, file *File) {
+func (c *Client) SendFile(label string, file *File, caption string) {
 	if chat, ok := c.chat(label); ok {
-		chat.room.SendFile(chat.member, file)
+		chat.room.SendFile(chat.member, file, caption)
 	}
 }
 

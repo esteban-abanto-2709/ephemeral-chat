@@ -159,8 +159,14 @@ func (r *Room) Send(from *Member, text string) {
 	}
 }
 
-func (r *Room) SendFile(from *Member, file *File) {
-	r.post(from, Message{File: file}, from.files, "Slow down: one file every 2 seconds.")
+func validCaption(caption string) bool {
+	return caption == "" || validText(caption)
+}
+
+func (r *Room) SendFile(from *Member, file *File, caption string) {
+	if validCaption(caption) {
+		r.post(from, Message{Text: caption, File: file}, from.files, "Slow down: one file every 2 seconds.")
+	}
 }
 
 func (r *Room) post(from *Member, message Message, limiter *rate.Limiter, slow string) {

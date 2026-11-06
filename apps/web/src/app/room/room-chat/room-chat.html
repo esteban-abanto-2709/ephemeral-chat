@@ -85,6 +85,9 @@
     class="absolute inset-0 z-30 bg-canvas md:rounded-3xl md:border md:border-edge"
     [files]="preview()"
     [to]="title()"
+    (sent)="filesSent.emit($event)"
+    (discarded)="filesDiscarded.emit()"
+    (added)="picker.click()"
   />
 }
 
@@ -175,7 +178,6 @@
       >
         <svg lucidePaperclip class="size-5" aria-hidden="true"></svg>
       </button>
-      <input #picker type="file" class="hidden" multiple tabindex="-1" (change)="pick(picker)" />
       <label for="message" class="sr-only">Message</label>
       <input
         #input
@@ -216,3 +218,5 @@
     </form>
   }
 </div>
+
+<input #picker type="file" class="hidden" multiple tabindex="-1" (change)="pick(picker)" />

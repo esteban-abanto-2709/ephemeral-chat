@@ -395,11 +395,11 @@ func TestFilesReachEveryoneWithinTheirOwnLimit(t *testing.T) {
 		receipt.File = &File{Kind: "file", Name: "notes.txt", Size: 4}
 
 		for range FileBurst {
-			room.SendFile(juan, file)
+			room.SendFile(juan, file, "")
 			expect(t, juan, receipt)
 			expect(t, ana, sent)
 		}
-		room.SendFile(juan, file)
+		room.SendFile(juan, file, "")
 		expect(t, juan, Message{Type: "error", Room: roomID, Text: "Slow down: one file every 2 seconds."})
 		assertEmpty(t, ana)
 
@@ -407,7 +407,23 @@ func TestFilesReachEveryoneWithinTheirOwnLimit(t *testing.T) {
 		expect(t, ana, said(juan, "text still flows"))
 
 		time.Sleep(FileInterval)
-		room.SendFile(juan, file)
+		room.SendFile(juan, file, "")
 		expect(t, ana, sent)
 	})
+}
+
+func TestACaptionTravelsWithItsFile(t *testing.T) {
+	room := newTestRoom()
+	juan, ana := join(t, room, "Juan"), join(t, room, "Ana")
+	drain(juan)
+	drain(ana)
+	file, _ := NewFile("notes.txt", encode([]byte("hola")))
+
+	room.SendFile(juan, file, "   ")
+	room.SendFile(juan, file, strings.Repeat("x", MessageMaxLength+1))
+	assertEmpty(t, ana)
+
+	room.SendFile(juan, file, "for Saturday")
+	expect(t, ana, Message{Type: "message", Room: roomID, ID: juan.client.ID, Name: "Juan", Text: "for Saturday", File: file})
+	expect(t, juan, Message{Type: "message", Room: roomID, ID: juan.client.ID, Name: "Juan", Text: "for Saturday", File: &File{Kind: "file", Name: "notes.txt", Size: 4}})
 }

@@ -1,7 +1,7 @@
 import { DOCUMENT, OnDestroy, Service, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Notice } from '../notice';
-import { Attachment, Quote } from './attachment';
+import { Attachment, Outgoing, Quote } from './attachment';
 import { compressPhoto } from './compress-photo';
 
 export type SocketStatus = 'connecting' | 'open' | 'closed';
@@ -54,6 +54,7 @@ interface Frame {
 export const maxChats = 20;
 export const fileMaxBytes = 5 * 1024 * 1024;
 const fileNameMaxLength = 120;
+const shownTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
 const typingShownFor = 3000;
 const typingSentEvery = 2000;
 
@@ -83,6 +84,13 @@ export class ChatClient implements OnDestroy {
   readonly active = computed(
     () => this._chats().find((chat) => chat.id === this._active()) ?? null,
   );
+  private readonly _picked = signal<{ room: string; files: File[]; previews: Attachment[] } | null>(
+    null,
+  );
+  readonly picked = computed(() => {
+    const picked = this._picked();
+    return picked?.room === this._active() ? picked.previews : [];
+  });
 
   private readonly http = inject(HttpClient);
   private readonly notice = inject(Notice);
@@ -145,6 +153,9 @@ export class ChatClient implements OnDestroy {
     this.write({ type: 'leave', room: id });
     this.release(this._chats().filter((chat) => chat.id === id));
     this.sentFiles.delete(id);
+    if (this._picked()?.room === id) {
+      this.discardPicked();
+    }
     this._chats.update((chats) => chats.filter((chat) => chat.id !== id));
     if (this._active() === id) {
       this._active.set(null);
@@ -163,18 +174,60 @@ export class ChatClient implements OnDestroy {
     this.typingSentAt.delete(room);
   }
 
-  async sendFiles(room: string, files: File[]): Promise<void> {
-    for (const file of files) {
-      const ready = await compressPhoto(file);
+  pick(room: string, files: File[]): void {
+    if (this._picked()?.room !== room) {
+      this.discardPicked();
+    }
+    const picked = this._picked() ?? { room, files: [], previews: [] };
+    this._picked.set({
+      room,
+      files: [...picked.files, ...files],
+      previews: [
+        ...picked.previews,
+        ...files.map((file): Attachment => ({
+          kind: shownTypes.includes(file.type) ? 'image' : 'file',
+          name: file.name,
+          size: file.size,
+          url: URL.createObjectURL(file),
+        })),
+      ],
+    });
+  }
+
+  discardPicked(): void {
+    this._picked()?.previews.forEach((preview) => URL.revokeObjectURL(preview.url));
+    this._picked.set(null);
+  }
+
+  async sendPicked(items: Outgoing[], original: boolean): Promise<void> {
+    const picked = this._picked();
+    if (!picked) {
+      return;
+    }
+    const files = items.map(({ file, caption }) => ({
+      file: picked.files[picked.previews.indexOf(file)],
+      caption,
+    }));
+    this.discardPicked();
+    await this.sendFiles(picked.room, files, original);
+  }
+
+  async sendFiles(
+    room: string,
+    files: { file: File; caption: string }[],
+    original = false,
+  ): Promise<void> {
+    for (const { file, caption } of files) {
+      const ready = original ? file : await compressPhoto(file);
       if (ready.size > fileMaxBytes) {
         this.notice.show('Files up to 5 MB.');
       } else {
-        this.sendFile(room, ready);
+        this.sendFile(room, ready, caption.trim());
       }
     }
   }
 
-  private sendFile(room: string, file: File): void {
+  private sendFile(room: string, file: File, caption: string): void {
     const name = Array.from(file.name.trim() || 'file')
       .slice(-fileNameMaxLength)
       .join('')
@@ -182,7 +235,13 @@ export class ChatClient implements OnDestroy {
     const reader = new FileReader();
     reader.onload = () => {
       this.sentFiles.set(room, [...(this.sentFiles.get(room) ?? []), new File([file], name)]);
-      this.write({ type: 'file', room, name, data: String(reader.result).split(',')[1] });
+      this.write({
+        type: 'file',
+        room,
+        name,
+        data: String(reader.result).split(',')[1],
+        text: caption || undefined,
+      });
     };
     reader.readAsDataURL(file);
   }
@@ -198,6 +257,7 @@ export class ChatClient implements OnDestroy {
 
   ngOnDestroy(): void {
     this.clearTyping();
+    this.discardPicked();
     this.release(this._chats());
     this.socket?.close();
   }

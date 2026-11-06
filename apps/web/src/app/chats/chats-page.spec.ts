@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { computed, signal } from '@angular/core';
 import { Location } from '@angular/common';
+import { Attachment } from './attachment';
 import { Chat, ChatClient, SocketStatus } from './chat-client';
 import { ChatsPage } from './chats-page';
 
@@ -11,6 +12,7 @@ describe('ChatsPage', () => {
   const chats = signal<Chat[]>([]);
   const activeId = signal<string | null>(null);
   const name = signal<string | null>(null);
+  const picked = signal<Attachment[]>([]);
   const fakeClient = {
     status: signal<SocketStatus>('open'),
     name,
@@ -23,7 +25,10 @@ describe('ChatsPage', () => {
     create: vi.fn(),
     send: vi.fn(),
     sendTyping: vi.fn(),
-    sendFiles: vi.fn(),
+    picked,
+    pick: vi.fn(),
+    sendPicked: vi.fn(),
+    discardPicked: vi.fn(),
     reconnect: vi.fn(),
     remove: vi.fn(),
   };
@@ -32,6 +37,7 @@ describe('ChatsPage', () => {
     vi.clearAllMocks();
     name.set(null);
     activeId.set(null);
+    picked.set([]);
     fakeClient.status.set('open');
     chats.set([
       {
@@ -144,13 +150,32 @@ describe('ChatsPage', () => {
     expect(input.value).toBe('');
   });
 
-  it('sends the files picked with the clip', async () => {
-    const { page } = await openChat();
+  it('reviews the files picked with the clip before sending them', async () => {
+    const { fixture, page } = await openChat();
     const picker = page.querySelector('input[type="file"]') as HTMLInputElement;
     const file = new File(['hola'], 'notes.txt');
     Object.defineProperty(picker, 'files', { value: [file] });
     picker.dispatchEvent(new Event('change'));
-    expect(fakeClient.sendFiles).toHaveBeenCalledWith('trip', [file]);
+    expect(fakeClient.pick).toHaveBeenCalledWith('trip', [file]);
+
+    const preview: Attachment = { kind: 'file', name: 'notes.txt', size: 4, url: 'blob:1' };
+    picked.set([preview]);
+    await fixture.whenStable();
+    const caption = page.querySelector('#caption') as HTMLInputElement;
+    caption.value = 'for Saturday';
+    caption.dispatchEvent(new Event('input'));
+    caption.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }),
+    );
+    expect(fakeClient.open).not.toHaveBeenCalledWith(null);
+
+    (page.querySelector('[aria-label="Send 1 file"]') as HTMLButtonElement).click();
+    expect(fakeClient.sendPicked).toHaveBeenCalledWith(
+      [{ file: preview, caption: 'for Saturday' }],
+      false,
+    );
+    [...page.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'Discard')!.click();
+    expect(fakeClient.discardPicked).toHaveBeenCalled();
   });
 
   it('offers to reconnect when the connection drops', async () => {

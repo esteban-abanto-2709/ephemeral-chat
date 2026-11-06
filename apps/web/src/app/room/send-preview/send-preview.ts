@@ -5,6 +5,7 @@ import {
   input,
   linkedSignal,
   output,
+  signal,
   viewChild,
 } from '@angular/core';
 import {
@@ -14,13 +15,8 @@ import {
   LucideSendHorizontal,
   LucideX,
 } from '@lucide/angular';
-import { Attachment, fileSize } from '../../chats/attachment';
+import { Attachment, Outgoing, fileSize } from '../../chats/attachment';
 import { Glass } from '../../glass/glass';
-
-export interface Outgoing {
-  file: Attachment;
-  caption: string;
-}
 
 @Component({
   imports: [Glass, LucideFile, LucideFileText, LucidePlus, LucideSendHorizontal, LucideX],
@@ -36,15 +32,21 @@ export class SendPreview {
   readonly added = output();
 
   protected readonly fileSize = fileSize;
-  protected readonly items = linkedSignal<Outgoing[]>(() =>
-    this.files().map((file) => ({ file, caption: '' })),
-  );
+  protected readonly items = linkedSignal<Attachment[], Outgoing[]>({
+    source: this.files,
+    computation: (files, previous) => [
+      ...(previous?.value ?? []),
+      ...files
+        .filter((file) => !previous?.source.includes(file))
+        .map((file) => ({ file, caption: '' })),
+    ],
+  });
   protected readonly selected = linkedSignal<Outgoing[], number>({
     source: this.items,
     computation: (items, previous) => Math.min(previous?.value ?? 0, items.length - 1),
   });
   protected readonly current = computed(() => this.items()[this.selected()]);
-  protected readonly original = linkedSignal({ source: this.files, computation: () => false });
+  protected readonly original = signal(false);
 
   protected readonly dialog = viewChild.required<ElementRef<HTMLDialogElement>>('confirmation');
 

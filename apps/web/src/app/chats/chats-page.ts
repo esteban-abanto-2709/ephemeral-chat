@@ -23,7 +23,7 @@ import { ChatsWelcome } from './chats-welcome';
   ],
   providers: [ChatClient],
   selector: 'app-chats-page',
-  host: { '(document:keydown.escape)': 'client.open(null)' },
+  host: { '(document:keydown.escape)': '$event.defaultPrevented || client.open(null)' },
   templateUrl: './chats-page.html',
 })
 export class ChatsPage {

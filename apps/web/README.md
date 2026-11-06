@@ -125,12 +125,17 @@ The message input stops at 1000 characters (`maxlength`, the API's limit) and
 shows a counter from 900 on.
 
 Photos and files go through the clip, a paste into the input or a drop on the
-chat; `ChatClient.sendFiles()` sends each one as a `file` frame in base64.
+chat (a "Drop to send" overlay shows while dragging). Nothing leaves yet: they
+wait in `ChatClient.picked`, tied to that chat, and `room/send-preview` covers
+the chat to review them, as in WhatsApp: a large preview, a caption for each,
+thumbnails to remove one, Add more, and an X or `Esc` that asks before
+discarding. Send hands what is left to `ChatClient.sendFiles()`, one `file`
+frame in base64 each, with its caption as `text`.
 JPEG, PNG and WebP photos are first redrawn on an `OffscreenCanvas`
 (`chats/compress-photo.ts`): 1600 px on the long side, JPEG at quality 0.8,
 which takes a 5 MB phone photo to a few hundred KB and drops its metadata,
-location included. GIFs, other files and anything the browser can't redraw go
-as they are. Whatever is still over 5 MB isn't sent ("Files up to 5 MB.").
+location included. Original quality skips this step. GIFs, other files and
+anything the browser can't redraw go as they are. Whatever is still over 5 MB isn't sent ("Files up to 5 MB.").
 Your own files come back from the server without their bytes, so the tab keeps
 what it sent and shows it when that receipt arrives, matched by name and size.
 Received files become `blob:` URLs, released when the chat is deleted: photos

@@ -128,7 +128,7 @@ func connect(rooms *room.Registry, ping time.Duration) http.HandlerFunc {
 			case "message":
 				rooms.Send(client, incoming.Room, incoming.Text)
 			case "file":
-				rooms.SendFile(client, incoming.Room, incoming.Name, incoming.Data)
+				rooms.SendFile(client, incoming.Room, incoming.Name, incoming.Data, incoming.Text)
 			case "typing":
 				client.Typing(incoming.Room)
 			}

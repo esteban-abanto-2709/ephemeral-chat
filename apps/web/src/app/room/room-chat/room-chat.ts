@@ -26,7 +26,7 @@ import {
   LucideWifiOff,
   LucideX,
 } from '@lucide/angular';
-import { Attachment, Quote, duration } from '../../chats/attachment';
+import { Attachment, Outgoing, Quote, duration } from '../../chats/attachment';
 import { ChatEvent, Person, SocketStatus } from '../../chats/chat-client';
 import { Glass } from '../../glass/glass';
 import { avatarHue } from '../avatar-hue';
@@ -94,6 +94,8 @@ export class RoomChat {
   readonly preview = input<Attachment[]>([]);
   readonly sent = output<string>();
   readonly attached = output<File[]>();
+  readonly filesSent = output<{ items: Outgoing[]; original: boolean }>();
+  readonly filesDiscarded = output();
   readonly reconnect = output();
   readonly typed = output();
   readonly closed = output();

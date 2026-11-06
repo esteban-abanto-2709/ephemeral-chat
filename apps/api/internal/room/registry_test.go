@@ -4,6 +4,7 @@ import (
 	"errors"
 	"reflect"
 	"regexp"
+	"strings"
 	"sync"
 	"testing"
 	"testing/synctest"
@@ -222,10 +223,12 @@ func TestAFileCanStartAPrivateChat(t *testing.T) {
 	rooms := NewRegistry()
 	sam, luis := rooms.Connect("Sam"), rooms.Connect("Luis")
 
-	rooms.SendFile(sam, luis.ID, "x.txt", "not base64!")
+	rooms.SendFile(sam, luis.ID, "x.txt", "not base64!", "")
+	assertNothing(t, luis)
+	rooms.SendFile(sam, luis.ID, "notes.txt", "aG9sYQ==", strings.Repeat("x", MessageMaxLength+1))
 	assertNothing(t, luis)
 
-	rooms.SendFile(sam, luis.ID, "notes.txt", "aG9sYQ==")
+	rooms.SendFile(sam, luis.ID, "notes.txt", "aG9sYQ==", "")
 	if got := next(t, luis); got.Type != "joined" || !got.Private {
 		t.Errorf("Luis got %+v, want the private chat", got)
 	}

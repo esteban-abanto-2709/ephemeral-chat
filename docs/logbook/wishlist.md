@@ -34,8 +34,5 @@ Checks on your messages saying they arrived and were read, as in WhatsApp. Open 
 ## [WL-016] Photo viewer in the page
 Tapping a photo opens it full screen over the chat (close with X, Escape or a tap outside), as in WhatsApp, instead of a new tab.
 
-## [WL-017] Review before sending a photo or file
-Picking, pasting or dropping files opens a preview first: remove the wrong one, write a caption, then send; dragging over the chat shows a "Drop to send" overlay. The same screen can offer "send as file" to skip compression and keep the original (up to 5 MB).
-
 ## [WL-019] Files in binary frames
 Files travel as base64 inside JSON text frames, about 33% bigger than the file. Binary WebSocket frames would carry the raw bytes, at the cost of a small header of our own for the chat and the file name.

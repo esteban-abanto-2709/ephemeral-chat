@@ -66,11 +66,11 @@ share a name; the id tells them apart. Then, as JSON text frames:
 client → server:   {"type": "join",    "room": "…"}
                    {"type": "message", "room": "…", "text": "hola"}
                    {"type": "typing",  "room": "…"}
-                   {"type": "file",    "room": "…", "name": "photo.jpg", "data": "<base64>"}
+                   {"type": "file",    "room": "…", "name": "photo.jpg", "data": "<base64>", "text": "optional caption"}
                    {"type": "leave",   "room": "…"}
 server → client:   {"type": "ready",   "id": "…", "name": "Juan"}
 server → room:     {"type": "message", "room": "…", "id": "…", "name": "Juan", "text": "hola"}
-                   {"type": "message", "room": "…", "id": "…", "name": "Juan", "file": {"kind": "image", "name": "photo.jpg", "mime": "image/jpeg", "size": 48213, "data": "<base64>"}}
+                   {"type": "message", "room": "…", "id": "…", "name": "Juan", "text": "optional caption", "file": {"kind": "image", "name": "photo.jpg", "mime": "image/jpeg", "size": 48213, "data": "<base64>"}}
                    (the sender gets the same file event without "data")
                    {"type": "joined",  "room": "…", "id": "…", "name": "Ana", "title": "Weekend trip", "members": [{"id": "…", "name": "Juan"}, …]}
                    {"type": "left",    "room": "…", "id": "…", "name": "Ana", "members": […]}
@@ -115,7 +115,8 @@ those. Any frame over 7 MiB closes the connection with `1009` before it is
 even read, so no client can make the server buffer a huge message.
 
 A `file` frame carries one file in base64, up to 5 MiB once decoded
-(`FileMaxBytes`), with a name of 1 to 120 characters; anything else is dropped.
+(`FileMaxBytes`), with a name of 1 to 120 characters and an optional caption in
+`text`, held to the same rules as a message; anything else is dropped.
 The server decodes it to measure it and sniffs its first bytes
 (`http.DetectContentType`): only PNG, JPEG, GIF and WebP become `"kind":
 "image"` with their `mime`, which a client may show inline. Everything else is
