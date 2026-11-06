@@ -82,6 +82,11 @@ or a tab that closed), `full` for a room that already has 50 people
 (`MaxMembers`), `limit` for a tab already in 20 chats (`MaxChats`). Frames for
 a chat the tab isn't in are ignored.
 
+While a chat is quiet the server pings the tab every 30 seconds. That keeps
+proxies such as a Cloudflare tunnel from closing an idle WebSocket, and a tab
+that doesn't answer within the next 30 seconds is disconnected. Browsers
+answer pings on their own.
+
 ### Private chats
 
 `join` also takes someone's id. That only looks them up: the tab that asked

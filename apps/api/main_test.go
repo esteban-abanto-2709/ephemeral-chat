@@ -212,3 +212,42 @@ func TestAPIOnlyWithoutStaticDir(t *testing.T) {
 		t.Errorf("GET / without STATIC_DIR = %d, want 404", rec.Code)
 	}
 }
+
+func TestKeepAlive(t *testing.T) {
+	ping := 50 * time.Millisecond
+	server := httptest.NewServer(connect(room.NewRegistry(), ping))
+	defer server.Close()
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	dial := func() *websocket.Conn {
+		conn, _, err := websocket.Dial(ctx, "ws"+strings.TrimPrefix(server.URL, "http")+"?name=Juan", nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return conn
+	}
+
+	alive := dial()
+	defer alive.CloseNow()
+	var ready room.Message
+	wsjson.Read(ctx, alive, &ready)
+	replies := make(chan room.Message)
+	go func() {
+		var reply room.Message
+		wsjson.Read(ctx, alive, &reply)
+		replies <- reply
+	}()
+	time.Sleep(5 * ping)
+	wsjson.Write(ctx, alive, map[string]string{"type": "join", "room": "unknown"})
+	if got := <-replies; got.Code != "gone" {
+		t.Errorf("a tab that answers pings got %+v after a quiet spell, want it still connected", got)
+	}
+
+	dead := dial()
+	defer dead.CloseNow()
+	time.Sleep(5 * ping)
+	wsjson.Read(ctx, dead, &ready)
+	if _, _, err := dead.Read(ctx); err == nil || ctx.Err() != nil {
+		t.Errorf("a tab that never answers pings stayed connected: %v", err)
+	}
+}

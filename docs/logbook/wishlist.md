@@ -19,9 +19,6 @@ Accept `.webp` images, animated included, shown as stickers. WhatsApp's own stic
 ## [WL-005] End-to-end encryption
 The key travels in the link after `#`, which browsers never send to the server; Web Crypto encrypts in the browser and the API only relays ciphertext. Candidate for v0.6.
 
-## [WL-006] Single-use link
-A link that only lets one person in, for the room's creator to hand out. Far future.
-
 ## [WL-007] Load test with real numbers
 Measure concurrent connections against RAM and latency (e.g. with `k6`) and publish the result in the README.
 
@@ -39,3 +36,9 @@ A manifest and icons so the app installs to the home screen and opens full scree
 
 ## [WL-013] QR code for links
 Show an invite or group link as a QR code, so a phone joins a chat open on a computer by scanning it. Pairs with WL-002 for moving files between devices.
+
+## [WL-014] No "You:" in private chat previews
+A private chat's preview still starts with "You:" when the last message is yours; WhatsApp shows only the text there (with its checks). Drop the prefix in private chats.
+
+## [WL-015] Read receipts
+Checks on your messages saying they arrived and were read, as in WhatsApp. Open product question: does "seen" fit an ephemeral chat, or is not knowing part of the point? Decide before building.

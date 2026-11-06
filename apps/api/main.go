@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"io/fs"
 	"log"
@@ -8,6 +9,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/coder/websocket"
 	"github.com/coder/websocket/wsjson"
@@ -16,6 +18,8 @@ import (
 )
 
 const frameMaxBytes = 8 << 10
+
+const pingInterval = 30 * time.Second
 
 func main() {
 	port := os.Getenv("PORT")
@@ -35,7 +39,7 @@ func newMux(staticDir string) *http.ServeMux {
 		w.Write([]byte("ok"))
 	})
 	mux.HandleFunc("POST /api/rooms", createRoom(rooms))
-	mux.HandleFunc("GET /api/ws", connect(rooms))
+	mux.HandleFunc("GET /api/ws", connect(rooms, pingInterval))
 	mux.HandleFunc("GET /api/", http.NotFound)
 
 	if staticDir != "" {
@@ -63,7 +67,7 @@ func createRoom(rooms *room.Registry) http.HandlerFunc {
 	}
 }
 
-func connect(rooms *room.Registry) http.HandlerFunc {
+func connect(rooms *room.Registry, ping time.Duration) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		name := strings.TrimSpace(r.URL.Query().Get("name"))
 		if !room.ValidName(name) {
@@ -80,6 +84,8 @@ func connect(rooms *room.Registry) http.HandlerFunc {
 
 		client := rooms.Connect(name)
 		defer rooms.Disconnect(client)
+
+		go keepAlive(r.Context(), conn, ping)
 
 		go func() {
 			defer conn.CloseNow()
@@ -119,6 +125,25 @@ func connect(rooms *room.Registry) http.HandlerFunc {
 			case "typing":
 				client.Typing(incoming.Room)
 			}
+		}
+	}
+}
+
+func keepAlive(ctx context.Context, conn *websocket.Conn, every time.Duration) {
+	ticker := time.NewTicker(every)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ticker.C:
+			pong, cancel := context.WithTimeout(ctx, every)
+			err := conn.Ping(pong)
+			cancel()
+			if err != nil {
+				conn.CloseNow()
+				return
+			}
+		case <-ctx.Done():
+			return
 		}
 	}
 }

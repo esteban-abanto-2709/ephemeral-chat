@@ -12,6 +12,9 @@ Summary in ≤2 lines of what was done.
 
 ---
 
+## [TD-005] Idle connections get dropped (2026-11-06 09:07)
+The server pings every tab every 30 seconds, so proxies keep quiet WebSockets open, and drops a tab that stops answering.
+
 ## [RM-011] Chats (v0.4) (2026-11-05 19:22)
 One page like WhatsApp Web: a name and id per tab over one connection, several chats at once, named groups joined by link or code, private chats by id or invite link that start with the first message. Completes v0.4.
 
