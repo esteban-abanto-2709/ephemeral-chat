@@ -1,4 +1,12 @@
-import { DestroyRef, Directive, ElementRef, afterRenderEffect, computed, inject, input } from '@angular/core';
+import {
+  DestroyRef,
+  Directive,
+  ElementRef,
+  afterRenderEffect,
+  computed,
+  inject,
+  input,
+} from '@angular/core';
 import { Theme } from '../theme/theme';
 import { GlassName, GlassStyle, glassStyles } from './glass-styles';
 import { LiquidGlass } from './liquid-glass';
@@ -36,7 +44,9 @@ export class Glass {
   protected readonly fallback = computed(() =>
     mix(this.base(), this.style().kind === 'liquid' ? this.amount() + 0.2 : this.amount()),
   );
-  protected readonly border = computed(() => mix('var(--frost-base)', this.style().border[this.theme.mode()]));
+  protected readonly border = computed(() =>
+    mix('var(--frost-base)', this.style().border[this.theme.mode()]),
+  );
   protected readonly blur = computed(() => {
     const style = this.style();
     return style.kind === 'liquid' ? '24px' : `${style.blur}px`;

@@ -11,10 +11,11 @@ Ephemerality is a design feature, not a limitation.
 
 **Product certainties (judge every change against them):**
 
-1. **No accounts, no database.** A name per room, nothing else.
+1. **No accounts, no database.** A name and an id per tab, nothing else.
 2. **The server never stores messages**: it relays them to whoever is
    connected. Late joiners see nothing from before.
-3. **The link is the key**: anyone with it gets in.
+3. **The link is the key**: anyone with a group's link or code gets in;
+   anyone with your id or invite link can write to you.
 4. **Private by nature**: no global or public rooms.
 
 The full reasoning, limits, versions and what was decided against are in
@@ -25,13 +26,15 @@ clever shortcuts.
 
 ## Current state (2026-11)
 
-- **v0.3 is feature-complete**: v0.1's journey (create a room, share its
-  link, pick a name, see who is in, chat; rooms vanish a minute after they
-  empty; limits on message length, rate and room size) with the glass
-  redesign: WhatsApp Web layout, WebGL liquid glass with a frosted fallback,
-  light and dark themes. v0.3 made it comfortable: a clear background with
-  glass bubbles and a floating header and composer, the room kept above the
-  phone keyboard, and a typing indicator. The protocol is in the
+- **v0.4 is feature-complete**: one page like WhatsApp Web. You pick a name
+  once and the tab gets an id that lives while it is open; then several chats
+  at once over one connection: named groups joined by link or code, and
+  private chats opened by someone's id or invite link, which reach them only
+  with your first message and end when either leaves. Earlier versions brought
+  the glass design (WebGL liquid glass with a frosted fallback, light and dark
+  themes), the layout kept above the phone keyboard, a typing indicator, and
+  limits on message length, rate, group size and chats per tab. Groups vanish
+  a minute after they empty. The protocol is in the
   [API README](./apps/api/README.md#room-chat), the look in the
   [web README](./apps/web/README.md#look-and-feel).
 - Next versions are ideas in `docs/logbook/wishlist.md` until committed to

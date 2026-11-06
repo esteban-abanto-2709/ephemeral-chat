@@ -7,6 +7,6 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideHttpClient(),
-    provideRouter(routes, withComponentInputBinding())
-  ]
+    provideRouter(routes, withComponentInputBinding()),
+  ],
 };

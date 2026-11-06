@@ -5,7 +5,9 @@ export type ThemeMode = 'light' | 'dark';
 @Service()
 export class Theme {
   private readonly root = inject(DOCUMENT).documentElement;
-  private readonly _mode = signal<ThemeMode>(this.root.dataset['theme'] === 'dark' ? 'dark' : 'light');
+  private readonly _mode = signal<ThemeMode>(
+    this.root.dataset['theme'] === 'dark' ? 'dark' : 'light',
+  );
   readonly mode = this._mode.asReadonly();
 
   show(mode: ThemeMode): void {

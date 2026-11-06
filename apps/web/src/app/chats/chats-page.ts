@@ -1,4 +1,5 @@
-import { Component, DOCUMENT, inject, input, signal, viewChild } from '@angular/core';
+import { Component, DOCUMENT, inject, input, signal } from '@angular/core';
+import { Location } from '@angular/common';
 import { LucideCheck, LucideInfo } from '@lucide/angular';
 import { Glass } from '../glass/glass';
 import { Notice } from '../notice';
@@ -10,7 +11,16 @@ import { ChatList } from './chat-list/chat-list';
 import { ChatsWelcome } from './chats-welcome';
 
 @Component({
-  imports: [ChatList, ChatsWelcome, Glass, LucideCheck, LucideInfo, NameDialog, RoomChat, VisibleViewport],
+  imports: [
+    ChatList,
+    ChatsWelcome,
+    Glass,
+    LucideCheck,
+    LucideInfo,
+    NameDialog,
+    RoomChat,
+    VisibleViewport,
+  ],
   providers: [ChatClient],
   selector: 'app-chats-page',
   host: { '(document:keydown.escape)': 'client.open(null)' },
@@ -22,24 +32,32 @@ export class ChatsPage {
   protected readonly client = inject(ChatClient);
   protected readonly notice = inject(Notice);
   protected readonly creating = signal(false);
-  private readonly list = viewChild.required(ChatList);
+  protected readonly joined = signal<string | null>(null);
   private readonly origin = inject(DOCUMENT).location.origin;
+  private readonly location = inject(Location);
 
   protected start(name: string): void {
     this.client.connect(name);
     const id = this.id();
     if (id) {
-      this.client.join(id);
+      this.join(id);
+      this.location.replaceState('/');
     }
+  }
+
+  protected join(code: string): void {
+    this.client.join(code);
+    this.joined.set(code);
+  }
+
+  protected select(id: string): void {
+    this.joined.set(null);
+    this.client.open(id);
   }
 
   protected create(title: string): void {
     this.creating.set(false);
     this.client.create(title);
-  }
-
-  protected joinWithCode(): void {
-    this.list().focusSearch();
   }
 
   protected link(id: string): string {

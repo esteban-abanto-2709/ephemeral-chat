@@ -1,4 +1,12 @@
-import { Component, ElementRef, afterNextRender, computed, inject, input, signal } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  afterNextRender,
+  computed,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
 import { DomSanitizer } from '@angular/platform-browser';
 
 @Component({
@@ -29,7 +37,9 @@ export class DesignDevice {
 
   private readonly sanitizer = inject(DomSanitizer);
   private readonly available = signal(0);
-  protected readonly url = computed(() => this.sanitizer.bypassSecurityTrustResourceUrl(this.src()));
+  protected readonly url = computed(() =>
+    this.sanitizer.bypassSecurityTrustResourceUrl(this.src()),
+  );
   protected readonly scale = computed(() => Math.min(1, this.available() / this.width()) || 1);
 
   constructor() {

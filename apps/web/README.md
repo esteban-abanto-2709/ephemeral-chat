@@ -32,23 +32,31 @@ the page connects to it on load.
 | ----------- | --------------------- | ------------ |
 | `/`         | `chats/chats-page`    | The app, as in WhatsApp Web: asks your name, then the chat list beside the open chat |
 | `/room/:id` | `chats/chats-page`    | The same page, joining that group as soon as you pick a name: a shared link works at first click |
+| `/chat/:id` | `chats/chats-page`    | An invite: the same page, opening a private chat with that person once you pick a name |
 | `/design`   | `design/design-board` | Development only: the design board (see [Design board](#design-board)) |
 
 Pages are lazy-loaded. The router binds `:id` straight to the page's `id`
-input (`withComponentInputBinding`). The page never changes the URL, so moving
-between chats never reloads it.
+input (`withComponentInputBinding`). A link is only a way in: once you pick a
+name and the chat opens, the address goes back to `/` (`Location.replaceState`,
+no navigation), so reloading starts clean and copying the address never
+shares someone's id. Moving between chats never changes the URL.
 
 The page is built from:
 
-- `chats/chat-list`: the side panel. The search box filters chats by name;
-  when it holds a group code, or a link with one, it offers "Join with this
-  code" (also on Enter). Filters show all chats, the unread ones or groups.
-  Chats are sorted by their last event, with an unread count.
+- `chats/chat-list`: the side panel. Its field joins with whatever you paste
+  and Enter: a group code, someone's id, or a group or invite link holding
+  one; anything else says "That's not a code, link or ID." Filters show all
+  chats, the unread ones, groups or private chats. Chats are sorted by their
+  last event, with the time and an unread count in a column the preview never
+  crosses; a private chat's preview leaves out the name.
 - `room/room-chat`: the open chat, with its header (group name, who is in or
   who is typing, copy link) and composer floating over the messages. On phones
   the list and the chat take turns, with a back arrow; `Esc` closes the chat.
+  The cursor lands in the composer when a chat opens on desktop, and after
+  joining with a code or link anywhere; on phones, picking a chat from the
+  list leaves the keyboard closed.
 - `chats/chats-welcome`: what the right side shows with no chat open: New
-  group and Join with code.
+  group, Invite with link (copies `/chat/<your id>`) and Copy my ID.
 - `room/name-dialog`: a native `<dialog>` (`showModal()`) with a Signal Forms
   form (`@angular/forms/signals`) for a non-blank name of up to 24 characters.
   It asks your name (`Esc` blocked) and, with `cancelable`, a new group's name.
@@ -128,6 +136,7 @@ pnpm start                 # dev server with reload
 pnpm run build             # production build to dist/web/browser
 pnpm test                  # Vitest in watch mode
 pnpm test --watch=false    # single run
+pnpm run format            # Prettier over src (.prettierrc); keep it clean
 ```
 
 Tests run on jsdom, which lacks `<dialog>`'s `showModal()` and `close()`;

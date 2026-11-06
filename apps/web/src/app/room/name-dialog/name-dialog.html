@@ -21,7 +21,9 @@
         [formField]="nameForm.name"
       />
       @if (nameForm.name().touched() && nameForm.name().invalid()) {
-        <p class="text-sm text-danger-ink" role="alert">Enter a name, up to {{ maxLength }} characters.</p>
+        <p class="text-sm text-danger-ink" role="alert">
+          Enter a name, up to {{ maxLength }} characters.
+        </p>
       }
     </div>
 

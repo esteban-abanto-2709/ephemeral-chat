@@ -1,4 +1,15 @@
-import { Component, computed, input, output, signal } from '@angular/core';
+import {
+  Component,
+  DOCUMENT,
+  ElementRef,
+  afterRenderEffect,
+  computed,
+  inject,
+  input,
+  output,
+  signal,
+  viewChild,
+} from '@angular/core';
 import {
   LucideArrowLeft,
   LucideCopy,
@@ -56,6 +67,7 @@ export class RoomChat {
   readonly code = input.required<string>();
   readonly link = input.required<string>();
   readonly typing = input<Person[]>([]);
+  readonly focus = input(false);
   readonly sent = output<string>();
   readonly reconnect = output();
   readonly typed = output();
@@ -78,8 +90,23 @@ export class RoomChat {
     if (!second) {
       return `${first} is typing…`;
     }
-    return rest.length ? `${first} and ${rest.length + 1} more are typing…` : `${first} and ${second} are typing…`;
+    return rest.length
+      ? `${first} and ${rest.length + 1} more are typing…`
+      : `${first} and ${second} are typing…`;
   });
+
+  private readonly composer = viewChild<ElementRef<HTMLInputElement>>('input');
+  private readonly finePointer =
+    !!inject(DOCUMENT).defaultView?.matchMedia?.('(pointer: fine)').matches;
+
+  constructor() {
+    afterRenderEffect(() => {
+      this.code();
+      if (this.finePointer || this.focus()) {
+        this.composer()?.nativeElement.focus();
+      }
+    });
+  }
 
   protected readonly messageMaxLength = messageMaxLength;
   protected readonly counterFrom = messageMaxLength - 100;

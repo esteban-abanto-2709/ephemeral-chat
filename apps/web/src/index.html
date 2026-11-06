@@ -1,24 +1,27 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>Ephemeral Chat</title>
-  <base href="/">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
-  <meta name="description" content="Create a room, share the link, talk. Nothing is kept.">
-  <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <script>
-    (() => {
-      let theme = null;
-      try {
-        theme = localStorage.getItem('theme');
-      } catch {}
-      document.documentElement.dataset.theme =
-        theme ?? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-    })();
-  </script>
-</head>
-<body>
-  <app-root></app-root>
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <title>Ephemeral Chat</title>
+    <base href="/" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content"
+    />
+    <meta name="description" content="Groups and private chats that vanish. Nothing is kept." />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <script>
+      (() => {
+        let theme = null;
+        try {
+          theme = localStorage.getItem('theme');
+        } catch {}
+        document.documentElement.dataset.theme =
+          theme ?? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      })();
+    </script>
+  </head>
+  <body>
+    <app-root></app-root>
+  </body>
 </html>

@@ -25,14 +25,17 @@ nothing to sign up for and nothing left behind.
 
 ## How it works
 
-1. **Create a room** and pick the name you'll appear with.
-2. **Share the link.** Whoever has it comes in, even if a friend forwarded it.
-3. **Talk.** Everyone sees who joined, who left and who is here.
-4. **Leave.** A minute after the last person goes, the room is gone and its
-   link stops working.
+1. **Pick a name.** Your tab gets an id that lasts until you close it.
+2. **Create a group** and share its link or code. Whoever has it comes in,
+   even if a friend forwarded it.
+3. **Or invite someone** with your link or id: they get a private chat with
+   you, and you hear from them with their first message.
+4. **Talk** in several chats at once, like WhatsApp Web.
+5. **Leave.** A minute after the last person goes, a group is gone and its
+   link stops working; a private chat ends when either of you leaves.
 
 The server **never stores a message**: it only passes it on to whoever is in
-the room at that moment. Join late and you see nothing from before. Reload and
+the chat at that moment. Join late and you see nothing from before. Reload and
 everything you had is gone.
 
 ## What it is NOT
@@ -43,10 +46,10 @@ everything you had is gone.
 
 ## Status
 
-**v0.3**: the journey above, text only, deployed, with a glass design in
-light and dark, a room that stays above the phone keyboard and a typing
-indicator. Several chats at once, images, voice messages, stickers and
-end-to-end encryption are ideas for later versions.
+**v0.4**: the journey above, text only, deployed: groups and private chats in
+one page, with a glass design in light and dark, a layout that stays above the
+phone keyboard and a typing indicator. Images and files, voice messages,
+stickers and end-to-end encryption are ideas for later versions.
 
 The detail and the order are in the [roadmap](./docs/logbook/roadmap.md).
 

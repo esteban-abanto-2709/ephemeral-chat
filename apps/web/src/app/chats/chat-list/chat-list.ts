@@ -1,13 +1,13 @@
-import { Component, ElementRef, computed, input, output, signal, viewChild } from '@angular/core';
+import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import {
   LucideCopy,
   LucideHourglass,
   LucideKeyRound,
   LucidePlus,
-  LucideSearch,
   LucideUsersRound,
 } from '@lucide/angular';
+import { Notice } from '../../notice';
 import { CopyLink } from '../../room/copy-link/copy-link';
 import { avatarHue } from '../../room/avatar-hue';
 import { ThemeToggle } from '../../theme/theme-toggle/theme-toggle';
@@ -16,7 +16,7 @@ import { Chat } from '../chat-client';
 const filters = ['All', 'Unread', 'Groups', 'Private'] as const;
 type Filter = (typeof filters)[number];
 
-const codePattern = /(?:^|\/room\/)([A-Za-z0-9_-]{22})\/?$/;
+const codePattern = /(?:^|\/(?:room|chat)\/)([A-Za-z0-9_-]{22})\/?$/;
 
 export function codeIn(text: string): string | null {
   return codePattern.exec(text.trim())?.[1] ?? null;
@@ -30,7 +30,6 @@ export function codeIn(text: string): string | null {
     LucideHourglass,
     LucideKeyRound,
     LucidePlus,
-    LucideSearch,
     LucideUsersRound,
     ThemeToggle,
   ],
@@ -49,25 +48,17 @@ export class ChatList {
   protected readonly avatarHue = avatarHue;
   protected readonly filters = filters;
   protected readonly filter = signal<Filter>('All');
-  protected readonly query = signal('');
-  protected readonly code = computed(() => codeIn(this.query()));
-  protected readonly shown = computed(() => {
-    const query = this.query().trim().toLowerCase();
-    return this.chats().filter(
+  protected readonly shown = computed(() =>
+    this.chats().filter(
       (chat) =>
-        (this.filter() === 'All' ||
-          (this.filter() === 'Unread' && chat.unread > 0) ||
-          (this.filter() === 'Groups' && chat.kind === 'group') ||
-          (this.filter() === 'Private' && chat.kind === 'private')) &&
-        (!query || chat.title.toLowerCase().includes(query)),
-    );
-  });
+        this.filter() === 'All' ||
+        (this.filter() === 'Unread' && chat.unread > 0) ||
+        (this.filter() === 'Groups' && chat.kind === 'group') ||
+        (this.filter() === 'Private' && chat.kind === 'private'),
+    ),
+  );
 
-  private readonly search = viewChild.required<ElementRef<HTMLInputElement>>('search');
-
-  focusSearch(): void {
-    this.search().nativeElement.focus();
-  }
+  private readonly notice = inject(Notice);
 
   protected preview(chat: Chat): string {
     const last = chat.events.filter((event) => event.type !== 'error').at(-1);
@@ -87,11 +78,13 @@ export class ChatList {
     return chat.events.at(-1)?.at ?? chat.at;
   }
 
-  protected open(): void {
-    const code = this.code();
+  protected open(field: HTMLInputElement): void {
+    const code = codeIn(field.value);
     if (code) {
       this.opened.emit(code);
-      this.query.set('');
+      field.value = '';
+    } else if (field.value.trim()) {
+      this.notice.show("That's not a code, link or ID.");
     }
   }
 }

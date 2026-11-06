@@ -39,7 +39,9 @@ describe('ChatClient', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.stubGlobal('WebSocket', FakeWebSocket);
-    TestBed.configureTestingModule({ providers: [ChatClient, provideHttpClient(), provideHttpClientTesting()] });
+    TestBed.configureTestingModule({
+      providers: [ChatClient, provideHttpClient(), provideHttpClientTesting()],
+    });
     client = TestBed.inject(ChatClient);
     client.connect('Juan');
     server = FakeWebSocket.last;
@@ -115,8 +117,17 @@ describe('ChatClient', () => {
 
   it('gets private chats opened by others without opening them', () => {
     ready();
-    server.receive({ type: 'joined', room: 'l', ...luis, title: 'Luis', private: true, members: [juan, luis] });
-    expect(client.chats()).toEqual([expect.objectContaining({ id: 'l', kind: 'private', title: 'Luis', events: [] })]);
+    server.receive({
+      type: 'joined',
+      room: 'l',
+      ...luis,
+      title: 'Luis',
+      private: true,
+      members: [juan, luis],
+    });
+    expect(client.chats()).toEqual([
+      expect.objectContaining({ id: 'l', kind: 'private', title: 'Luis', events: [] }),
+    ]);
     expect(client.active()).toBeNull();
 
     server.receive({ type: 'message', room: 'l', ...luis, text: 'hola' });
@@ -132,7 +143,14 @@ describe('ChatClient', () => {
     ready();
     client.join('one');
     client.join('two');
-    server.receive({ type: 'joined', room: 'l', ...luis, title: 'Luis', private: true, members: [juan, luis] });
+    server.receive({
+      type: 'joined',
+      room: 'l',
+      ...luis,
+      title: 'Luis',
+      private: true,
+      members: [juan, luis],
+    });
     client.reconnect();
     server = FakeWebSocket.last;
     server.onopen?.();

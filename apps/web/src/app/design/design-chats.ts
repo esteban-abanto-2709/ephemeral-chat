@@ -21,16 +21,40 @@ const tripEvents: ChatEvent[] = [
   { type: 'joined', ...ana, members: [ana], at: start },
   { type: 'joined', ...juan, members: [ana, juan], at: start },
   { type: 'joined', ...sam, members: [ana, juan, sam], at: start },
-  { type: 'message', ...ana, own: false, text: 'Saturday at 9, the usual place?', at: start + minute },
+  {
+    type: 'message',
+    ...ana,
+    own: false,
+    text: 'Saturday at 9, the usual place?',
+    at: start + minute,
+  },
   { type: 'message', ...ana, own: false, text: 'I can bring the tent', at: start + minute },
   { type: 'message', ...juan, own: false, text: 'Works for me', at: start + 2 * minute },
   { type: 'message', ...sam, own: true, text: 'Got it, I am in', at: start + 3 * minute },
 ];
 
 const luisEvents: ChatEvent[] = [
-  { type: 'message', ...luis, own: false, text: 'Hey, got your ID from the group', at: start + minute },
-  { type: 'message', ...sam, own: true, text: 'Nice, this one is just us two', at: start + 2 * minute },
-  { type: 'message', ...luis, own: false, text: 'And it is gone once we close the tab', at: start + 2 * minute },
+  {
+    type: 'message',
+    ...luis,
+    own: false,
+    text: 'Hey, got your ID from the group',
+    at: start + minute,
+  },
+  {
+    type: 'message',
+    ...sam,
+    own: true,
+    text: 'Nice, this one is just us two',
+    at: start + 2 * minute,
+  },
+  {
+    type: 'message',
+    ...luis,
+    own: false,
+    text: 'And it is gone once we close the tab',
+    at: start + 2 * minute,
+  },
 ];
 
 const luisChat: Chat = {
@@ -68,7 +92,15 @@ const chats: Chat[] = [
     kind: 'group',
     ended: false,
     title: 'Book club',
-    events: [{ type: 'message', ...eva, own: false, text: 'Chapter 4 by Friday', at: start - 110 * minute }],
+    events: [
+      {
+        type: 'message',
+        ...eva,
+        own: false,
+        text: 'Chapter 4 by Friday',
+        at: start - 110 * minute,
+      },
+    ],
     members: [eva, sam],
     typing: [],
     unread: 5,
@@ -79,7 +111,15 @@ const chats: Chat[] = [
     kind: 'private',
     ended: false,
     title: 'Ana',
-    events: [{ type: 'message', ...ana, own: false, text: 'Is the link working for you?', at: start - 4 * minute }],
+    events: [
+      {
+        type: 'message',
+        ...ana,
+        own: false,
+        text: 'Is the link working for you?',
+        at: start - 4 * minute,
+      },
+    ],
     members: [sam, ana],
     typing: [],
     unread: 2,
@@ -90,7 +130,9 @@ const chats: Chat[] = [
     kind: 'group',
     ended: false,
     title: 'Study group',
-    events: [{ type: 'message', ...sam, own: true, text: 'See you at 6', at: start - 300 * minute }],
+    events: [
+      { type: 'message', ...sam, own: true, text: 'See you at 6', at: start - 300 * minute },
+    ],
     members: [juan, sam],
     typing: [],
     unread: 0,
@@ -127,10 +169,16 @@ const chats: Chat[] = [
           [typing]="chat.typing"
         />
       } @else {
-        <app-chats-welcome class="hidden" [class.md:flex]="state() === 'chats'" me="u7Qm2xKp9RtLw4Zb8NcVhA" />
+        <app-chats-welcome
+          class="hidden"
+          [class.md:flex]="state() === 'chats'"
+          me="u7Qm2xKp9RtLw4Zb8NcVhA"
+        />
       }
       @if (state() === 'start') {
-        <app-name-dialog hint="It's how others see you in every chat. It lasts until you close this tab." />
+        <app-name-dialog
+          hint="It's how others see you in every chat. It lasts until you close this tab."
+        />
       }
       @if (state() === 'new group') {
         <app-name-dialog
@@ -157,6 +205,12 @@ export class DesignChats {
   });
   protected readonly open = computed(() => {
     const state = this.state();
-    return state === 'group' ? chats[0] : state === 'private' ? luisChat : state === 'left' ? luisLeft : null;
+    return state === 'group'
+      ? chats[0]
+      : state === 'private'
+        ? luisChat
+        : state === 'left'
+          ? luisLeft
+          : null;
   });
 }

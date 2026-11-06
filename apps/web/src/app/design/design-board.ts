@@ -31,7 +31,12 @@ import { DesignScreen, designScreens } from './design-frame';
           <h2 class="text-sm font-semibold text-ink-soft">Desktop · 1280 × 800</h2>
           <div class="grid gap-6 lg:grid-cols-2">
             @for (theme of themes; track theme) {
-              <app-design-device [label]="theme" [src]="frame(theme)" [width]="1280" [height]="800" />
+              <app-design-device
+                [label]="theme"
+                [src]="frame(theme)"
+                [width]="1280"
+                [height]="800"
+              />
             }
           </div>
         </section>
@@ -40,7 +45,13 @@ import { DesignScreen, designScreens } from './design-frame';
           <h2 class="text-sm font-semibold text-ink-soft">Mobile · 390 × 844</h2>
           <div class="flex flex-wrap gap-6">
             @for (theme of themes; track theme) {
-              <app-design-device class="w-[390px]" [label]="theme" [src]="frame(theme)" [width]="390" [height]="844" />
+              <app-design-device
+                class="w-[390px]"
+                [label]="theme"
+                [src]="frame(theme)"
+                [width]="390"
+                [height]="844"
+              />
             }
           </div>
         </section>

@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { Notice } from '../../notice';
 import { Chat } from '../chat-client';
 import { ChatList, codeIn } from './chat-list';
 
@@ -10,7 +11,9 @@ function chat(id: string, title: string, unread = 0): Chat {
     kind: 'group',
     ended: false,
     title,
-    events: [{ type: 'message', id: 'a', name: 'Ana', text: `hi from ${title}`, own: false, at: 0 }],
+    events: [
+      { type: 'message', id: 'a', name: 'Ana', text: `hi from ${title}`, own: false, at: 0 },
+    ],
     members: [],
     typing: [],
     unread,
@@ -26,19 +29,22 @@ describe('ChatList', () => {
     fixture.componentInstance.opened.subscribe((id) => opened.push(id));
     await fixture.whenStable();
     const list = fixture.nativeElement as HTMLElement;
-    const titles = () => [...list.querySelectorAll('[aria-label="Your chats"] li')].map((li) => li.textContent);
-    async function type(text: string) {
-      const search = list.querySelector('#search') as HTMLInputElement;
-      search.value = text;
-      search.dispatchEvent(new Event('input'));
-      await fixture.whenStable();
+    const titles = () =>
+      [...list.querySelectorAll('[aria-label="Your chats"] li')].map((li) => li.textContent);
+    function submit(text: string) {
+      const field = list.querySelector('#join') as HTMLInputElement;
+      field.value = text;
+      field.form!.dispatchEvent(new Event('submit', { cancelable: true }));
+      return field;
     }
-    return { fixture, list, opened, titles, type };
+    return { fixture, list, opened, titles, submit };
   }
 
   it('finds a code alone or inside a link', () => {
     expect(codeIn(code)).toBe(code);
     expect(codeIn(` https://ephemeral.chat/room/${code} `)).toBe(code);
+    expect(codeIn(`https://ephemeral.chat/chat/${code}`)).toBe(code);
+    expect(codeIn(`https://elsewhere.com/x/${code}`)).toBeNull();
     expect(codeIn('Weekend trip')).toBeNull();
   });
 
@@ -54,30 +60,29 @@ describe('ChatList', () => {
     const fixture = TestBed.createComponent(ChatList);
     fixture.componentRef.setInput('chats', [{ ...chat('3', 'Ana'), kind: 'private' }]);
     await fixture.whenStable();
-    const row = (fixture.nativeElement as HTMLElement).querySelector('[aria-label="Your chats"] li');
+    const row = (fixture.nativeElement as HTMLElement).querySelector(
+      '[aria-label="Your chats"] li',
+    );
     expect(row?.textContent).toContain('hi from Ana');
     expect(row?.textContent).not.toContain('Ana:');
   });
 
-  it('filters by name and by unread', async () => {
-    const { fixture, list, titles, type } = await render();
-    await type('book');
-    expect(titles()).toEqual([expect.stringContaining('Book club')]);
-
-    await type('');
-    [...list.querySelectorAll('[role="radio"]')].find((b) => b.textContent?.includes('Unread'))!.dispatchEvent(
-      new Event('click'),
-    );
+  it('filters unread chats', async () => {
+    const { fixture, list, titles } = await render();
+    [...list.querySelectorAll('[role="radio"]')]
+      .find((b) => b.textContent?.includes('Unread'))!
+      .dispatchEvent(new Event('click'));
     await fixture.whenStable();
     expect(titles()).toEqual([expect.stringContaining('Book club')]);
   });
 
-  it('joins with a pasted link', async () => {
-    const { list, opened, type } = await render();
-    await type(`https://ephemeral.chat/room/${code}`);
-    expect(list.textContent).toContain('Open this code');
-
-    list.querySelector('form')!.dispatchEvent(new Event('submit', { cancelable: true }));
+  it('joins with a pasted code, link or ID and says when it is none', async () => {
+    const { opened, submit } = await render();
+    expect(submit(`https://ephemeral.chat/chat/${code}`).value).toBe('');
     expect(opened).toEqual([code]);
+
+    expect(submit('Weekend trip').value).toBe('Weekend trip');
+    expect(opened).toHaveLength(1);
+    expect(TestBed.inject(Notice).text()).toBe("That's not a code, link or ID.");
   });
 });

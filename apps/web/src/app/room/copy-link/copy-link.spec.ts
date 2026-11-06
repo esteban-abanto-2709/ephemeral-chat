@@ -5,7 +5,10 @@ import { CopyLink } from './copy-link';
 
 @Component({
   imports: [CopyLink],
-  template: `<button appCopyLink="https://chat.test/room/abc" aria-label="Copy room link"></button>`,
+  template: `<button
+    appCopyLink="https://chat.test/room/abc"
+    aria-label="Copy room link"
+  ></button>`,
 })
 class Host {}
 

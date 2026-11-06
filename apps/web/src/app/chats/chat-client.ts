@@ -62,9 +62,13 @@ export class ChatClient implements OnDestroy {
   readonly name = this._name.asReadonly();
   readonly me = this._me.asReadonly();
   readonly chats = computed(() =>
-    [...this._chats()].sort((a, b) => (b.events.at(-1)?.at ?? b.at) - (a.events.at(-1)?.at ?? a.at)),
+    [...this._chats()].sort(
+      (a, b) => (b.events.at(-1)?.at ?? b.at) - (a.events.at(-1)?.at ?? a.at),
+    ),
   );
-  readonly active = computed(() => this._chats().find((chat) => chat.id === this._active()) ?? null);
+  readonly active = computed(
+    () => this._chats().find((chat) => chat.id === this._active()) ?? null,
+  );
 
   private readonly http = inject(HttpClient);
   private readonly notice = inject(Notice);
@@ -76,7 +80,9 @@ export class ChatClient implements OnDestroy {
 
   connect(name: string): void {
     const scheme = this.location.protocol === 'https:' ? 'wss' : 'ws';
-    const socket = new WebSocket(`${scheme}://${this.location.host}/api/ws?name=${encodeURIComponent(name)}`);
+    const socket = new WebSocket(
+      `${scheme}://${this.location.host}/api/ws?name=${encodeURIComponent(name)}`,
+    );
     this._name.set(name);
     this._status.set('connecting');
     this.ready = false;
@@ -113,10 +119,7 @@ export class ChatClient implements OnDestroy {
       this.notice.show(failures['limit']);
       return;
     }
-    this._chats.update((chats) => [
-      ...chats,
-      this.newChat(id, title),
-    ]);
+    this._chats.update((chats) => [...chats, this.newChat(id, title)]);
     this.open(id);
     if (this.ready) {
       this.write({ type: 'join', room: id });
@@ -168,7 +171,9 @@ export class ChatClient implements OnDestroy {
       this._me.set(frame.id!);
       this.ready = true;
       this._chats.update((chats) =>
-        chats.map((chat) => (chat.kind === 'private' && !chat.ended ? { ...chat, ended: true } : chat)),
+        chats.map((chat) =>
+          chat.kind === 'private' && !chat.ended ? { ...chat, ended: true } : chat,
+        ),
       );
       this._chats()
         .filter((chat) => chat.kind === 'group')
@@ -204,7 +209,14 @@ export class ChatClient implements OnDestroy {
     const at = Date.now();
     const event = (
       frame.type === 'message'
-        ? { type: 'message', id: frame.id, name: frame.name, text: frame.text, own: frame.id === this._me(), at }
+        ? {
+            type: 'message',
+            id: frame.id,
+            name: frame.name,
+            text: frame.text,
+            own: frame.id === this._me(),
+            at,
+          }
         : frame.type === 'error'
           ? { type: 'error', text: frame.text, at }
           : { type: frame.type, id: frame.id, name: frame.name, members: frame.members, at }
@@ -218,12 +230,25 @@ export class ChatClient implements OnDestroy {
       title: frame.title || chat.title,
       members: event.type === 'joined' || event.type === 'left' ? event.members : chat.members,
       events: [...chat.events, event],
-      unread: event.type === 'message' && !event.own && this._active() !== room ? chat.unread + 1 : chat.unread,
+      unread:
+        event.type === 'message' && !event.own && this._active() !== room
+          ? chat.unread + 1
+          : chat.unread,
     }));
   }
 
   private newChat(id: string, title: string): Chat {
-    return { id, kind: 'group', ended: false, title, events: [], members: [], typing: [], unread: 0, at: Date.now() };
+    return {
+      id,
+      kind: 'group',
+      ended: false,
+      title,
+      events: [],
+      members: [],
+      typing: [],
+      unread: 0,
+      at: Date.now(),
+    };
   }
 
   private update(id: string, change: (chat: Chat) => Chat): void {
@@ -233,9 +258,14 @@ export class ChatClient implements OnDestroy {
   private startTyping(room: string, person: Person): void {
     const key = `${room} ${person.id}`;
     clearTimeout(this.typingTimers.get(key));
-    this.typingTimers.set(key, setTimeout(() => this.stopTyping(room, person.id), typingShownFor));
+    this.typingTimers.set(
+      key,
+      setTimeout(() => this.stopTyping(room, person.id), typingShownFor),
+    );
     this.update(room, (chat) =>
-      chat.typing.some(({ id }) => id === person.id) ? chat : { ...chat, typing: [...chat.typing, person] },
+      chat.typing.some(({ id }) => id === person.id)
+        ? chat
+        : { ...chat, typing: [...chat.typing, person] },
     );
   }
 

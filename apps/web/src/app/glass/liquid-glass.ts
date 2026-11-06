@@ -114,7 +114,6 @@ export class LiquidGlass {
       this.theme.mode();
       this.loadBackdrop();
     });
-
   }
 
   add(element: HTMLElement, optics: Optics): void {
@@ -126,7 +125,8 @@ export class LiquidGlass {
     if (this.disabled) {
       return;
     }
-    const radius = known?.radius ?? (parseFloat(getComputedStyle(element).borderTopLeftRadius) || 0);
+    const radius =
+      known?.radius ?? (parseFloat(getComputedStyle(element).borderTopLeftRadius) || 0);
     this.lenses.set(element, { radius, optics });
     if (!known) {
       element.classList.add('lens');

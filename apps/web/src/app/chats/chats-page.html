@@ -11,9 +11,9 @@
     [active]="active?.id ?? null"
     [me]="client.me()"
     [name]="client.name()"
-    (selected)="client.open($event)"
+    (selected)="select($event)"
     (newGroup)="creating.set(true)"
-    (opened)="client.join($event)"
+    (opened)="join($event)"
   />
 
   @if (active) {
@@ -28,6 +28,7 @@
       [code]="active.id"
       [link]="link(active.id)"
       [typing]="active.typing"
+      [focus]="joined() === active.id"
       (sent)="client.send(active.id, $event)"
       (typed)="client.sendTyping(active.id)"
       (reconnect)="client.reconnect()"
@@ -40,7 +41,6 @@
       [class.md:flex]="client.name() && !creating()"
       (newGroup)="creating.set(true)"
       [me]="client.me()"
-      (joinWithCode)="joinWithCode()"
     />
   }
 

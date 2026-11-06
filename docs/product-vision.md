@@ -2,34 +2,40 @@
 
 ## The idea
 
-**You create a room, share the link, and whoever has it comes in to talk.
-When everyone leaves, nothing is left.**
+**You pick a name, open groups or private chats, share a link, and whoever has
+it comes in to talk. When everyone leaves, nothing is left.**
 
 ## Principles
 
 They hold in every version. Judge every change against them.
 
-1. **No accounts, no database.** You come in, pick a name and talk.
+1. **No accounts, no database.** You come in, pick a name and talk. Your tab
+   gets an id that lives while it is open, never stored.
 2. **Truly ephemeral.** The server **never stores messages**: it only relays
    them to whoever is connected at that moment. Someone who joins late sees
    nothing from before. Reloading the page drops everything you had.
-3. **The link is the key.** Anyone with the link gets in, even if it was
-   forwarded by someone else. Rooms are not limited to two people.
+3. **The link is the key.** Anyone with a group's link or code gets in, even
+   if it was forwarded by someone else. Anyone with your id or invite link can
+   write to you; you only hear from them with their first message.
 4. **Private by nature.** No public spaces: every conversation happens in a
-   room only its link opens.
+   group only its link opens, or in a private chat between two people.
 
-## User journey (v0.1)
+## User journey (v0.4)
 
-1. You open the site: the Ephemeral Chat home with a **Create room** button.
-2. A modal asks for **your name**. It is asked every time you enter a room.
-3. You land in the room with a banner: **share this link**, with a copy button.
-4. A friend opens the link, enters a name and joins.
-5. Everyone sees **"Juan joined"**, the **list of who is in**, and later
+1. You open the site: a modal asks for **your name**, once for the whole tab.
+   The tab gets an id that lasts until you close it.
+2. You see the **chat list**, like WhatsApp Web: New group, Invite with link,
+   Copy my ID, and a field to join with a code, link or ID.
+3. **A group**: you name it (it can't change), share its link or code, and
+   friends join. Everyone sees **"Juan joined"**, who is in, and later
    **"Juan left"**.
-6. You exchange **text messages** in real time.
-7. Everyone leaves: after a **one-minute grace period**, the room is gone and
-   its link stops working. The grace period covers someone reloading while
-   alone in the room.
+4. **A private chat**: someone opens your invite link or pastes your id. You
+   hear nothing until their first message, which lands the chat in your list.
+5. You exchange **text messages** in real time, in several chats at once,
+   with unread counts and who is typing.
+6. When the other person leaves a private chat, it turns read-only and you can
+   delete it. When everyone leaves a group, after a **one-minute grace
+   period** it is gone and its link stops working.
 
 ## Limits
 
@@ -40,8 +46,9 @@ The link can reach anyone, so the server protects itself from day one:
 | Message length | 1000 characters |
 | Messages per person | 5 per second |
 | Name length | 24 characters |
-| People per room | 50 |
-| Grace period for an empty room | 1 minute |
+| People per group | 50 |
+| Chats per tab | 20 |
+| Grace period for an empty group | 1 minute |
 
 They are tuning values, not product rules: each one lives in one place in the
 API and can change as the product gets polished.
@@ -56,11 +63,11 @@ Each version is a milestone. When all its work is done, it gets a git tag
 | v0.1 | The core | The whole user journey above, deployed |
 | v0.2 | Glass | Visual redesign: WhatsApp Web layout, liquid glass, light and dark themes |
 | v0.3 | Comfort | Clearer room design, mobile keyboard handling, typing indicator |
-| v0.4 | Rooms | Several chats at once |
-| v0.5 | Media | Images, voice messages, stickers |
+| v0.4 | Chats | One page with several chats: named groups, private chats by id or invite link |
+| v0.5 | Media | Images and files, voice messages, stickers |
 | v0.6 | Privacy | End-to-end encryption |
 
-v0.4 to v0.6 are ideas in the [wishlist](./logbook/wishlist.md) until they
+v0.5 and v0.6 are ideas in the [wishlist](./logbook/wishlist.md) until they
 are committed.
 
 **Deploy early.** The app is on Render from the first steps, not at the end,

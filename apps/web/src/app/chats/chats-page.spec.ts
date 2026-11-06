@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { computed, signal } from '@angular/core';
+import { Location } from '@angular/common';
 import { Chat, ChatClient, SocketStatus } from './chat-client';
 import { ChatsPage } from './chats-page';
 
@@ -45,7 +46,9 @@ describe('ChatsPage', () => {
       },
     ]);
     await TestBed.configureTestingModule({ imports: [ChatsPage] })
-      .overrideComponent(ChatsPage, { set: { providers: [{ provide: ChatClient, useValue: fakeClient }] } })
+      .overrideComponent(ChatsPage, {
+        set: { providers: [{ provide: ChatClient, useValue: fakeClient }] },
+      })
       .compileComponents();
   });
 
@@ -72,12 +75,16 @@ describe('ChatsPage', () => {
     expect(fakeClient.connect).not.toHaveBeenCalled();
   });
 
-  it('connects with the name and joins the group from the link', async () => {
+  it('connects with the name, joins the chat from the link and clears the address', async () => {
+    fakeClient.join.mockImplementation((id: string) => activeId.set(id));
+    const replaceState = vi.spyOn(TestBed.inject(Location), 'replaceState');
     const { page, submitName } = await render('trip');
     await submitName('Juan');
     expect(fakeClient.connect).toHaveBeenCalledWith('Juan');
     expect(fakeClient.join).toHaveBeenCalledWith('trip');
+    expect(replaceState).toHaveBeenCalledWith('/');
     expect(page.querySelector('dialog')).toBeNull();
+    expect(document.activeElement?.id).toBe('message');
   });
 
   it('creates a named group', async () => {
@@ -110,7 +117,9 @@ describe('ChatsPage', () => {
     const { fixture, page } = await openChat();
     chats.update(([chat]) => [{ ...chat, typing: [ana, juan, { id: 'e', name: 'Eva' }] }]);
     await fixture.whenStable();
-    expect(page.querySelector('[role="status"]')?.textContent).toContain('Ana and 2 more are typing…');
+    expect(page.querySelector('[role="status"]')?.textContent).toContain(
+      'Ana and 2 more are typing…',
+    );
 
     const input = page.querySelector('#message') as HTMLInputElement;
     input.value = 'h';
@@ -148,13 +157,17 @@ describe('ChatsPage', () => {
     await fixture.whenStable();
     expect(page.querySelector('header [role="status"]')?.textContent).toContain('Online');
     expect(page.querySelector('[aria-label="Copy group link"]')).toBeNull();
-    expect(page.querySelector('[aria-label="About this chat"] h2')?.textContent).toContain('Private chat with Ana');
+    expect(page.querySelector('[aria-label="About this chat"] h2')?.textContent).toContain(
+      'Private chat with Ana',
+    );
 
     chats.update(([chat]) => [{ ...chat, ended: true }]);
     await fixture.whenStable();
     expect(page.querySelector('#message')).toBeNull();
     expect(page.querySelector('header [role="status"]')?.textContent).toContain('Left the chat');
-    [...page.querySelectorAll('button')].find((b) => b.textContent?.includes('Delete chat'))!.click();
+    [...page.querySelectorAll('button')]
+      .find((b) => b.textContent?.includes('Delete chat'))!
+      .click();
     expect(fakeClient.remove).toHaveBeenCalledWith('trip');
   });
 

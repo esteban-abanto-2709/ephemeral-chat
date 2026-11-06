@@ -20,7 +20,15 @@ import { ChatEvent } from '../../chats/chat-client';
 const stickyDistance = 80;
 
 @Component({
-  imports: [CopyLink, DatePipe, Glass, LucideCopy, LucideKeyRound, LucideShieldCheck, LucideUsersRound],
+  imports: [
+    CopyLink,
+    DatePipe,
+    Glass,
+    LucideCopy,
+    LucideKeyRound,
+    LucideShieldCheck,
+    LucideUsersRound,
+  ],
   selector: 'app-message-list',
   host: { class: 'flex min-h-0 flex-1 flex-col' },
   templateUrl: './message-list.html',
@@ -37,7 +45,11 @@ export class MessageList {
       return {
         event,
         own: event.type === 'message' && event.own,
-        first: !(event.type === 'message' && previous?.type === 'message' && previous.id === event.id),
+        first: !(
+          event.type === 'message' &&
+          previous?.type === 'message' &&
+          previous.id === event.id
+        ),
       };
     }),
   );

@@ -12,6 +12,12 @@ Summary in ≤2 lines of what was done.
 
 ---
 
+## [RM-011] Chats (v0.4) (2026-11-05 19:22)
+One page like WhatsApp Web: a name and id per tab over one connection, several chats at once, named groups joined by link or code, private chats by id or invite link that start with the first message. Completes v0.4.
+
+## [TD-004] Web code drifted from Prettier (2026-11-05 19:22)
+One `prettier --write` pass over `apps/web/src` and a `pnpm run format` script to keep it clean.
+
 ## [RM-010] Comfort (v0.3) (2026-11-05 14:57)
 Clear background with glass bubbles, floating header and composer and no green fill; the room stays above the phone keyboard; typing indicator. Completes v0.3.
 

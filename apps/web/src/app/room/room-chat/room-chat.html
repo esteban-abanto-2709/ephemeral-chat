@@ -23,7 +23,11 @@
   </span>
   <div class="min-w-0 flex-1">
     <h1 class="truncate text-sm font-semibold md:leading-tight">{{ title() || 'Joining…' }}</h1>
-    <p role="status" class="truncate text-xs md:leading-tight" [class]="typing().length ? 'text-accent-ink' : 'text-ink-soft'">
+    <p
+      role="status"
+      class="truncate text-xs md:leading-tight"
+      [class]="typing().length ? 'text-accent-ink' : 'text-ink-soft'"
+    >
       {{ subtitle() }}
     </p>
   </div>
@@ -69,7 +73,11 @@
   class="absolute inset-x-2 bottom-[calc(env(safe-area-inset-bottom)+0.5rem)] z-10 flex flex-col gap-2 md:inset-x-0 md:bottom-0"
 >
   @if (status() === 'closed') {
-    <div appGlass="bubble" class="flex items-center gap-3 rounded-2xl py-1.5 pr-1.5 pl-4 text-sm" role="alert">
+    <div
+      appGlass="bubble"
+      class="flex items-center gap-3 rounded-2xl py-1.5 pr-1.5 pl-4 text-sm"
+      role="alert"
+    >
       <svg lucideWifiOff class="size-4 shrink-0 text-ink-soft" aria-hidden="true"></svg>
       <span class="flex-1">You're disconnected.</span>
       <button
@@ -97,34 +105,36 @@
       </button>
     </p>
   } @else {
-  <form
-    appGlass="composer"
-    class="flex items-center gap-2 rounded-full py-1 pr-1 pl-5 has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-accent-ink"
-    (submit)="send($event, input)"
-  >
-    <label for="message" class="sr-only">Message</label>
-    <input
-      #input
-      id="message"
-      class="min-w-0 flex-1 bg-transparent py-2.5 outline-none placeholder:text-ink-soft"
-      placeholder="Write a message"
-      autocomplete="off"
-      [maxLength]="messageMaxLength"
-      (input)="write(input)"
-    />
-    @if (length() >= counterFrom) {
-      <span class="text-xs text-ink-soft" id="message-length">{{ length() }} / {{ messageMaxLength }}</span>
-    }
-    <button
-      type="submit"
-      class="grid size-10 shrink-0 place-items-center rounded-full text-ink-soft transition hover:scale-110 disabled:opacity-50 disabled:hover:scale-100 focus-visible:outline-2 focus-visible:outline-accent-ink"
-      aria-label="Send"
-      (mousedown)="$event.preventDefault()"
-      [class.text-ink]="length() > 0"
-      [disabled]="status() !== 'open'"
+    <form
+      appGlass="composer"
+      class="flex items-center gap-2 rounded-full py-1 pr-1 pl-5 has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-accent-ink"
+      (submit)="send($event, input)"
     >
-      <svg lucideSendHorizontal class="size-5" aria-hidden="true"></svg>
-    </button>
-  </form>
+      <label for="message" class="sr-only">Message</label>
+      <input
+        #input
+        id="message"
+        class="min-w-0 flex-1 bg-transparent py-2.5 outline-none placeholder:text-ink-soft"
+        placeholder="Write a message"
+        autocomplete="off"
+        [maxLength]="messageMaxLength"
+        (input)="write(input)"
+      />
+      @if (length() >= counterFrom) {
+        <span class="text-xs text-ink-soft" id="message-length"
+          >{{ length() }} / {{ messageMaxLength }}</span
+        >
+      }
+      <button
+        type="submit"
+        class="grid size-10 shrink-0 place-items-center rounded-full text-ink-soft transition hover:scale-110 disabled:opacity-50 disabled:hover:scale-100 focus-visible:outline-2 focus-visible:outline-accent-ink"
+        aria-label="Send"
+        (mousedown)="$event.preventDefault()"
+        [class.text-ink]="length() > 0"
+        [disabled]="status() !== 'open'"
+      >
+        <svg lucideSendHorizontal class="size-5" aria-hidden="true"></svg>
+      </button>
+    </form>
   }
 </div>

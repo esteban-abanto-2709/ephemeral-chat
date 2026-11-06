@@ -1,5 +1,20 @@
-import { Component, ElementRef, afterNextRender, input, output, signal, viewChild } from '@angular/core';
-import { FormField, FormRoot, form, maxLength, requiredError, validate } from '@angular/forms/signals';
+import {
+  Component,
+  ElementRef,
+  afterNextRender,
+  input,
+  output,
+  signal,
+  viewChild,
+} from '@angular/core';
+import {
+  FormField,
+  FormRoot,
+  form,
+  maxLength,
+  requiredError,
+  validate,
+} from '@angular/forms/signals';
 import { Glass } from '../../glass/glass';
 
 export const nameMaxLength = 24;
