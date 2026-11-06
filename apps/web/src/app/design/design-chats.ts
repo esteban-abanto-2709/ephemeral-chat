@@ -5,10 +5,13 @@ import { ChatList } from '../chats/chat-list/chat-list';
 import { ChatsWelcome } from '../chats/chats-welcome';
 import { Glass } from '../glass/glass';
 import { NameDialog } from '../room/name-dialog/name-dialog';
+import { PhotoViewer } from '../room/photo-viewer/photo-viewer';
 import { RoomChat } from '../room/room-chat/room-chat';
 
-export const chatsStates = ['start', 'chats', 'group', 'media', 'left'] as const;
+export const chatsStates = ['start', 'chats', 'group', 'media', 'photos', 'left'] as const;
 export type ChatsState = (typeof chatsStates)[number];
+export const photoViews = ['chat', 'send', 'tall', 'viewer'] as const;
+export type PhotoView = (typeof photoViews)[number];
 
 const start = new Date(2026, 10, 4, 14, 2).getTime();
 const minute = 60_000;
@@ -42,7 +45,11 @@ const tripEvents: ChatEvent[] = [
 ];
 
 const photo = `data:image/svg+xml,${encodeURIComponent(
-  "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'><defs><linearGradient id='s' x2='0' y2='1'><stop offset='0' stop-color='#f4a261'/><stop offset='1' stop-color='#fde8c8'/></linearGradient></defs><rect width='400' height='300' fill='url(#s)'/><circle cx='300' cy='95' r='34' fill='#fff4d6'/><path d='M0 230 90 140l80 70 80-90 150 130v50H0z' fill='#6d8b74'/><path d='M0 260l120-60 100 55 100-45 80 50v40H0z' fill='#3f5e4b'/><path d='M150 262l30-42 30 42z' fill='#e76f51'/></svg>",
+  "<svg xmlns='http://www.w3.org/2000/svg' width='1600' height='1200' viewBox='0 0 400 300'><defs><linearGradient id='s' x2='0' y2='1'><stop offset='0' stop-color='#f4a261'/><stop offset='1' stop-color='#fde8c8'/></linearGradient></defs><rect width='400' height='300' fill='url(#s)'/><circle cx='300' cy='95' r='34' fill='#fff4d6'/><path d='M0 230 90 140l80 70 80-90 150 130v50H0z' fill='#6d8b74'/><path d='M0 260l120-60 100 55 100-45 80 50v40H0z' fill='#3f5e4b'/><path d='M150 262l30-42 30 42z' fill='#e76f51'/></svg>",
+)}`;
+
+const portrait = `data:image/svg+xml,${encodeURIComponent(
+  "<svg xmlns='http://www.w3.org/2000/svg' width='900' height='1600' viewBox='0 0 225 400'><defs><linearGradient id='n' x2='0' y2='1'><stop offset='0' stop-color='#1d3557'/><stop offset='.6' stop-color='#e76f51'/><stop offset='1' stop-color='#f4a261'/></linearGradient></defs><rect width='225' height='400' fill='url(#n)'/><circle cx='150' cy='90' r='3' fill='#fff'/><circle cx='60' cy='60' r='2' fill='#fff'/><circle cx='112' cy='245' r='30' fill='#ffd6a5'/><path d='M0 270 70 210l50 45 50-60 55 50v155H0z' fill='#3f5e4b'/><path d='M0 330l80-40 60 30 85-45v125H0z' fill='#1b2f25'/><rect x='104' y='300' width='16' height='60' fill='#e9c46a'/><path d='M92 300h40l-20-28z' fill='#e76f51'/></svg>",
 )}`;
 
 const sticker = `data:image/svg+xml,${encodeURIComponent(
@@ -50,6 +57,14 @@ const sticker = `data:image/svg+xml,${encodeURIComponent(
 )}`;
 
 const campsite: Attachment = { kind: 'image', name: 'campsite.jpg', size: 2_400_000, url: photo };
+const lake: Attachment = { ...campsite, name: 'lake.jpg', url: `${photo}#lake` };
+const ridge: Attachment = { kind: 'image', name: 'ridge.jpg', size: 1_900_000, url: portrait };
+const routeMap: Attachment = {
+  kind: 'file',
+  name: 'route-map.pdf',
+  size: 3_100_000,
+  url: 'data:,',
+};
 const juanVoice: Attachment = {
   kind: 'voice',
   name: 'voice.webm',
@@ -62,7 +77,12 @@ function media(person: Person, own: boolean, at: number, file: Attachment): Chat
   return { type: 'message', ...person, own, text: '', file, at: start + at * minute };
 }
 
-const mediaEvents: ChatEvent[] = [
+const ridgePhoto = {
+  ...media(ana, false, 6, ridge),
+  text: 'Sunrise from the ridge, last year',
+} as Extract<ChatEvent, { type: 'message' }>;
+
+const photoEvents: ChatEvent[] = [
   ...tripEvents,
   media(ana, false, 4, campsite),
   {
@@ -73,8 +93,14 @@ const mediaEvents: ChatEvent[] = [
     reply: { ...ana, own: false, text: '', file: campsite },
     at: start + 4 * minute,
   },
-  media(sam, true, 5, { ...campsite, name: 'lake.jpg' }),
-  media(juan, false, 6, { kind: 'file', name: 'route-map.pdf', size: 3_100_000, url: 'data:,' }),
+  { ...media(sam, true, 5, lake), text: 'Our spot for Saturday' } as ChatEvent,
+  ridgePhoto,
+  media(sam, true, 7, ridge),
+];
+
+const mediaEvents: ChatEvent[] = [
+  ...tripEvents,
+  media(juan, false, 6, routeMap),
   media(sam, true, 6, { kind: 'file', name: 'packing-list.pdf', size: 184_000, url: 'data:,' }),
   media(juan, false, 7, juanVoice),
   {
@@ -193,7 +219,7 @@ const chats: Chat[] = [
 ];
 
 @Component({
-  imports: [ChatList, ChatsWelcome, Glass, NameDialog, RoomChat],
+  imports: [ChatList, ChatsWelcome, Glass, NameDialog, PhotoViewer, RoomChat],
   selector: 'app-design-chats',
   template: `
     <div class="relative flex h-dvh md:gap-4 md:p-4">
@@ -212,6 +238,7 @@ const chats: Chat[] = [
           [voice]="true"
           [recording]="state() === 'media' ? 12 : null"
           [replying]="state() === 'group' ? replying : null"
+          [preview]="preview()"
           status="open"
           [title]="chat.title"
           [kind]="chat.kind"
@@ -230,6 +257,9 @@ const chats: Chat[] = [
           me="u7Qm2xKp9RtLw4Zb8NcVhA"
         />
       }
+      @if (state() === 'photos' && view() === 'viewer') {
+        <app-photo-viewer [message]="ridgePhoto" />
+      }
       @if (state() === 'start') {
         <app-name-dialog
           hint="It's how others see you in every chat. It lasts until you close this tab."
@@ -239,20 +269,37 @@ const chats: Chat[] = [
   `,
 })
 export class DesignChats {
+  protected readonly ridgePhoto = ridgePhoto;
   protected readonly replying = { ...ana, own: false, text: 'I can bring the tent' };
   readonly state = input<ChatsState>('chats');
+  readonly view = input<PhotoView>('chat');
+
+  protected readonly preview = computed((): Attachment[] => {
+    if (this.state() !== 'photos') {
+      return [];
+    }
+    switch (this.view()) {
+      case 'send':
+        return [campsite, lake, routeMap];
+      case 'tall':
+        return [ridge, campsite];
+      default:
+        return [];
+    }
+  });
 
   protected readonly chats = computed(() => {
     const state = this.state();
     if (state === 'start') {
       return [];
     }
-    const trip = state === 'media' ? { ...chats[0], events: mediaEvents, typing: [] } : chats[0];
+    const events = state === 'media' ? mediaEvents : state === 'photos' ? photoEvents : null;
+    const trip = events ? { ...chats[0], events, typing: [] } : chats[0];
     return [trip, state === 'left' ? luisLeft : luisChat, ...chats.slice(1)];
   });
   protected readonly open = computed(() => {
     const state = this.state();
-    if (state === 'group' || state === 'media') {
+    if (state === 'group' || state === 'media' || state === 'photos') {
       return this.chats()[0];
     }
     return state === 'left' ? luisLeft : null;

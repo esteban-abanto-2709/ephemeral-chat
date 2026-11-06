@@ -69,6 +69,25 @@
   <app-message-list [events]="events()" [title]="title()" [code]="code()" />
 }
 
+@if (dragging()) {
+  <div
+    class="pointer-events-none absolute inset-2 z-20 flex flex-col items-center justify-center gap-3 rounded-3xl border-2 border-dashed border-accent-ink bg-glass-strong/80 text-center animate-appear motion-reduce:animate-none md:inset-0"
+    role="status"
+  >
+    <svg lucideImagePlus class="size-10 text-accent-ink" aria-hidden="true"></svg>
+    <p class="text-lg font-semibold">Drop to send</p>
+    <p class="text-sm text-ink-soft">Photos and files up to 5 MB</p>
+  </div>
+}
+
+@if (preview().length) {
+  <app-send-preview
+    class="absolute inset-0 z-30 bg-canvas md:rounded-3xl md:border md:border-edge"
+    [files]="preview()"
+    [to]="title()"
+  />
+}
+
 <div
   class="absolute inset-x-2 bottom-[calc(env(safe-area-inset-bottom)+0.5rem)] z-10 flex flex-col gap-2 md:inset-x-0 md:bottom-0"
 >

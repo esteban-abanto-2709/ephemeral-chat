@@ -1,5 +1,6 @@
 import { Component, computed, signal } from '@angular/core';
 import { DesignDevice } from './design-device';
+import { PhotoView, photoViews } from './design-chats';
 import { DesignScreen, designScreens } from './design-frame';
 
 @Component({
@@ -25,6 +26,23 @@ import { DesignScreen, designScreens } from './design-frame';
               </button>
             }
           </div>
+          @if (screen() === 'photos') {
+            <div class="flex basis-full justify-end gap-1.5" role="radiogroup" aria-label="Photos">
+              @for (option of views; track option) {
+                <button
+                  type="button"
+                  role="radio"
+                  class="rounded-full border border-edge px-3 py-1 text-xs capitalize transition"
+                  [class.bg-glass-strong]="view() === option"
+                  [class.font-semibold]="view() === option"
+                  [attr.aria-checked]="view() === option"
+                  (click)="view.set(option)"
+                >
+                  {{ option }}
+                </button>
+              }
+            </div>
+          }
         </header>
 
         <section class="flex flex-col gap-3" aria-label="Desktop">
@@ -62,8 +80,12 @@ import { DesignScreen, designScreens } from './design-frame';
 export class DesignBoard {
   protected readonly screens = designScreens;
   protected readonly themes = ['light', 'dark'] as const;
+  protected readonly views = photoViews;
   protected readonly screen = signal<DesignScreen>('chats');
-  private readonly query = computed(() => `/design/frame?screen=${this.screen()}`);
+  protected readonly view = signal<PhotoView>('chat');
+  private readonly query = computed(
+    () => `/design/frame?screen=${this.screen()}&view=${this.view()}`,
+  );
 
   protected frame(theme: string): string {
     return `${this.query()}&theme=${theme}`;

@@ -169,6 +169,9 @@
                 }}</time>
               }
             }
+            @if (file && event.text) {
+              <p class="px-2.5 pt-1.5 pb-1 wrap-anywhere whitespace-pre-wrap">{{ event.text }}</p>
+            }
           </li>
         }
       } @else if (event.type === 'error') {

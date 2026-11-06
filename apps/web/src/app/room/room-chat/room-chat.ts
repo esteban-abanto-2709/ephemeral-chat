@@ -13,6 +13,7 @@ import {
 import {
   LucideArrowLeft,
   LucideCopy,
+  LucideImagePlus,
   LucideLock,
   LucideLogOut,
   LucideMic,
@@ -25,13 +26,14 @@ import {
   LucideWifiOff,
   LucideX,
 } from '@lucide/angular';
-import { Quote, duration } from '../../chats/attachment';
+import { Attachment, Quote, duration } from '../../chats/attachment';
 import { ChatEvent, Person, SocketStatus } from '../../chats/chat-client';
 import { Glass } from '../../glass/glass';
 import { avatarHue } from '../avatar-hue';
 import { CopyLink } from '../copy-link/copy-link';
 import { MessageList } from '../message-list/message-list';
 import { QuoteCard } from '../quote/quote';
+import { SendPreview } from '../send-preview/send-preview';
 
 const messageMaxLength = 1000;
 const voiceMaxSeconds = 60;
@@ -48,6 +50,7 @@ const statusLabels = {
     Glass,
     LucideArrowLeft,
     LucideCopy,
+    LucideImagePlus,
     LucideLock,
     LucideLogOut,
     LucideMic,
@@ -61,11 +64,14 @@ const statusLabels = {
     LucideX,
     MessageList,
     QuoteCard,
+    SendPreview,
   ],
   selector: 'app-room-chat',
   host: {
     class: 'relative flex min-w-0 flex-1 flex-col',
     '(dragover)': '$event.preventDefault()',
+    '(dragenter)': 'dragging.set(true)',
+    '(dragleave)': 'leave($event)',
     '(drop)': 'drop($event)',
   },
   templateUrl: './room-chat.html',
@@ -85,6 +91,7 @@ export class RoomChat {
   readonly voice = input(false);
   readonly recording = input<number | null>(null);
   readonly replying = input<Quote | null>(null);
+  readonly preview = input<Attachment[]>([]);
   readonly sent = output<string>();
   readonly attached = output<File[]>();
   readonly reconnect = output();
@@ -131,6 +138,8 @@ export class RoomChat {
   protected readonly messageMaxLength = messageMaxLength;
   protected readonly counterFrom = messageMaxLength - 100;
   protected readonly length = signal(0);
+  protected readonly dragging = signal(false);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
 
   protected write(input: HTMLInputElement): void {
     this.length.set(input.value.length);
@@ -151,8 +160,15 @@ export class RoomChat {
     }
   }
 
+  protected leave(event: DragEvent): void {
+    if (!this.host.contains(event.relatedTarget as Node | null)) {
+      this.dragging.set(false);
+    }
+  }
+
   protected drop(event: DragEvent): void {
     event.preventDefault();
+    this.dragging.set(false);
     this.attach(event.dataTransfer?.files);
   }
 

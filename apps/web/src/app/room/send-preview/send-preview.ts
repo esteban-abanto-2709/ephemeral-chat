@@ -1,0 +1,79 @@
+import {
+  Component,
+  ElementRef,
+  computed,
+  input,
+  linkedSignal,
+  output,
+  viewChild,
+} from '@angular/core';
+import {
+  LucideFile,
+  LucideFileText,
+  LucidePlus,
+  LucideSendHorizontal,
+  LucideX,
+} from '@lucide/angular';
+import { Attachment, fileSize } from '../../chats/attachment';
+import { Glass } from '../../glass/glass';
+
+export interface Outgoing {
+  file: Attachment;
+  caption: string;
+}
+
+@Component({
+  imports: [Glass, LucideFile, LucideFileText, LucidePlus, LucideSendHorizontal, LucideX],
+  selector: 'app-send-preview',
+  host: { class: 'flex flex-col', '(keydown.escape)': 'confirm($event)' },
+  templateUrl: './send-preview.html',
+})
+export class SendPreview {
+  readonly files = input.required<Attachment[]>();
+  readonly to = input.required<string>();
+  readonly sent = output<{ items: Outgoing[]; original: boolean }>();
+  readonly discarded = output();
+  readonly added = output();
+
+  protected readonly fileSize = fileSize;
+  protected readonly items = linkedSignal<Outgoing[]>(() =>
+    this.files().map((file) => ({ file, caption: '' })),
+  );
+  protected readonly selected = linkedSignal<Outgoing[], number>({
+    source: this.items,
+    computation: (items, previous) => Math.min(previous?.value ?? 0, items.length - 1),
+  });
+  protected readonly current = computed(() => this.items()[this.selected()]);
+  protected readonly original = linkedSignal({ source: this.files, computation: () => false });
+
+  protected readonly dialog = viewChild.required<ElementRef<HTMLDialogElement>>('confirmation');
+
+  protected write(caption: string): void {
+    const index = this.selected();
+    this.items.update((items) =>
+      items.map((item, i) => (i === index ? { ...item, caption } : item)),
+    );
+  }
+
+  protected remove(index: number): void {
+    if (this.items().length === 1) {
+      this.discarded.emit();
+      return;
+    }
+    this.items.update((items) => items.filter((_, i) => i !== index));
+  }
+
+  protected confirm(event: Event): void {
+    event.preventDefault();
+    this.dialog().nativeElement.showModal();
+  }
+
+  protected discard(): void {
+    this.dialog().nativeElement.close();
+    this.discarded.emit();
+  }
+
+  protected send(): void {
+    this.sent.emit({ items: this.items(), original: this.original() });
+  }
+}

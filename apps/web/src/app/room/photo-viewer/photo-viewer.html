@@ -1,0 +1,59 @@
+@let photo = message().file!;
+<dialog
+  #viewer
+  class="m-0 size-full max-h-none max-w-none flex-col bg-canvas p-0 text-ink animate-fade open:flex motion-reduce:animate-none"
+  aria-label="Photo"
+  (close)="closed.emit()"
+>
+  <header class="flex items-center gap-3 p-2 pt-[calc(env(safe-area-inset-top)+0.5rem)] md:p-3">
+    <span
+      class="avatar ml-1 grid size-9 shrink-0 place-items-center rounded-full text-sm font-semibold md:size-10"
+      [style.--hue]="avatarHue(message().name)"
+      aria-hidden="true"
+      >{{ message().name[0] }}</span
+    >
+    <div class="flex min-w-0 flex-1 flex-col">
+      <p class="truncate text-sm font-semibold">
+        {{ message().own ? 'You' : message().name }}
+      </p>
+      <p class="truncate text-xs text-ink-soft">
+        <time>{{ message().at | date: 'HH:mm' }}</time> · {{ photo.name }}
+      </p>
+    </div>
+    <a
+      [href]="photo.url"
+      [download]="photo.name"
+      class="grid size-10 shrink-0 place-items-center rounded-full transition hover:bg-glass-strong focus-visible:outline-2 focus-visible:outline-accent-ink"
+      aria-label="Download"
+    >
+      <svg lucideDownload class="size-5" aria-hidden="true"></svg>
+    </a>
+    <button
+      type="button"
+      class="grid size-10 shrink-0 place-items-center rounded-full transition hover:bg-glass-strong focus-visible:outline-2 focus-visible:outline-accent-ink"
+      aria-label="Close"
+      (click)="close()"
+    >
+      <svg lucideX class="size-5" aria-hidden="true"></svg>
+    </button>
+  </header>
+
+  <div class="min-h-0 flex-1 p-4 md:px-8" (click)="close()">
+    <div class="relative size-full">
+      <img
+        [src]="photo.url"
+        [alt]="photo.name"
+        class="absolute inset-0 m-auto max-h-full max-w-full rounded-2xl object-contain shadow-lift"
+        (click)="$event.stopPropagation()"
+      />
+    </div>
+  </div>
+
+  @if (message().text) {
+    <p
+      class="mx-auto w-full max-w-xl px-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] text-center text-sm"
+    >
+      {{ message().text }}
+    </p>
+  }
+</dialog>
