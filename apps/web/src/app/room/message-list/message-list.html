@@ -41,35 +41,134 @@
     @for (item of items(); track $index) {
       @let event = item.event;
       @if (event.type === 'message') {
-        @if (item.own) {
+        @let file = event.file;
+        @if (file?.kind === 'sticker') {
           <li
-            appGlass="bubble"
-            class="max-w-[80%] animate-rise self-end motion-reduce:animate-none rounded-2xl rounded-br-md px-3.5 py-2"
+            class="group relative flex animate-rise flex-col gap-1 motion-reduce:animate-none"
+            [class]="item.own ? 'items-end self-end' : 'items-start self-start'"
             [class.mt-2]="item.first"
           >
-            <span class="sr-only">You:</span>
-            <span class="wrap-anywhere whitespace-pre-wrap">{{ event.text }}</span>
-            &ngsp;<time class="ml-1.5 align-bottom text-[0.6875rem] text-ink-soft">{{
-              event.at | date: 'HH:mm'
-            }}</time>
+            <button
+              type="button"
+              class="absolute top-1/2 grid size-8 -translate-y-1/2 place-items-center rounded-full text-ink-soft opacity-0 transition group-hover:opacity-100 hover:bg-glass-strong hover:text-ink focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-accent-ink"
+              [class]="item.own ? '-left-10' : '-right-10'"
+              aria-label="Reply"
+            >
+              <svg lucideReply class="size-4" aria-hidden="true"></svg>
+            </button>
+            <span class="sr-only">{{ item.own ? 'You' : event.name }}: sticker</span>
+            <img [src]="file!.url" alt="" class="size-36 object-contain" />
+            <time
+              appGlass="bubble"
+              class="rounded-full px-2 py-0.5 text-[0.6875rem] text-ink-soft"
+              >{{ event.at | date: 'HH:mm' }}</time
+            >
           </li>
         } @else {
           <li
             appGlass="bubble"
-            class="max-w-[80%] animate-rise self-start motion-reduce:animate-none rounded-2xl rounded-bl-md px-3.5 py-2"
+            class="group relative max-w-[80%] animate-rise rounded-2xl motion-reduce:animate-none"
+            [class]="
+              (item.own ? 'self-end rounded-br-md' : 'self-start rounded-bl-md') +
+              (file ? ' p-1' : ' px-3.5 py-2')
+            "
             [class.mt-2]="item.first"
           >
-            <p
-              class="person-ink text-xs font-semibold"
-              [class.sr-only]="!item.first"
-              [style.--hue]="avatarHue(event.name)"
+            @if (item.own) {
+              <span class="sr-only">You:</span>
+            } @else {
+              <p
+                class="person-ink text-xs font-semibold"
+                [class.sr-only]="!item.first"
+                [class.px-2.5]="file"
+                [class.pt-1]="file"
+                [class.pb-1]="file || event.reply"
+                [style.--hue]="avatarHue(event.name)"
+              >
+                {{ event.name }}
+              </p>
+            }
+            <button
+              type="button"
+              class="absolute top-1/2 grid size-8 -translate-y-1/2 place-items-center rounded-full text-ink-soft opacity-0 transition group-hover:opacity-100 hover:bg-glass-strong hover:text-ink focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-accent-ink"
+              [class]="item.own ? '-left-10' : '-right-10'"
+              aria-label="Reply"
             >
-              {{ event.name }}
-            </p>
-            <span class="wrap-anywhere whitespace-pre-wrap">{{ event.text }}</span>
-            &ngsp;<time class="ml-1.5 align-bottom text-[0.6875rem] text-ink-soft">{{
-              event.at | date: 'HH:mm'
-            }}</time>
+              <svg lucideReply class="size-4" aria-hidden="true"></svg>
+            </button>
+            @if (event.reply; as reply) {
+              <app-quote class="mb-1" [quote]="reply" />
+            }
+            @switch (file?.kind) {
+              @case ('image') {
+                <a
+                  [href]="file!.url"
+                  target="_blank"
+                  rel="noopener"
+                  class="relative block focus-visible:outline-2 focus-visible:outline-accent-ink"
+                >
+                  <img
+                    [src]="file!.url"
+                    [alt]="file!.name"
+                    class="max-h-80 w-72 max-w-full rounded-xl object-cover"
+                  />
+                  <time
+                    class="absolute right-1.5 bottom-1.5 rounded-full bg-glass-strong px-1.5 text-[0.6875rem]"
+                    >{{ event.at | date: 'HH:mm' }}</time
+                  >
+                </a>
+              }
+              @case ('file') {
+                <a
+                  [href]="file!.url"
+                  [download]="file!.name"
+                  class="flex w-64 max-w-full items-center gap-3 rounded-xl bg-glass-strong/50 p-2 transition hover:bg-glass-strong focus-visible:outline-2 focus-visible:outline-accent-ink"
+                >
+                  <span
+                    class="grid size-10 shrink-0 place-items-center rounded-lg border border-edge text-accent-ink"
+                    aria-hidden="true"
+                  >
+                    <svg lucideFileText class="size-5"></svg>
+                  </span>
+                  <span class="flex min-w-0 flex-1 flex-col">
+                    <span class="truncate text-sm font-medium">{{ file!.name }}</span>
+                    <span class="text-xs text-ink-soft">{{ fileSize(file!.size) }}</span>
+                  </span>
+                  <svg
+                    lucideDownload
+                    class="size-5 shrink-0 text-ink-soft"
+                    aria-hidden="true"
+                  ></svg>
+                </a>
+                <time class="block px-2 pt-0.5 text-right text-[0.6875rem] text-ink-soft">{{
+                  event.at | date: 'HH:mm'
+                }}</time>
+              }
+              @case ('voice') {
+                <div class="flex w-64 max-w-full items-center gap-3 py-1 pr-2.5 pl-1">
+                  <button
+                    type="button"
+                    class="grid size-10 shrink-0 place-items-center rounded-full bg-accent-ink text-canvas transition hover:scale-105 focus-visible:outline-2 focus-visible:outline-accent-ink"
+                    aria-label="Play voice message"
+                  >
+                    <svg lucidePlay class="size-4 fill-current" aria-hidden="true"></svg>
+                  </button>
+                  <span class="flex min-w-0 flex-1 flex-col gap-1.5">
+                    <span class="h-1 rounded-full bg-edge"></span>
+                    <span class="flex justify-between text-[0.6875rem] text-ink-soft">
+                      <span>{{ duration(file!.seconds ?? 0) }}</span>
+                      <time>{{ event.at | date: 'HH:mm' }}</time>
+                    </span>
+                  </span>
+                </div>
+              }
+              @default {
+                <span class="wrap-anywhere whitespace-pre-wrap">{{ event.text }}</span>
+                &ngsp;<time class="ml-1.5 align-bottom text-[0.6875rem] text-ink-soft">{{
+                  event.at | date: 'HH:mm'
+                }}</time>
+              }
+            }
           </li>
         }
       } @else if (event.type === 'error') {

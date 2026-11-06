@@ -11,6 +11,7 @@ import { Notice } from '../../notice';
 import { CopyLink } from '../../room/copy-link/copy-link';
 import { avatarHue } from '../../room/avatar-hue';
 import { ThemeToggle } from '../../theme/theme-toggle/theme-toggle';
+import { describe } from '../attachment';
 import { Chat } from '../chat-client';
 
 const filters = ['All', 'Unread', 'Groups', 'Private'] as const;
@@ -66,10 +67,11 @@ export class ChatList {
       return 'No messages yet';
     }
     if (last.type === 'message') {
+      const text = last.file ? describe(last.file) : last.text;
       if (last.own) {
-        return `You: ${last.text}`;
+        return `You: ${text}`;
       }
-      return chat.kind === 'private' ? last.text : `${last.name}: ${last.text}`;
+      return chat.kind === 'private' ? text : `${last.name}: ${text}`;
     }
     return `${last.name} ${last.type}`;
   }

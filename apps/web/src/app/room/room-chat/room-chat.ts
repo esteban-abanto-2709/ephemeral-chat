@@ -15,20 +15,26 @@ import {
   LucideCopy,
   LucideLock,
   LucideLogOut,
+  LucideMic,
+  LucidePaperclip,
   LucideRefreshCw,
   LucideShieldCheck,
   LucideTrash2,
   LucideSendHorizontal,
   LucideUsersRound,
   LucideWifiOff,
+  LucideX,
 } from '@lucide/angular';
+import { Quote, duration } from '../../chats/attachment';
 import { ChatEvent, Person, SocketStatus } from '../../chats/chat-client';
 import { Glass } from '../../glass/glass';
 import { avatarHue } from '../avatar-hue';
 import { CopyLink } from '../copy-link/copy-link';
 import { MessageList } from '../message-list/message-list';
+import { QuoteCard } from '../quote/quote';
 
 const messageMaxLength = 1000;
+const voiceMaxSeconds = 60;
 
 const statusLabels = {
   connecting: 'Connecting…',
@@ -44,13 +50,17 @@ const statusLabels = {
     LucideCopy,
     LucideLock,
     LucideLogOut,
+    LucideMic,
+    LucidePaperclip,
     LucideRefreshCw,
     LucideShieldCheck,
     LucideTrash2,
     LucideSendHorizontal,
     LucideUsersRound,
     LucideWifiOff,
+    LucideX,
     MessageList,
+    QuoteCard,
   ],
   selector: 'app-room-chat',
   host: { class: 'relative flex min-w-0 flex-1 flex-col' },
@@ -68,6 +78,9 @@ export class RoomChat {
   readonly link = input.required<string>();
   readonly typing = input<Person[]>([]);
   readonly focus = input(false);
+  readonly media = input(false);
+  readonly recording = input<number | null>(null);
+  readonly replying = input<Quote | null>(null);
   readonly sent = output<string>();
   readonly reconnect = output();
   readonly typed = output();
@@ -75,6 +88,8 @@ export class RoomChat {
   readonly deleted = output();
 
   protected readonly avatarHue = avatarHue;
+  protected readonly duration = duration;
+  protected readonly voiceMaxSeconds = voiceMaxSeconds;
   protected readonly subtitle = computed(() => {
     const [first, second, ...rest] = this.typing().map((person) => person.name);
     if (this.status() !== 'open') {

@@ -11,11 +11,22 @@ import {
   viewChild,
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { LucideCopy, LucideKeyRound, LucideShieldCheck, LucideUsersRound } from '@lucide/angular';
+import {
+  LucideCopy,
+  LucideDownload,
+  LucideFileText,
+  LucideKeyRound,
+  LucidePlay,
+  LucideReply,
+  LucideShieldCheck,
+  LucideUsersRound,
+} from '@lucide/angular';
 import { Glass } from '../../glass/glass';
 import { CopyLink } from '../copy-link/copy-link';
 import { avatarHue } from '../avatar-hue';
 import { ChatEvent } from '../../chats/chat-client';
+import { duration, fileSize } from '../../chats/attachment';
+import { QuoteCard } from '../quote/quote';
 
 const stickyDistance = 80;
 
@@ -24,8 +35,13 @@ const stickyDistance = 80;
     CopyLink,
     DatePipe,
     Glass,
+    QuoteCard,
     LucideCopy,
+    LucideDownload,
+    LucideFileText,
     LucideKeyRound,
+    LucidePlay,
+    LucideReply,
     LucideShieldCheck,
     LucideUsersRound,
   ],
@@ -39,6 +55,8 @@ export class MessageList {
   readonly code = input('');
 
   protected readonly avatarHue = avatarHue;
+  protected readonly duration = duration;
+  protected readonly fileSize = fileSize;
   protected readonly items = computed(() =>
     this.events().map((event, index, events) => {
       const previous = events[index - 1];

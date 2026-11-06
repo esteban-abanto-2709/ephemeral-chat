@@ -1,6 +1,7 @@
 import { DOCUMENT, OnDestroy, Service, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Notice } from '../notice';
+import { Attachment, Quote } from './attachment';
 
 export type SocketStatus = 'connecting' | 'open' | 'closed';
 
@@ -10,7 +11,15 @@ export interface Person {
 }
 
 export type ChatEvent = (
-  | { type: 'message'; id: string; name: string; text: string; own: boolean }
+  | {
+      type: 'message';
+      id: string;
+      name: string;
+      text: string;
+      own: boolean;
+      file?: Attachment;
+      reply?: Quote;
+    }
   | { type: 'joined' | 'left'; id: string; name: string; members: Person[] }
   | { type: 'error'; text: string }
 ) & { at: number };

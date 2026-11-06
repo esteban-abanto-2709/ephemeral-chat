@@ -104,12 +104,59 @@
         Delete chat
       </button>
     </p>
+  } @else if (recording() !== null) {
+    <div appGlass="composer" class="flex items-center gap-2 rounded-full p-1" role="status">
+      <button
+        type="button"
+        class="grid size-10 shrink-0 place-items-center rounded-full text-danger-ink transition hover:bg-glass-strong focus-visible:outline-2 focus-visible:outline-accent-ink"
+        aria-label="Discard voice message"
+      >
+        <svg lucideTrash2 class="size-5" aria-hidden="true"></svg>
+      </button>
+      <span
+        class="size-2.5 shrink-0 animate-pulse rounded-full bg-danger-ink motion-reduce:animate-none"
+        aria-hidden="true"
+      ></span>
+      <span class="flex-1 text-sm tabular-nums"
+        >Recording {{ duration(recording() ?? 0) }}
+        <span class="text-ink-soft">/ {{ duration(voiceMaxSeconds) }}</span></span
+      >
+      <button
+        type="button"
+        class="grid size-10 shrink-0 place-items-center rounded-full bg-accent-ink text-canvas transition hover:scale-105 focus-visible:outline-2 focus-visible:outline-accent-ink"
+        aria-label="Send voice message"
+      >
+        <svg lucideSendHorizontal class="size-5" aria-hidden="true"></svg>
+      </button>
+    </div>
   } @else {
+    @if (replying(); as quote) {
+      <div appGlass="bubble" class="flex items-center gap-2 rounded-2xl p-1.5">
+        <app-quote class="min-w-0 flex-1" [quote]="quote" />
+        <button
+          type="button"
+          class="grid size-9 shrink-0 place-items-center rounded-full text-ink-soft transition hover:bg-glass-strong hover:text-ink focus-visible:outline-2 focus-visible:outline-accent-ink"
+          aria-label="Cancel reply"
+        >
+          <svg lucideX class="size-5" aria-hidden="true"></svg>
+        </button>
+      </div>
+    }
     <form
       appGlass="composer"
-      class="flex items-center gap-2 rounded-full py-1 pr-1 pl-5 has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-accent-ink"
+      class="flex items-center gap-2 rounded-full py-1 pr-1 has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-accent-ink"
+      [class]="media() ? 'pl-1' : 'pl-5'"
       (submit)="send($event, input)"
     >
+      @if (media()) {
+        <button
+          type="button"
+          class="grid size-10 shrink-0 place-items-center rounded-full text-ink-soft transition hover:bg-glass-strong hover:text-ink focus-visible:outline-2 focus-visible:outline-accent-ink"
+          aria-label="Attach a photo or file"
+        >
+          <svg lucidePaperclip class="size-5" aria-hidden="true"></svg>
+        </button>
+      }
       <label for="message" class="sr-only">Message</label>
       <input
         #input
@@ -125,16 +172,27 @@
           >{{ length() }} / {{ messageMaxLength }}</span
         >
       }
-      <button
-        type="submit"
-        class="grid size-10 shrink-0 place-items-center rounded-full text-ink-soft transition hover:scale-110 disabled:opacity-50 disabled:hover:scale-100 focus-visible:outline-2 focus-visible:outline-accent-ink"
-        aria-label="Send"
-        (mousedown)="$event.preventDefault()"
-        [class.text-ink]="length() > 0"
-        [disabled]="status() !== 'open'"
-      >
-        <svg lucideSendHorizontal class="size-5" aria-hidden="true"></svg>
-      </button>
+      @if (media() && length() === 0) {
+        <button
+          type="button"
+          class="grid size-10 shrink-0 place-items-center rounded-full text-ink-soft transition hover:scale-110 hover:text-ink disabled:opacity-50 disabled:hover:scale-100 focus-visible:outline-2 focus-visible:outline-accent-ink"
+          aria-label="Record a voice message"
+          [disabled]="status() !== 'open'"
+        >
+          <svg lucideMic class="size-5" aria-hidden="true"></svg>
+        </button>
+      } @else {
+        <button
+          type="submit"
+          class="grid size-10 shrink-0 place-items-center rounded-full text-ink-soft transition hover:scale-110 disabled:opacity-50 disabled:hover:scale-100 focus-visible:outline-2 focus-visible:outline-accent-ink"
+          aria-label="Send"
+          (mousedown)="$event.preventDefault()"
+          [class.text-ink]="length() > 0"
+          [disabled]="status() !== 'open'"
+        >
+          <svg lucideSendHorizontal class="size-5" aria-hidden="true"></svg>
+        </button>
+      }
     </form>
   }
 </div>

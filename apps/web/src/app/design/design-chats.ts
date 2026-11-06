@@ -1,12 +1,13 @@
 import { Component, computed, input } from '@angular/core';
-import { Chat, ChatEvent } from '../chats/chat-client';
+import { Attachment } from '../chats/attachment';
+import { Chat, ChatEvent, Person } from '../chats/chat-client';
 import { ChatList } from '../chats/chat-list/chat-list';
 import { ChatsWelcome } from '../chats/chats-welcome';
 import { Glass } from '../glass/glass';
 import { NameDialog } from '../room/name-dialog/name-dialog';
 import { RoomChat } from '../room/room-chat/room-chat';
 
-export const chatsStates = ['start', 'chats', 'new group', 'group', 'private', 'left'] as const;
+export const chatsStates = ['start', 'chats', 'group', 'media', 'left'] as const;
 export type ChatsState = (typeof chatsStates)[number];
 
 const start = new Date(2026, 10, 4, 14, 2).getTime();
@@ -29,8 +30,59 @@ const tripEvents: ChatEvent[] = [
     at: start + minute,
   },
   { type: 'message', ...ana, own: false, text: 'I can bring the tent', at: start + minute },
-  { type: 'message', ...juan, own: false, text: 'Works for me', at: start + 2 * minute },
+  {
+    type: 'message',
+    ...juan,
+    own: false,
+    text: 'Works for me',
+    reply: { ...ana, own: false, text: 'Saturday at 9, the usual place?' },
+    at: start + 2 * minute,
+  },
   { type: 'message', ...sam, own: true, text: 'Got it, I am in', at: start + 3 * minute },
+];
+
+const photo = `data:image/svg+xml,${encodeURIComponent(
+  "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'><defs><linearGradient id='s' x2='0' y2='1'><stop offset='0' stop-color='#f4a261'/><stop offset='1' stop-color='#fde8c8'/></linearGradient></defs><rect width='400' height='300' fill='url(#s)'/><circle cx='300' cy='95' r='34' fill='#fff4d6'/><path d='M0 230 90 140l80 70 80-90 150 130v50H0z' fill='#6d8b74'/><path d='M0 260l120-60 100 55 100-45 80 50v40H0z' fill='#3f5e4b'/><path d='M150 262l30-42 30 42z' fill='#e76f51'/></svg>",
+)}`;
+
+const sticker = `data:image/svg+xml,${encodeURIComponent(
+  "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><g stroke='#fff' stroke-width='12' stroke-linejoin='round'><path d='M50 70h90v60a45 45 0 0 1-90 0z' fill='#8ecae6'/><path d='M140 85h12a20 20 0 0 1 0 40h-14' fill='none'/></g><path d='M50 70h90v60a45 45 0 0 1-90 0z' fill='#8ecae6'/><path d='M140 85h12a20 20 0 0 1 0 40h-14' fill='none' stroke='#8ecae6' stroke-width='10'/><path d='M75 35c-8 10 8 15 0 25M100 30c-8 10 8 15 0 25M125 35c-8 10 8 15 0 25' fill='none' stroke='#219ebc' stroke-width='6' stroke-linecap='round'/></svg>",
+)}`;
+
+const campsite: Attachment = { kind: 'image', name: 'campsite.jpg', size: 2_400_000, url: photo };
+const juanVoice: Attachment = {
+  kind: 'voice',
+  name: 'voice.webm',
+  size: 48_000,
+  url: '',
+  seconds: 12,
+};
+
+function media(person: Person, own: boolean, at: number, file: Attachment): ChatEvent {
+  return { type: 'message', ...person, own, text: '', file, at: start + at * minute };
+}
+
+const mediaEvents: ChatEvent[] = [
+  ...tripEvents,
+  media(ana, false, 4, campsite),
+  {
+    type: 'message',
+    ...juan,
+    own: false,
+    text: 'That view, wow',
+    reply: { ...ana, own: false, text: '', file: campsite },
+    at: start + 4 * minute,
+  },
+  media(sam, true, 5, { ...campsite, name: 'lake.jpg' }),
+  media(juan, false, 6, { kind: 'file', name: 'route-map.pdf', size: 3_100_000, url: 'data:,' }),
+  media(sam, true, 6, { kind: 'file', name: 'packing-list.pdf', size: 184_000, url: 'data:,' }),
+  media(juan, false, 7, juanVoice),
+  {
+    ...media(sam, true, 8, { ...juanVoice, seconds: 31 }),
+    reply: { ...juan, own: false, text: '', file: juanVoice },
+  } as ChatEvent,
+  media(ana, false, 9, { kind: 'sticker', name: 'coffee.webp', size: 21_000, url: sticker }),
+  media(sam, true, 9, { kind: 'sticker', name: 'coffee.webp', size: 21_000, url: sticker }),
 ];
 
 const luisEvents: ChatEvent[] = [
@@ -157,6 +209,9 @@ const chats: Chat[] = [
       />
       @if (open(); as chat) {
         <app-room-chat
+          [media]="true"
+          [recording]="state() === 'media' ? 12 : null"
+          [replying]="state() === 'group' ? replying : null"
           status="open"
           [title]="chat.title"
           [kind]="chat.kind"
@@ -180,20 +235,11 @@ const chats: Chat[] = [
           hint="It's how others see you in every chat. It lasts until you close this tab."
         />
       }
-      @if (state() === 'new group') {
-        <app-name-dialog
-          heading="New group"
-          label="Group name"
-          placeholder="Weekend trip"
-          hint="It can't be changed later, and the group vanishes once everyone leaves."
-          action="Create group"
-          [cancelable]="true"
-        />
-      }
     </div>
   `,
 })
 export class DesignChats {
+  protected readonly replying = { ...ana, own: false, text: 'I can bring the tent' };
   readonly state = input<ChatsState>('chats');
 
   protected readonly chats = computed(() => {
@@ -201,16 +247,14 @@ export class DesignChats {
     if (state === 'start') {
       return [];
     }
-    return [chats[0], state === 'left' ? luisLeft : luisChat, ...chats.slice(1)];
+    const trip = state === 'media' ? { ...chats[0], events: mediaEvents, typing: [] } : chats[0];
+    return [trip, state === 'left' ? luisLeft : luisChat, ...chats.slice(1)];
   });
   protected readonly open = computed(() => {
     const state = this.state();
-    return state === 'group'
-      ? chats[0]
-      : state === 'private'
-        ? luisChat
-        : state === 'left'
-          ? luisLeft
-          : null;
+    if (state === 'group' || state === 'media') {
+      return this.chats()[0];
+    }
+    return state === 'left' ? luisLeft : null;
   });
 }

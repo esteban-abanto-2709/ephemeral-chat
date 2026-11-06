@@ -67,6 +67,27 @@ describe('ChatList', () => {
     expect(row?.textContent).not.toContain('Ana:');
   });
 
+  it('names what a media message holds', async () => {
+    const fixture = TestBed.createComponent(ChatList);
+    const voice = chat('4', 'Trip');
+    voice.events = [
+      {
+        type: 'message',
+        id: 'a',
+        name: 'Ana',
+        text: '',
+        own: false,
+        file: { kind: 'voice', name: 'voice.webm', size: 48_000, url: '', seconds: 72 },
+        at: 0,
+      },
+    ];
+    fixture.componentRef.setInput('chats', [voice]);
+    await fixture.whenStable();
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain(
+      'Ana: Voice message (1:12)',
+    );
+  });
+
   it('filters unread chats', async () => {
     const { fixture, list, titles } = await render();
     [...list.querySelectorAll('[role="radio"]')]
