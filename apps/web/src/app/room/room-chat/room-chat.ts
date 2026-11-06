@@ -27,11 +27,12 @@ import {
   LucideX,
 } from '@lucide/angular';
 import { Attachment, Outgoing, Quote, duration } from '../../chats/attachment';
-import { ChatEvent, Person, SocketStatus } from '../../chats/chat-client';
+import { ChatEvent, ChatMessage, Person, SocketStatus } from '../../chats/chat-client';
 import { Glass } from '../../glass/glass';
 import { avatarHue } from '../avatar-hue';
 import { CopyLink } from '../copy-link/copy-link';
 import { MessageList } from '../message-list/message-list';
+import { PhotoViewer } from '../photo-viewer/photo-viewer';
 import { QuoteCard } from '../quote/quote';
 import { SendPreview } from '../send-preview/send-preview';
 
@@ -63,6 +64,7 @@ const statusLabels = {
     LucideWifiOff,
     LucideX,
     MessageList,
+    PhotoViewer,
     QuoteCard,
     SendPreview,
   ],
@@ -141,6 +143,7 @@ export class RoomChat {
   protected readonly counterFrom = messageMaxLength - 100;
   protected readonly length = signal(0);
   protected readonly dragging = signal(false);
+  protected readonly viewing = signal<ChatMessage | null>(null);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
 
   protected write(input: HTMLInputElement): void {

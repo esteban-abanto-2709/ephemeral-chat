@@ -4,6 +4,7 @@
   class="m-0 size-full max-h-none max-w-none flex-col bg-canvas p-0 text-ink animate-fade open:flex motion-reduce:animate-none"
   aria-label="Photo"
   (close)="closed.emit()"
+  (keydown.escape)="close($event)"
 >
   <header class="flex items-center gap-3 p-2 pt-[calc(env(safe-area-inset-top)+0.5rem)] md:p-3">
     <span

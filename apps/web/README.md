@@ -140,6 +140,9 @@ Your own files come back from the server without their bytes, so the tab keeps
 what it sent and shows it when that receipt arrives, matched by name and size.
 Received files become `blob:` URLs, released when the chat is deleted: photos
 keep their image type to show inline, everything else is a plain download.
+Tapping a photo opens `room/photo-viewer` over the whole page, a native
+`<dialog>` with who sent it, its caption and a download button; X, `Esc` or a
+tap beside the photo closes it and leaves the chat open.
 
 The client is provided by the page itself (`providers: [ChatClient]`), not at
 the root, so leaving the page closes the connection (`ngOnDestroy`). Tests

@@ -12,6 +12,9 @@ Summary in ≤2 lines of what was done.
 
 ---
 
+## [WL-016] Photo viewer in the page (2026-11-06 17:57)
+Tapping a photo opens it full screen over the page, with sender, caption and download; X, Escape or a tap outside closes it, instead of a new tab.
+
 ## [WL-017] Review before sending a photo or file (2026-11-06 17:50)
 Picked, pasted or dropped files open a preview to remove, caption or add more before sending; captions travel with the file and Original quality skips compression.
 

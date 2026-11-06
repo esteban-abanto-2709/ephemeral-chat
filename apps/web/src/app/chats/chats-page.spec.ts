@@ -150,6 +150,40 @@ describe('ChatsPage', () => {
     expect(input.value).toBe('');
   });
 
+  it('opens a photo over the chat and closes it with Escape', async () => {
+    const { fixture, page } = await openChat();
+    chats.update(([chat]) => [
+      {
+        ...chat,
+        events: [
+          {
+            type: 'message',
+            ...ana,
+            own: false,
+            text: 'Sunset',
+            file: { kind: 'image', name: 'ridge.jpg', size: 4, url: 'blob:ridge' },
+            at: 0,
+          },
+        ],
+      },
+    ]);
+    await fixture.whenStable();
+    (page.querySelector('[aria-label="Messages"] button img') as HTMLImageElement).click();
+    await fixture.whenStable();
+    const viewer = page.querySelector('app-photo-viewer dialog') as HTMLDialogElement;
+    expect(viewer.open).toBe(true);
+    expect(viewer.textContent).toContain('Ana');
+    expect(viewer.textContent).toContain('Sunset');
+    expect(viewer.querySelector('a[download]')?.getAttribute('href')).toBe('blob:ridge');
+
+    viewer.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }),
+    );
+    await fixture.whenStable();
+    expect(page.querySelector('app-photo-viewer')).toBeNull();
+    expect(fakeClient.open).not.toHaveBeenCalledWith(null);
+  });
+
   it('reviews the files picked with the clip before sending them', async () => {
     const { fixture, page } = await openChat();
     const picker = page.querySelector('input[type="file"]') as HTMLInputElement;

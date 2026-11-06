@@ -8,6 +8,7 @@ import {
   computed,
   inject,
   input,
+  output,
   viewChild,
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
@@ -24,7 +25,7 @@ import {
 import { Glass } from '../../glass/glass';
 import { CopyLink } from '../copy-link/copy-link';
 import { avatarHue } from '../avatar-hue';
-import { ChatEvent } from '../../chats/chat-client';
+import { ChatEvent, ChatMessage } from '../../chats/chat-client';
 import { duration, fileSize } from '../../chats/attachment';
 import { QuoteCard } from '../quote/quote';
 
@@ -53,6 +54,7 @@ export class MessageList {
   readonly events = input.required<ChatEvent[]>();
   readonly title = input('');
   readonly code = input('');
+  readonly viewed = output<ChatMessage>();
 
   protected readonly avatarHue = avatarHue;
   protected readonly duration = duration;

@@ -43,7 +43,7 @@
 </header>
 
 @if (kind() === 'private') {
-  <app-message-list [events]="events()">
+  <app-message-list [events]="events()" (viewed)="viewing.set($event)">
     <section
       appGlass="bubble"
       class="mx-auto flex w-full max-w-sm flex-col items-center gap-3 rounded-3xl px-5 py-6 text-center"
@@ -66,7 +66,12 @@
     </section>
   </app-message-list>
 } @else {
-  <app-message-list [events]="events()" [title]="title()" [code]="code()" />
+  <app-message-list
+    [events]="events()"
+    [title]="title()"
+    [code]="code()"
+    (viewed)="viewing.set($event)"
+  />
 }
 
 @if (dragging()) {
@@ -78,6 +83,10 @@
     <p class="text-lg font-semibold">Drop to send</p>
     <p class="text-sm text-ink-soft">Photos and files up to 5 MB</p>
   </div>
+}
+
+@if (viewing(); as message) {
+  <app-photo-viewer [message]="message" (closed)="viewing.set(null)" />
 }
 
 @if (preview().length) {

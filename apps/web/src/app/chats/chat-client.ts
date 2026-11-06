@@ -25,6 +25,8 @@ export type ChatEvent = (
   | { type: 'error'; text: string }
 ) & { at: number };
 
+export type ChatMessage = Extract<ChatEvent, { type: 'message' }>;
+
 export interface Chat {
   id: string;
   kind: 'group' | 'private';

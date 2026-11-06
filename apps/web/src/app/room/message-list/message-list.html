@@ -101,11 +101,10 @@
             }
             @switch (file?.kind) {
               @case ('image') {
-                <a
-                  [href]="file!.url"
-                  target="_blank"
-                  rel="noopener"
-                  class="relative block focus-visible:outline-2 focus-visible:outline-accent-ink"
+                <button
+                  type="button"
+                  class="relative block rounded-xl focus-visible:outline-2 focus-visible:outline-accent-ink"
+                  (click)="viewed.emit(event)"
                 >
                   <img
                     [src]="file!.url"
@@ -116,7 +115,7 @@
                     class="absolute right-1.5 bottom-1.5 rounded-full bg-glass-strong px-1.5 text-[0.6875rem]"
                     >{{ event.at | date: 'HH:mm' }}</time
                   >
-                </a>
+                </button>
               }
               @case ('file') {
                 <a

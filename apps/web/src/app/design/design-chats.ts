@@ -1,6 +1,6 @@
 import { Component, computed, input } from '@angular/core';
 import { Attachment } from '../chats/attachment';
-import { Chat, ChatEvent, Person } from '../chats/chat-client';
+import { Chat, ChatEvent, ChatMessage, Person } from '../chats/chat-client';
 import { ChatList } from '../chats/chat-list/chat-list';
 import { ChatsWelcome } from '../chats/chats-welcome';
 import { Glass } from '../glass/glass';
@@ -80,7 +80,7 @@ function media(person: Person, own: boolean, at: number, file: Attachment): Chat
 const ridgePhoto = {
   ...media(ana, false, 6, ridge),
   text: 'Sunrise from the ridge, last year',
-} as Extract<ChatEvent, { type: 'message' }>;
+} as ChatMessage;
 
 const photoEvents: ChatEvent[] = [
   ...tripEvents,
