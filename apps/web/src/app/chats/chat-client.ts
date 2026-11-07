@@ -20,12 +20,18 @@ export type ChatEvent = (
       own: boolean;
       file?: Attachment;
       reply?: Quote;
+      seq?: number;
     }
   | { type: 'joined' | 'left'; id: string; name: string; members: Person[] }
   | { type: 'error'; text: string }
 ) & { at: number };
 
 export type ChatMessage = Extract<ChatEvent, { type: 'message' }>;
+
+export function quoteOf(message: ChatMessage): Quote {
+  const { name, own, text, file, seq } = message;
+  return { name, own, text, file, seq };
+}
 
 export interface Chat {
   id: string;
@@ -50,6 +56,8 @@ interface Frame {
   private?: boolean;
   members?: Person[];
   data?: string;
+  seq?: number;
+  reply?: number;
   file?: { kind: 'image' | 'file'; name: string; mime?: string; size: number; data?: string };
 }
 
@@ -171,8 +179,8 @@ export class ChatClient implements OnDestroy {
     }
   }
 
-  send(room: string, text: string): void {
-    this.write({ type: 'message', room, text });
+  send(room: string, text: string, reply?: number): void {
+    this.write({ type: 'message', room, text, reply });
     this.typingSentAt.delete(room);
   }
 
@@ -320,6 +328,8 @@ export class ChatClient implements OnDestroy {
             text: frame.text ?? '',
             own: frame.id === this._me(),
             file: frame.file && this.attach(room, frame.file),
+            reply: frame.reply ? this.quote(room, frame.reply) : undefined,
+            seq: frame.seq,
             at,
           }
         : frame.type === 'error'
@@ -356,6 +366,15 @@ export class ChatClient implements OnDestroy {
       size: file.size,
       url: URL.createObjectURL(new Blob([content], { type })),
     };
+  }
+
+  private quote(room: string, seq: number): Quote {
+    const original = this._chats()
+      .find((chat) => chat.id === room)
+      ?.events.find((event) => event.type === 'message' && event.seq === seq);
+    return original?.type === 'message'
+      ? quoteOf(original)
+      : { name: '', own: false, text: 'Earlier message' };
   }
 
   private takeSent(room: string, name: string, size: number): File | undefined {

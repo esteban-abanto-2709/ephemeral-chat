@@ -87,6 +87,24 @@ describe('ChatClient', () => {
     expect(client.chats().find((chat) => chat.id === 'one')?.unread).toBe(0);
   });
 
+  it('quotes a reply from its own copy of the original, or as an earlier message', () => {
+    ready();
+    client.join('one');
+    server.receive({ type: 'message', room: 'one', ...ana, text: 'Saturday?', seq: 1 });
+    server.receive({ type: 'message', room: 'one', ...juan, text: 'Works', seq: 2, reply: 1 });
+    server.receive({ type: 'message', room: 'one', ...ana, text: 'Sure', seq: 3, reply: 9 });
+
+    const [, works, sure] = client.active()!.events;
+    expect(works).toMatchObject({
+      seq: 2,
+      reply: { name: 'Ana', own: false, text: 'Saturday?', seq: 1 },
+    });
+    expect(sure).toMatchObject({ reply: { name: '', text: 'Earlier message' } });
+
+    client.send('one', 'me too', 1);
+    expect(server.sent.at(-1)).toEqual({ type: 'message', room: 'one', text: 'me too', reply: 1 });
+  });
+
   it('drops a chat the server refuses and says why', () => {
     ready();
     client.join('gone');

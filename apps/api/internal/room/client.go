@@ -46,15 +46,15 @@ func (c *Client) Notify(message Message) {
 	}
 }
 
-func (c *Client) Send(label, text string) {
+func (c *Client) Send(label, text string, reply int) {
 	if chat, ok := c.chat(label); ok {
-		chat.room.Send(chat.member, text)
+		chat.room.Send(chat.member, text, reply)
 	}
 }
 
-func (c *Client) SendFile(label string, file *File, caption string) {
+func (c *Client) SendFile(label string, file *File, caption string, reply int) {
 	if chat, ok := c.chat(label); ok {
-		chat.room.SendFile(chat.member, file, caption)
+		chat.room.SendFile(chat.member, file, caption, reply)
 	}
 }
 

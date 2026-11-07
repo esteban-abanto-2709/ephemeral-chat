@@ -136,10 +136,10 @@ func TestOpeningSomeonesIDTellsThemNothingUntilTheFirstMessage(t *testing.T) {
 		t.Errorf("Sam got %+v, want %+v", got, want)
 	}
 	sam.Typing(luis.ID)
-	rooms.Send(sam, luis.ID, "   ")
+	rooms.Send(sam, luis.ID, "   ", 0)
 	assertNothing(t, luis)
 
-	rooms.Send(sam, luis.ID, "hola")
+	rooms.Send(sam, luis.ID, "hola", 0)
 	if got, want := next(t, luis), (Message{Type: "joined", Room: sam.ID, ID: sam.ID, Name: "Sam", Title: "Sam", Private: true, Members: both}); !reflect.DeepEqual(got, want) {
 		t.Errorf("Luis got %+v, want %+v", got, want)
 	}
@@ -151,7 +151,7 @@ func TestOpeningSomeonesIDTellsThemNothingUntilTheFirstMessage(t *testing.T) {
 		t.Errorf("Sam got %+v, want hola labeled with Luis's id", got)
 	}
 
-	rooms.Send(luis, sam.ID, "qué tal")
+	rooms.Send(luis, sam.ID, "qué tal", 0)
 	if got := next(t, sam); got.Text != "qué tal" {
 		t.Errorf("Sam got %+v, want Luis's reply", got)
 	}
@@ -166,7 +166,7 @@ func TestFirstMessageToSomeoneGoneFails(t *testing.T) {
 	next(t, sam)
 
 	rooms.Disconnect(luis)
-	rooms.Send(sam, luis.ID, "hola")
+	rooms.Send(sam, luis.ID, "hola", 0)
 	if got := next(t, sam); got.Type != "error" || got.Code != "gone" || got.Room != luis.ID {
 		t.Errorf("Sam got %+v, want gone", got)
 	}
@@ -175,7 +175,7 @@ func TestFirstMessageToSomeoneGoneFails(t *testing.T) {
 func TestPrivateChatEndsWhenEitherLeaves(t *testing.T) {
 	rooms := NewRegistry()
 	sam, luis := rooms.Connect("Sam"), rooms.Connect("Luis")
-	rooms.Send(sam, luis.ID, "hola")
+	rooms.Send(sam, luis.ID, "hola", 0)
 	drainClient(sam)
 	drainClient(luis)
 
@@ -223,12 +223,12 @@ func TestAFileCanStartAPrivateChat(t *testing.T) {
 	rooms := NewRegistry()
 	sam, luis := rooms.Connect("Sam"), rooms.Connect("Luis")
 
-	rooms.SendFile(sam, luis.ID, "x.txt", "not base64!", "")
+	rooms.SendFile(sam, luis.ID, "x.txt", "not base64!", "", 0)
 	assertNothing(t, luis)
-	rooms.SendFile(sam, luis.ID, "notes.txt", "aG9sYQ==", strings.Repeat("x", MessageMaxLength+1))
+	rooms.SendFile(sam, luis.ID, "notes.txt", "aG9sYQ==", strings.Repeat("x", MessageMaxLength+1), 0)
 	assertNothing(t, luis)
 
-	rooms.SendFile(sam, luis.ID, "notes.txt", "aG9sYQ==", "")
+	rooms.SendFile(sam, luis.ID, "notes.txt", "aG9sYQ==", "", 0)
 	if got := next(t, luis); got.Type != "joined" || !got.Private {
 		t.Errorf("Luis got %+v, want the private chat", got)
 	}

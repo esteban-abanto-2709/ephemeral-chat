@@ -43,7 +43,7 @@
 </header>
 
 @if (kind() === 'private') {
-  <app-message-list [events]="events()" (viewed)="viewing.set($event)">
+  <app-message-list [events]="events()" (viewed)="viewing.set($event)" (replied)="reply($event)">
     <section
       appGlass="bubble"
       class="mx-auto flex w-full max-w-sm flex-col items-center gap-3 rounded-3xl px-5 py-6 text-center"
@@ -71,6 +71,7 @@
     [title]="title()"
     [code]="code()"
     (viewed)="viewing.set($event)"
+    (replied)="reply($event)"
   />
 }
 
@@ -161,13 +162,14 @@
       </button>
     </div>
   } @else {
-    @if (replying(); as quote) {
+    @if (quoting(); as quote) {
       <div appGlass="bubble" class="flex items-center gap-2 rounded-2xl p-1.5">
         <app-quote class="min-w-0 flex-1" [quote]="quote" />
         <button
           type="button"
           class="grid size-9 shrink-0 place-items-center rounded-full text-ink-soft transition hover:bg-glass-strong hover:text-ink focus-visible:outline-2 focus-visible:outline-accent-ink"
           aria-label="Cancel reply"
+          (click)="quoting.set(null)"
         >
           <svg lucideX class="size-5" aria-hidden="true"></svg>
         </button>

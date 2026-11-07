@@ -146,8 +146,65 @@ describe('ChatsPage', () => {
 
     input.value = '  hola  ';
     input.form!.dispatchEvent(new Event('submit'));
-    expect(fakeClient.send).toHaveBeenCalledWith('trip', 'hola');
+    expect(fakeClient.send).toHaveBeenCalledWith('trip', 'hola', undefined);
     expect(input.value).toBe('');
+  });
+
+  it('replies to a message and jumps back to it from the quote', async () => {
+    const { fixture, page } = await openChat();
+    chats.update(([chat]) => [
+      {
+        ...chat,
+        events: [{ type: 'message', ...ana, own: false, text: 'Saturday?', seq: 3, at: 0 }],
+      },
+    ]);
+    await fixture.whenStable();
+    const bubble = page.querySelector('[data-seq="3"]') as HTMLElement;
+    const replyButton = bubble.querySelector('[aria-label="Reply"]') as HTMLButtonElement;
+    bubble.click();
+    await fixture.whenStable();
+    expect(replyButton.classList).toContain('opacity-100!');
+
+    replyButton.click();
+    await fixture.whenStable();
+    const input = page.querySelector('#message') as HTMLInputElement;
+    expect(document.activeElement).toBe(input);
+    expect(page.querySelector('app-quote')?.textContent).toContain('Saturday?');
+
+    input.value = 'Works for me';
+    input.form!.dispatchEvent(new Event('submit'));
+    await fixture.whenStable();
+    expect(fakeClient.send).toHaveBeenCalledWith('trip', 'Works for me', 3);
+    expect(page.querySelector('[aria-label="Cancel reply"]')).toBeNull();
+
+    replyButton.click();
+    await fixture.whenStable();
+    (page.querySelector('[aria-label="Cancel reply"]') as HTMLButtonElement).click();
+    await fixture.whenStable();
+    expect(page.querySelector('[aria-label="Cancel reply"]')).toBeNull();
+
+    chats.update(([chat]) => [
+      {
+        ...chat,
+        events: [
+          ...chat.events,
+          {
+            type: 'message',
+            ...juan,
+            own: true,
+            text: 'Works for me',
+            seq: 4,
+            reply: { ...ana, own: false, text: 'Saturday?', seq: 3 },
+            at: 0,
+          },
+        ],
+      },
+    ]);
+    await fixture.whenStable();
+    const scrollIntoView = vi.fn();
+    (page.querySelector('[data-seq="3"]') as HTMLElement).scrollIntoView = scrollIntoView;
+    (page.querySelector('[aria-label="Go to the message from Ana"]') as HTMLButtonElement).click();
+    expect(scrollIntoView).toHaveBeenCalled();
   });
 
   it('opens a photo over the chat and closes it with Escape', async () => {

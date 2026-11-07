@@ -9,6 +9,7 @@ import {
   inject,
   input,
   output,
+  signal,
   viewChild,
 } from '@angular/core';
 import { DatePipe } from '@angular/common';
@@ -55,6 +56,9 @@ export class MessageList {
   readonly title = input('');
   readonly code = input('');
   readonly viewed = output<ChatMessage>();
+  readonly replied = output<ChatMessage>();
+
+  protected readonly selected = signal<number | null>(null);
 
   protected readonly avatarHue = avatarHue;
   protected readonly duration = duration;
@@ -96,6 +100,18 @@ export class MessageList {
         this.sticky = true;
       }
     });
+  }
+
+  protected reply(click: Event, message: ChatMessage): void {
+    click.stopPropagation();
+    this.selected.set(null);
+    this.replied.emit(message);
+  }
+
+  protected jump(seq: number): void {
+    this.list()
+      .nativeElement.querySelector(`[data-seq="${seq}"]`)
+      ?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
   }
 
   protected dismissKeyboard(): void {

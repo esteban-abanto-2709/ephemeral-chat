@@ -111,11 +111,12 @@ func connect(rooms *room.Registry, ping time.Duration) http.HandlerFunc {
 
 		for {
 			var incoming struct {
-				Type string `json:"type"`
-				Room string `json:"room"`
-				Text string `json:"text"`
-				Name string `json:"name"`
-				Data string `json:"data"`
+				Type  string `json:"type"`
+				Room  string `json:"room"`
+				Text  string `json:"text"`
+				Name  string `json:"name"`
+				Data  string `json:"data"`
+				Reply int    `json:"reply"`
 			}
 			if err := wsjson.Read(r.Context(), conn, &incoming); err != nil {
 				return
@@ -126,9 +127,9 @@ func connect(rooms *room.Registry, ping time.Duration) http.HandlerFunc {
 			case "leave":
 				client.Leave(incoming.Room)
 			case "message":
-				rooms.Send(client, incoming.Room, incoming.Text)
+				rooms.Send(client, incoming.Room, incoming.Text, incoming.Reply)
 			case "file":
-				rooms.SendFile(client, incoming.Room, incoming.Name, incoming.Data, incoming.Text)
+				rooms.SendFile(client, incoming.Room, incoming.Name, incoming.Data, incoming.Text, incoming.Reply)
 			case "typing":
 				client.Typing(incoming.Room)
 			}

@@ -64,12 +64,12 @@ share a name; the id tells them apart. Then, as JSON text frames:
 
 ```
 client → server:   {"type": "join",    "room": "…"}
-                   {"type": "message", "room": "…", "text": "hola"}
+                   {"type": "message", "room": "…", "text": "hola", "reply": 1}
                    {"type": "typing",  "room": "…"}
                    {"type": "file",    "room": "…", "name": "photo.jpg", "data": "<base64>", "text": "optional caption"}
                    {"type": "leave",   "room": "…"}
 server → client:   {"type": "ready",   "id": "…", "name": "Juan"}
-server → room:     {"type": "message", "room": "…", "id": "…", "name": "Juan", "text": "hola"}
+server → room:     {"type": "message", "room": "…", "id": "…", "name": "Juan", "text": "hola", "seq": 2, "reply": 1}
                    {"type": "message", "room": "…", "id": "…", "name": "Juan", "text": "optional caption", "file": {"kind": "image", "name": "photo.jpg", "mime": "image/jpeg", "size": 48213, "data": "<base64>"}}
                    (the sender gets the same file event without "data")
                    {"type": "joined",  "room": "…", "id": "…", "name": "Ana", "title": "Weekend trip", "members": [{"id": "…", "name": "Juan"}, …]}
@@ -129,6 +129,14 @@ uploaded. Each member may send 3 files at once and then one every 2
 seconds (`FileBurst`, `FileInterval`, a bucket apart from messages); over that
 only the sender gets `"Slow down: one file every 2 seconds."` A file also
 starts a private chat, like a first message.
+
+Every message and file gets a `seq`, counting up from 1 in each chat: the
+server keeps only the counter, never the messages. A message or file may carry
+`reply`, the `seq` of an earlier one in the same chat (from 1 up to the last
+given); anything else drops the frame. The server relays the number alone, so
+each tab builds the quote from its own copy of the original and nobody can
+forge what someone said; a tab that joined later shows it as an earlier
+message.
 
 Each member may send 5 messages per second (`MessagesPerSecond`), with bursts
 of up to 5: a token bucket from `golang.org/x/time/rate`, one per member. A

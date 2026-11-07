@@ -33,3 +33,6 @@ Checks on your messages saying they arrived and were read, as in WhatsApp. Open 
 
 ## [WL-019] Files in binary frames
 Files travel as base64 inside JSON text frames, about 33% bigger than the file. Binary WebSocket frames would carry the raw bytes, at the cost of a small header of our own for the chat and the file name.
+
+## [WL-020] Swipe to reply
+On a phone, dragging a message sideways starts a reply, as in WhatsApp. Today a tap shows the Reply button beside the bubble.

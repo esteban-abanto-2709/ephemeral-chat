@@ -131,7 +131,7 @@ func TestChat(t *testing.T) {
 		}
 		return tab{conn, room.Person{ID: ready.ID, Name: name}}
 	}
-	send := func(from tab, frame map[string]string) {
+	send := func(from tab, frame any) {
 		if err := wsjson.Write(ctx, from.conn, frame); err != nil {
 			t.Fatal(err)
 		}
@@ -153,8 +153,8 @@ func TestChat(t *testing.T) {
 		}
 		return room.Message{Type: "joined", Room: id, ID: who.person.ID, Name: who.person.Name, Title: "Trip", Members: people}
 	}
-	said := func(who tab, text string) room.Message {
-		return room.Message{Type: "message", Room: id, ID: who.person.ID, Name: who.person.Name, Text: text}
+	said := func(who tab, seq int, text string) room.Message {
+		return room.Message{Type: "message", Room: id, ID: who.person.ID, Name: who.person.Name, Text: text, Seq: seq}
 	}
 
 	juan := open("Juan")
@@ -165,7 +165,7 @@ func TestChat(t *testing.T) {
 	expect(joined(ana, juan, ana), juan, ana)
 
 	send(juan, map[string]string{"type": "message", "room": id, "text": "hola"})
-	expect(said(juan, "hola"), juan, ana)
+	expect(said(juan, 1, "hola"), juan, ana)
 	send(ana, map[string]string{"type": "typing", "room": id})
 	expect(room.Message{Type: "typing", Room: id, ID: ana.person.ID, Name: "Ana"}, juan)
 
@@ -201,11 +201,13 @@ func TestChat(t *testing.T) {
 	}
 	expect(room.Message{Type: "left", Room: id, ID: flooder.person.ID, Name: "Flooder", Members: []room.Person{juan.person}}, juan)
 
-	send(juan, map[string]string{"type": "message", "room": id, "text": "still here"})
-	expect(said(juan, "still here"), juan)
+	send(juan, map[string]any{"type": "message", "room": id, "text": "still here", "reply": 1})
+	stillHere := said(juan, 2, "still here")
+	stillHere.Reply = 1
+	expect(stillHere, juan)
 
 	send(juan, map[string]string{"type": "file", "room": id, "name": "notes.txt", "data": "aG9sYQ==", "text": "for Saturday"})
-	expect(room.Message{Type: "message", Room: id, ID: juan.person.ID, Name: "Juan", Text: "for Saturday", File: &room.File{Kind: "file", Name: "notes.txt", Size: 4}}, juan)
+	expect(room.Message{Type: "message", Room: id, ID: juan.person.ID, Name: "Juan", Text: "for Saturday", File: &room.File{Kind: "file", Name: "notes.txt", Size: 4}, Seq: 3}, juan)
 }
 
 func TestAPIOnlyWithoutStaticDir(t *testing.T) {

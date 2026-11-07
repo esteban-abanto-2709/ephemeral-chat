@@ -106,6 +106,12 @@ you scrolled up to read; sending always brings you back down. It opens with a
 card holding the group's name and code; a chat can pass its own card as
 content instead.
 
+To reply, hover a message (tap it on a phone) and press Reply: the quote sits
+above the composer, with an X to drop it, and the message goes out with the
+original's `seq`. `ChatClient` turns a received `reply` into a quote from its
+own copy of that message (`quoteOf`), or "Earlier message" when the tab never
+saw it. Tapping a quote in a bubble scrolls back to the original.
+
 On phones the page fits above the keyboard, as in WhatsApp: Android resizes
 the page (`interactive-widget=resizes-content` in the viewport meta) and iOS,
 which ignores that, gets the visible height from `visualViewport`

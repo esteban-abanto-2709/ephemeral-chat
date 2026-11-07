@@ -11,7 +11,9 @@ import { avatarHue } from '../avatar-hue';
   },
   template: `
     <span class="flex min-w-0 flex-1 flex-col py-0.5">
-      <span class="text-xs font-semibold">{{ quote().own ? 'You' : quote().name }}</span>
+      @if (quote().own || quote().name) {
+        <span class="text-xs font-semibold">{{ quote().own ? 'You' : quote().name }}</span>
+      }
       <span class="line-clamp-2 text-xs text-ink-soft">{{
         quote().file ? describe(quote().file!) : quote().text
       }}</span>

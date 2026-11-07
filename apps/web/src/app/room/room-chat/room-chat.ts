@@ -6,6 +6,7 @@ import {
   computed,
   inject,
   input,
+  linkedSignal,
   output,
   signal,
   viewChild,
@@ -27,7 +28,7 @@ import {
   LucideX,
 } from '@lucide/angular';
 import { Attachment, Outgoing, Quote, duration } from '../../chats/attachment';
-import { ChatEvent, ChatMessage, Person, SocketStatus } from '../../chats/chat-client';
+import { ChatEvent, ChatMessage, Person, SocketStatus, quoteOf } from '../../chats/chat-client';
 import { Glass } from '../../glass/glass';
 import { avatarHue } from '../avatar-hue';
 import { CopyLink } from '../copy-link/copy-link';
@@ -94,7 +95,7 @@ export class RoomChat {
   readonly recording = input<number | null>(null);
   readonly replying = input<Quote | null>(null);
   readonly preview = input<Attachment[]>([]);
-  readonly sent = output<string>();
+  readonly sent = output<{ text: string; reply?: number }>();
   readonly attached = output<File[]>();
   readonly filesSent = output<{ items: Outgoing[]; original: boolean }>();
   readonly filesDiscarded = output();
@@ -144,6 +145,10 @@ export class RoomChat {
   protected readonly length = signal(0);
   protected readonly dragging = signal(false);
   protected readonly viewing = signal<ChatMessage | null>(null);
+  protected readonly quoting = linkedSignal(() => {
+    this.code();
+    return this.replying();
+  });
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
 
   protected write(input: HTMLInputElement): void {
@@ -183,13 +188,19 @@ export class RoomChat {
     }
   }
 
+  protected reply(message: ChatMessage): void {
+    this.quoting.set(quoteOf(message));
+    this.composer()?.nativeElement.focus();
+  }
+
   protected send(event: Event, input: HTMLInputElement): void {
     event.preventDefault();
     const text = input.value.trim();
     if (!text) {
       return;
     }
-    this.sent.emit(text);
+    this.sent.emit({ text, reply: this.quoting()?.seq });
+    this.quoting.set(null);
     input.value = '';
     this.length.set(0);
   }

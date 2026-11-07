@@ -16,6 +16,7 @@ export interface Quote {
   own: boolean;
   text: string;
   file?: Attachment;
+  seq?: number;
 }
 
 export function describe(file: Attachment): string {

@@ -96,8 +96,8 @@ func left(who *Member, members ...*Member) Message {
 	return Message{Type: "left", Room: roomID, ID: who.client.ID, Name: who.client.Name, Members: people(members...)}
 }
 
-func said(who *Member, text string) Message {
-	return Message{Type: "message", Room: roomID, ID: who.client.ID, Name: who.client.Name, Text: text}
+func said(who *Member, seq int, text string) Message {
+	return Message{Type: "message", Room: roomID, ID: who.client.ID, Name: who.client.Name, Text: text, Seq: seq}
 }
 
 func typing(who *Member) Message {
@@ -161,23 +161,42 @@ func TestSendReachesEveryMemberWithTheSenderName(t *testing.T) {
 	drain(juan)
 	drain(ana)
 
-	room.Send(juan, "hola")
+	room.Send(juan, "hola", 0)
 
-	expect(t, juan, said(juan, "hola"))
-	expect(t, ana, said(juan, "hola"))
+	expect(t, juan, said(juan, 1, "hola"))
+	expect(t, ana, said(juan, 1, "hola"))
+}
+
+func TestAReplyPointsAtAnEarlierMessage(t *testing.T) {
+	room := newTestRoom()
+	juan, ana := join(t, room, "Juan"), join(t, room, "Ana")
+	drain(juan)
+	drain(ana)
+
+	room.Send(juan, "too soon", 1)
+	room.Send(juan, "backwards", -1)
+	assertEmpty(t, ana)
+
+	room.Send(juan, "Saturday?", 0)
+	expect(t, ana, said(juan, 1, "Saturday?"))
+	drain(juan)
+	room.Send(ana, "works for me", 1)
+	want := said(ana, 2, "works for me")
+	want.Reply = 1
+	expect(t, juan, want)
 }
 
 func TestLateJoinerSeesNothingFromBefore(t *testing.T) {
 	room := newTestRoom()
 	juan := join(t, room, "Juan")
-	room.Send(juan, "before")
+	room.Send(juan, "before", 0)
 	drain(juan)
 
 	ana := join(t, room, "Ana")
 	expect(t, ana, joined(ana, juan, ana))
 	assertEmpty(t, ana)
 
-	room.Send(juan, "after")
+	room.Send(juan, "after", 0)
 	if got := receive(t, ana); got.Text != "after" {
 		t.Errorf("Ana got %q, want %q", got.Text, "after")
 	}
@@ -189,7 +208,7 @@ func TestLeftMemberStopsReceiving(t *testing.T) {
 	drain(ana)
 
 	room.Leave(ana)
-	room.Send(juan, "hola")
+	room.Send(juan, "hola", 0)
 
 	assertEmpty(t, ana)
 	assertConnected(t, ana, true)
@@ -203,7 +222,7 @@ func TestSlowMemberIsDisconnectedAndAnnounced(t *testing.T) {
 		drain(slow)
 
 		for range mailboxSize + 1 {
-			room.Send(fast, "hola")
+			room.Send(fast, "hola", 0)
 			receive(t, fast)
 			time.Sleep(time.Second / MessagesPerSecond)
 		}
@@ -218,7 +237,7 @@ func TestBlankMessagesAreIgnored(t *testing.T) {
 	juan := join(t, room, "Juan")
 	drain(juan)
 
-	room.Send(juan, "   ")
+	room.Send(juan, "   ", 0)
 	assertEmpty(t, juan)
 }
 
@@ -227,10 +246,10 @@ func TestMessagesOverTheMaxLengthAreIgnored(t *testing.T) {
 	juan := join(t, room, "Juan")
 	drain(juan)
 
-	room.Send(juan, strings.Repeat("ñ", MessageMaxLength+1))
+	room.Send(juan, strings.Repeat("ñ", MessageMaxLength+1), 0)
 	assertEmpty(t, juan)
 
-	room.Send(juan, strings.Repeat("ñ", MessageMaxLength))
+	room.Send(juan, strings.Repeat("ñ", MessageMaxLength), 0)
 	if got := receive(t, juan); len([]rune(got.Text)) != MessageMaxLength {
 		t.Errorf("got %d characters, want %d", len([]rune(got.Text)), MessageMaxLength)
 	}
@@ -244,18 +263,18 @@ func TestSendingTooFastIsRefusedToTheSenderOnly(t *testing.T) {
 		drain(ana)
 
 		for range MessagesPerSecond {
-			room.Send(juan, "hola")
+			room.Send(juan, "hola", 0)
 			receive(t, juan)
 			receive(t, ana)
 		}
 
-		room.Send(juan, "one too many")
+		room.Send(juan, "one too many", 0)
 		expect(t, juan, Message{Type: "error", Room: roomID, Text: "Slow down: up to 5 messages per second."})
 		assertEmpty(t, ana)
 
 		time.Sleep(time.Second / MessagesPerSecond)
-		room.Send(juan, "again")
-		expect(t, ana, said(juan, "again"))
+		room.Send(juan, "again", 0)
+		expect(t, ana, said(juan, MessagesPerSecond+1, "again"))
 	})
 }
 
@@ -301,9 +320,9 @@ func TestTypingLeavesTheMessageLimitAlone(t *testing.T) {
 
 		room.Typing(juan)
 		receive(t, ana)
-		for range MessagesPerSecond {
-			room.Send(juan, "hola")
-			expect(t, ana, said(juan, "hola"))
+		for i := range MessagesPerSecond {
+			room.Send(juan, "hola", 0)
+			expect(t, ana, said(juan, i+1, "hola"))
 			receive(t, juan)
 		}
 	})
@@ -315,7 +334,7 @@ func TestTypingNeverDisconnectsASlowMember(t *testing.T) {
 		juan, ana := join(t, room, "Juan"), join(t, room, "Ana")
 		drain(juan)
 		for range mailboxSize - 1 {
-			room.Send(ana, "hola")
+			room.Send(ana, "hola", 0)
 			time.Sleep(time.Second)
 		}
 		drain(ana)
@@ -394,20 +413,22 @@ func TestFilesReachEveryoneWithinTheirOwnLimit(t *testing.T) {
 		receipt := sent
 		receipt.File = &File{Kind: "file", Name: "notes.txt", Size: 4}
 
-		for range FileBurst {
-			room.SendFile(juan, file, "")
+		for i := range FileBurst {
+			sent.Seq, receipt.Seq = i+1, i+1
+			room.SendFile(juan, file, "", 0)
 			expect(t, juan, receipt)
 			expect(t, ana, sent)
 		}
-		room.SendFile(juan, file, "")
+		sent.Seq = FileBurst + 2
+		room.SendFile(juan, file, "", 0)
 		expect(t, juan, Message{Type: "error", Room: roomID, Text: "Slow down: one file every 2 seconds."})
 		assertEmpty(t, ana)
 
-		room.Send(juan, "text still flows")
-		expect(t, ana, said(juan, "text still flows"))
+		room.Send(juan, "text still flows", 0)
+		expect(t, ana, said(juan, FileBurst+1, "text still flows"))
 
 		time.Sleep(FileInterval)
-		room.SendFile(juan, file, "")
+		room.SendFile(juan, file, "", 0)
 		expect(t, ana, sent)
 	})
 }
@@ -419,11 +440,11 @@ func TestACaptionTravelsWithItsFile(t *testing.T) {
 	drain(ana)
 	file, _ := NewFile("notes.txt", encode([]byte("hola")))
 
-	room.SendFile(juan, file, "   ")
-	room.SendFile(juan, file, strings.Repeat("x", MessageMaxLength+1))
+	room.SendFile(juan, file, "   ", 0)
+	room.SendFile(juan, file, strings.Repeat("x", MessageMaxLength+1), 0)
 	assertEmpty(t, ana)
 
-	room.SendFile(juan, file, "for Saturday")
-	expect(t, ana, Message{Type: "message", Room: roomID, ID: juan.client.ID, Name: "Juan", Text: "for Saturday", File: file})
-	expect(t, juan, Message{Type: "message", Room: roomID, ID: juan.client.ID, Name: "Juan", Text: "for Saturday", File: &File{Kind: "file", Name: "notes.txt", Size: 4}})
+	room.SendFile(juan, file, "for Saturday", 0)
+	expect(t, ana, Message{Type: "message", Room: roomID, ID: juan.client.ID, Name: "Juan", Text: "for Saturday", File: file, Seq: 1})
+	expect(t, juan, Message{Type: "message", Room: roomID, ID: juan.client.ID, Name: "Juan", Text: "for Saturday", File: &File{Kind: "file", Name: "notes.txt", Size: 4}, Seq: 1})
 }

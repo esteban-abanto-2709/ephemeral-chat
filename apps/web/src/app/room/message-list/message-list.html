@@ -47,12 +47,16 @@
             class="group relative flex animate-rise flex-col gap-1 motion-reduce:animate-none"
             [class]="item.own ? 'items-end self-end' : 'items-start self-start'"
             [class.mt-2]="item.first"
+            [attr.data-seq]="event.seq"
+            (click)="selected.set($index)"
           >
             <button
               type="button"
               class="absolute top-1/2 grid size-8 -translate-y-1/2 place-items-center rounded-full text-ink-soft opacity-0 transition group-hover:opacity-100 hover:bg-glass-strong hover:text-ink focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-accent-ink"
               [class]="item.own ? '-left-10' : '-right-10'"
+              [class.opacity-100!]="selected() === $index"
               aria-label="Reply"
+              (click)="reply($event, event)"
             >
               <svg lucideReply class="size-4" aria-hidden="true"></svg>
             </button>
@@ -73,6 +77,8 @@
               (file ? ' p-1' : ' px-3.5 py-2')
             "
             [class.mt-2]="item.first"
+            [attr.data-seq]="event.seq"
+            (click)="selected.set($index)"
           >
             @if (item.own) {
               <span class="sr-only">You:</span>
@@ -92,12 +98,25 @@
               type="button"
               class="absolute top-1/2 grid size-8 -translate-y-1/2 place-items-center rounded-full text-ink-soft opacity-0 transition group-hover:opacity-100 hover:bg-glass-strong hover:text-ink focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-accent-ink"
               [class]="item.own ? '-left-10' : '-right-10'"
+              [class.opacity-100!]="selected() === $index"
               aria-label="Reply"
+              (click)="reply($event, event)"
             >
               <svg lucideReply class="size-4" aria-hidden="true"></svg>
             </button>
             @if (event.reply; as reply) {
-              <app-quote class="mb-1" [quote]="reply" />
+              @if (reply.seq) {
+                <button
+                  type="button"
+                  class="mb-1 block w-full rounded-lg text-left focus-visible:outline-2 focus-visible:outline-accent-ink"
+                  [attr.aria-label]="'Go to the message from ' + (reply.own ? 'you' : reply.name)"
+                  (click)="jump(reply.seq)"
+                >
+                  <app-quote [quote]="reply" />
+                </button>
+              } @else {
+                <app-quote class="mb-1" [quote]="reply" />
+              }
             }
             @switch (file?.kind) {
               @case ('image') {

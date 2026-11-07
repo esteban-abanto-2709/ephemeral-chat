@@ -63,15 +63,15 @@ func (r *Registry) Open(client *Client, code string) {
 	client.Notify(Message{Type: "joined", Room: other.ID, ID: other.ID, Name: other.Name, Title: other.Name, Private: true, Members: []Person{client.person(), other.person()}})
 }
 
-func (r *Registry) Send(client *Client, label, text string) {
+func (r *Registry) Send(client *Client, label, text string, reply int) {
 	if validText(text) && r.reach(client, label) {
-		client.Send(label, text)
+		client.Send(label, text, reply)
 	}
 }
 
-func (r *Registry) SendFile(client *Client, label, name, data, caption string) {
+func (r *Registry) SendFile(client *Client, label, name, data, caption string, reply int) {
 	if file, ok := NewFile(name, data); ok && validCaption(caption) && r.reach(client, label) {
-		client.SendFile(label, file, caption)
+		client.SendFile(label, file, caption, reply)
 	}
 }
 

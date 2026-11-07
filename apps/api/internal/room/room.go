@@ -49,6 +49,8 @@ type Message struct {
 	Private bool     `json:"private,omitempty"`
 	Members []Person `json:"members,omitempty"`
 	File    *File    `json:"file,omitempty"`
+	Seq     int      `json:"seq,omitempty"`
+	Reply   int      `json:"reply,omitempty"`
 }
 
 type File struct {
@@ -101,6 +103,7 @@ type Room struct {
 	closed  bool
 	private bool
 	expiry  *time.Timer
+	seq     int
 }
 
 func newRoom(id, name string, onExpire func()) *Room {
@@ -153,9 +156,9 @@ func validText(text string) bool {
 	return strings.TrimSpace(text) != "" && utf8.RuneCountInString(text) <= MessageMaxLength
 }
 
-func (r *Room) Send(from *Member, text string) {
+func (r *Room) Send(from *Member, text string, reply int) {
 	if validText(text) {
-		r.post(from, Message{Text: text}, from.limiter, "Slow down: up to 5 messages per second.")
+		r.post(from, Message{Text: text, Reply: reply}, from.limiter, "Slow down: up to 5 messages per second.")
 	}
 }
 
@@ -163,23 +166,24 @@ func validCaption(caption string) bool {
 	return caption == "" || validText(caption)
 }
 
-func (r *Room) SendFile(from *Member, file *File, caption string) {
+func (r *Room) SendFile(from *Member, file *File, caption string, reply int) {
 	if validCaption(caption) {
-		r.post(from, Message{Text: caption, File: file}, from.files, "Slow down: one file every 2 seconds.")
+		r.post(from, Message{Text: caption, File: file, Reply: reply}, from.files, "Slow down: one file every 2 seconds.")
 	}
 }
 
 func (r *Room) post(from *Member, message Message, limiter *rate.Limiter, slow string) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	if !slices.Contains(r.members, from) {
+	if !slices.Contains(r.members, from) || message.Reply < 0 || message.Reply > r.seq {
 		return
 	}
 	if !limiter.Allow() {
 		r.deliver(from, Message{Type: "error", Text: slow})
 		return
 	}
-	message.Type, message.ID, message.Name = "message", from.client.ID, from.client.Name
+	r.seq++
+	message.Type, message.ID, message.Name, message.Seq = "message", from.client.ID, from.client.Name, r.seq
 	if message.File == nil {
 		r.broadcast(message)
 		return
