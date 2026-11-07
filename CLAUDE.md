@@ -26,11 +26,14 @@ clever shortcuts.
 
 ## Current state (2026-11)
 
-- **v0.4 is feature-complete**: one page like WhatsApp Web. You pick a name
+- **v0.5 is feature-complete**: one page like WhatsApp Web. You pick a name
   once and the tab gets an id that lives while it is open; then several chats
   at once over one connection: named groups joined by link or code, and
   private chats opened by someone's id or invite link, which reach them only
-  with your first message and end when either leaves. Earlier versions brought
+  with your first message and end when either leaves. Chats carry photos
+  (compressed in the browser, reviewed before sending, opened in the page),
+  files up to 5 MB, voice messages up to a minute and replies; the server
+  relays them and keeps none. Earlier versions brought
   the glass design (WebGL liquid glass with a frosted fallback, light and dark
   themes), the layout kept above the phone keyboard, a typing indicator, and
   limits on message length, rate, group size and chats per tab. Groups vanish

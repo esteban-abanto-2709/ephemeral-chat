@@ -1,14 +1,17 @@
 import {
   Component,
   DOCUMENT,
+  DestroyRef,
   ElementRef,
   afterRenderEffect,
   computed,
+  effect,
   inject,
   input,
   linkedSignal,
   output,
   signal,
+  untracked,
   viewChild,
 } from '@angular/core';
 import {
@@ -35,7 +38,9 @@ import { CopyLink } from '../copy-link/copy-link';
 import { MessageList } from '../message-list/message-list';
 import { PhotoViewer } from '../photo-viewer/photo-viewer';
 import { QuoteCard } from '../quote/quote';
+import { Notice } from '../../notice';
 import { SendPreview } from '../send-preview/send-preview';
+import { VoiceRecorder } from './voice-recorder';
 
 const messageMaxLength = 1000;
 const voiceMaxSeconds = 60;
@@ -91,7 +96,6 @@ export class RoomChat {
   readonly link = input.required<string>();
   readonly typing = input<Person[]>([]);
   readonly focus = input(false);
-  readonly voice = input(false);
   readonly recording = input<number | null>(null);
   readonly replying = input<Quote | null>(null);
   readonly preview = input<Attachment[]>([]);
@@ -99,6 +103,7 @@ export class RoomChat {
   readonly attached = output<File[]>();
   readonly filesSent = output<{ items: Outgoing[]; original: boolean }>();
   readonly filesDiscarded = output();
+  readonly voiced = output<{ blob: Blob; seconds: number; reply?: number }>();
   readonly reconnect = output();
   readonly typed = output();
   readonly closed = output();
@@ -107,6 +112,10 @@ export class RoomChat {
   protected readonly avatarHue = avatarHue;
   protected readonly duration = duration;
   protected readonly voiceMaxSeconds = voiceMaxSeconds;
+  protected readonly canRecord = VoiceRecorder.supported();
+  protected readonly recorder = new VoiceRecorder(voiceMaxSeconds, () => this.sendVoice());
+  protected readonly recordingSeconds = computed(() => this.recorder.seconds() ?? this.recording());
+  private readonly notice = inject(Notice);
   protected readonly subtitle = computed(() => {
     const [first, second, ...rest] = this.typing().map((person) => person.name);
     if (this.status() !== 'open') {
@@ -132,6 +141,11 @@ export class RoomChat {
     !!inject(DOCUMENT).defaultView?.matchMedia?.('(pointer: fine)').matches;
 
   constructor() {
+    effect(() => {
+      this.code();
+      untracked(() => this.recorder.cancel());
+    });
+    inject(DestroyRef).onDestroy(() => this.recorder.cancel());
     afterRenderEffect(() => {
       this.code();
       if (this.finePointer || this.focus()) {
@@ -185,6 +199,20 @@ export class RoomChat {
   private attach(files: FileList | null | undefined): void {
     if (files?.length && this.status() === 'open' && !this.ended()) {
       this.attached.emit([...files]);
+    }
+  }
+
+  protected record(): void {
+    this.recorder
+      .start()
+      .catch(() => this.notice.show('Allow the microphone to record a voice message.'));
+  }
+
+  protected async sendVoice(): Promise<void> {
+    const voice = await this.recorder.stop();
+    if (voice) {
+      this.voiced.emit({ ...voice, reply: this.quoting()?.seq });
+      this.quoting.set(null);
     }
   }
 

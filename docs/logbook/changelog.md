@@ -12,6 +12,9 @@ Summary in ≤2 lines of what was done.
 
 ---
 
+## [RM-012] Media (v0.5) (2026-11-07 09:26)
+Photos, files, replies and voice messages up to a minute, relayed and never stored. Stickers (WL-004) and QR codes (WL-013) went back to the wishlist. Completes v0.5.
+
 ## [WL-016] Photo viewer in the page (2026-11-06 17:57)
 Tapping a photo opens it full screen over the page, with sender, caption and download; X, Escape or a tap outside closes it, instead of a new tab.
 

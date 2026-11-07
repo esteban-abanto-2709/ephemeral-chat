@@ -58,11 +58,20 @@ interface Frame {
   data?: string;
   seq?: number;
   reply?: number;
-  file?: { kind: 'image' | 'file'; name: string; mime?: string; size: number; data?: string };
+  seconds?: number;
+  file?: {
+    kind: 'image' | 'file' | 'voice';
+    name: string;
+    mime?: string;
+    size: number;
+    seconds?: number;
+    data?: string;
+  };
 }
 
 export const maxChats = 20;
 export const fileMaxBytes = 5 * 1024 * 1024;
+export const voiceMaxBytes = 1024 * 1024;
 const fileNameMaxLength = 120;
 const shownTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
 const typingShownFor = 3000;
@@ -232,12 +241,28 @@ export class ChatClient implements OnDestroy {
       if (ready.size > fileMaxBytes) {
         this.notice.show('Files up to 5 MB.');
       } else {
-        this.sendFile(room, ready, caption.trim());
+        this.sendFile(room, ready, { text: caption.trim() || undefined });
       }
     }
   }
 
-  private sendFile(room: string, file: File, caption: string): void {
+  sendVoice(room: string, voice: Blob, seconds: number, reply?: number): void {
+    if (voice.size > voiceMaxBytes) {
+      this.notice.show('Voice messages up to 1 MB.');
+      return;
+    }
+    const extension = voice.type.includes('mp4')
+      ? 'm4a'
+      : voice.type.includes('ogg')
+        ? 'ogg'
+        : 'webm';
+    this.sendFile(room, new File([voice], `voice.${extension}`, { type: voice.type }), {
+      seconds,
+      reply,
+    });
+  }
+
+  private sendFile(room: string, file: File, extra: Partial<Frame>): void {
     const name = Array.from(file.name.trim() || 'file')
       .slice(-fileNameMaxLength)
       .join('')
@@ -250,7 +275,7 @@ export class ChatClient implements OnDestroy {
         room,
         name,
         data: String(reader.result).split(',')[1],
-        text: caption || undefined,
+        ...extra,
       });
     };
     reader.readAsDataURL(file);
@@ -359,11 +384,12 @@ export class ChatClient implements OnDestroy {
     if (!content) {
       return undefined;
     }
-    const type = file.kind === 'image' ? file.mime : 'application/octet-stream';
+    const type = file.mime ?? 'application/octet-stream';
     return {
       kind: file.kind,
       name: file.name,
       size: file.size,
+      seconds: file.seconds,
       url: URL.createObjectURL(new Blob([content], { type })),
     };
   }

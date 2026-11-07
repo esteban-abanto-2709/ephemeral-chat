@@ -67,6 +67,7 @@ client → server:   {"type": "join",    "room": "…"}
                    {"type": "message", "room": "…", "text": "hola", "reply": 1}
                    {"type": "typing",  "room": "…"}
                    {"type": "file",    "room": "…", "name": "photo.jpg", "data": "<base64>", "text": "optional caption"}
+                   {"type": "file",    "room": "…", "name": "voice.webm", "data": "<base64>", "seconds": 12}
                    {"type": "leave",   "room": "…"}
 server → client:   {"type": "ready",   "id": "…", "name": "Juan"}
 server → room:     {"type": "message", "room": "…", "id": "…", "name": "Juan", "text": "hola", "seq": 2, "reply": 1}
@@ -125,7 +126,15 @@ HTML file can't run script in the app's origin. A file goes to every member
 like a message, as one value shared by every mailbox, so a group of 50 holds
 it in memory once. The sender gets it back without `data`: a receipt in the
 chat's order, so their tab shows its own copy and never downloads what it just
-uploaded. Each member may send 3 files at once and then one every 2
+uploaded.
+
+A `file` frame with `seconds` is a voice message: 1 to 60 seconds
+(`VoiceMaxSeconds`, as the recording tab measured it) and up to 1 MiB
+(`VoiceMaxBytes`). Its first bytes must be WebM, MP4 or Ogg, what browsers
+record (`MediaRecorder`), and it goes out as `"kind": "voice"` with an audio
+`mime` and its `seconds`; anything else with `seconds` is dropped.
+
+Each member may send 3 files at once and then one every 2
 seconds (`FileBurst`, `FileInterval`, a bucket apart from messages); over that
 only the sender gets `"Slow down: one file every 2 seconds."` A file also
 starts a private chat, like a first message.

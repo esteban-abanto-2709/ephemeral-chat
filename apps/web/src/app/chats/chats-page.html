@@ -34,6 +34,7 @@
       (attached)="client.pick(active.id, $event)"
       (filesSent)="client.sendPicked($event.items, $event.original)"
       (filesDiscarded)="client.discardPicked()"
+      (voiced)="client.sendVoice(active.id, $event.blob, $event.seconds, $event.reply)"
       (typed)="client.sendTyping(active.id)"
       (reconnect)="client.reconnect()"
       (closed)="client.open(null)"

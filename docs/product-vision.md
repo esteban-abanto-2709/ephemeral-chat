@@ -47,6 +47,7 @@ The link can reach anyone, so the server protects itself from day one:
 | Messages per person | 5 per second |
 | File size | 5 MB |
 | Files per person | 3 at once, then one every 2 seconds |
+| Voice message | 60 seconds, 1 MB |
 | Name length | 24 characters |
 | People per group | 50 |
 | Chats per tab | 20 |
@@ -66,11 +67,11 @@ Each version is a milestone. When all its work is done, it gets a git tag
 | v0.2 | Glass | Visual redesign: WhatsApp Web layout, liquid glass, light and dark themes |
 | v0.3 | Comfort | Clearer room design, mobile keyboard handling, typing indicator |
 | v0.4 | Chats | One page with several chats: named groups, private chats by id or invite link |
-| v0.5 | Media | Images and files, voice messages, stickers |
+| v0.5 | Media | Photos and files, replies, voice messages |
 | v0.6 | Privacy | End-to-end encryption |
 
-v0.5 and v0.6 are ideas in the [wishlist](./logbook/wishlist.md) until they
-are committed.
+v0.6 is an idea in the [wishlist](./logbook/wishlist.md) until it is
+committed.
 
 **Deploy early.** The app is on Render from the first steps, not at the end,
 so "no commit breaks production" means something from day one.

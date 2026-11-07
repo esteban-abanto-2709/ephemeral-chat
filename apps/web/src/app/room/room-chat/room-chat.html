@@ -136,12 +136,13 @@
         Delete chat
       </button>
     </p>
-  } @else if (recording() !== null) {
+  } @else if (recordingSeconds() !== null) {
     <div appGlass="composer" class="flex items-center gap-2 rounded-full p-1" role="status">
       <button
         type="button"
         class="grid size-10 shrink-0 place-items-center rounded-full text-danger-ink transition hover:bg-glass-strong focus-visible:outline-2 focus-visible:outline-accent-ink"
         aria-label="Discard voice message"
+        (click)="recorder.cancel()"
       >
         <svg lucideTrash2 class="size-5" aria-hidden="true"></svg>
       </button>
@@ -150,13 +151,14 @@
         aria-hidden="true"
       ></span>
       <span class="flex-1 text-sm tabular-nums"
-        >Recording {{ duration(recording() ?? 0) }}
+        >Recording {{ duration(recordingSeconds() ?? 0) }}
         <span class="text-ink-soft">/ {{ duration(voiceMaxSeconds) }}</span></span
       >
       <button
         type="button"
         class="grid size-10 shrink-0 place-items-center rounded-full bg-accent-ink text-canvas transition hover:scale-105 focus-visible:outline-2 focus-visible:outline-accent-ink"
         aria-label="Send voice message"
+        (click)="sendVoice()"
       >
         <svg lucideSendHorizontal class="size-5" aria-hidden="true"></svg>
       </button>
@@ -205,12 +207,13 @@
           >{{ length() }} / {{ messageMaxLength }}</span
         >
       }
-      @if (voice() && length() === 0) {
+      @if (canRecord && length() === 0) {
         <button
           type="button"
           class="grid size-10 shrink-0 place-items-center rounded-full text-ink-soft transition hover:scale-110 hover:text-ink disabled:opacity-50 disabled:hover:scale-100 focus-visible:outline-2 focus-visible:outline-accent-ink"
           aria-label="Record a voice message"
           [disabled]="status() !== 'open'"
+          (click)="record()"
         >
           <svg lucideMic class="size-5" aria-hidden="true"></svg>
         </button>

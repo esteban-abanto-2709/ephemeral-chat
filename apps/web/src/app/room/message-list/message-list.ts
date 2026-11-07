@@ -18,7 +18,6 @@ import {
   LucideDownload,
   LucideFileText,
   LucideKeyRound,
-  LucidePlay,
   LucideReply,
   LucideShieldCheck,
   LucideUsersRound,
@@ -29,6 +28,7 @@ import { avatarHue } from '../avatar-hue';
 import { ChatEvent, ChatMessage } from '../../chats/chat-client';
 import { duration, fileSize } from '../../chats/attachment';
 import { QuoteCard } from '../quote/quote';
+import { VoiceNote } from '../voice-note/voice-note';
 
 const stickyDistance = 80;
 
@@ -38,11 +38,11 @@ const stickyDistance = 80;
     DatePipe,
     Glass,
     QuoteCard,
+    VoiceNote,
     LucideCopy,
     LucideDownload,
     LucideFileText,
     LucideKeyRound,
-    LucidePlay,
     LucideReply,
     LucideShieldCheck,
     LucideUsersRound,

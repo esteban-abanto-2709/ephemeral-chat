@@ -268,6 +268,52 @@ describe('ChatClient', () => {
     expect(client.picked()).toEqual([]);
   });
 
+  it('sends a voice message with its length and plays a received one as audio', async () => {
+    vi.useRealTimers();
+    const createObjectURL = vi.fn(() => 'blob:voice');
+    vi.stubGlobal('URL', Object.assign(URL, { createObjectURL, revokeObjectURL: vi.fn() }));
+    ready();
+    client.join('one');
+    server.sent = [];
+
+    client.sendVoice('one', new Blob(['hola'], { type: 'audio/webm;codecs=opus' }), 12, 3);
+    await vi.waitFor(() =>
+      expect(server.sent).toEqual([
+        {
+          type: 'file',
+          room: 'one',
+          name: 'voice.webm',
+          data: btoa('hola'),
+          seconds: 12,
+          reply: 3,
+        },
+      ]),
+    );
+
+    server.receive({
+      type: 'message',
+      room: 'one',
+      ...ana,
+      file: {
+        kind: 'voice',
+        name: 'voice.m4a',
+        mime: 'audio/mp4',
+        size: 4,
+        seconds: 7,
+        data: btoa('hola'),
+      },
+    });
+    expect(client.active()!.events.at(-1)).toMatchObject({
+      file: { kind: 'voice', seconds: 7, url: 'blob:voice' },
+    });
+    expect((createObjectURL.mock.calls[0] as unknown[])[0]).toMatchObject({ type: 'audio/mp4' });
+
+    const big = new Blob(['x']);
+    Object.defineProperty(big, 'size', { value: 1024 * 1024 + 1 });
+    client.sendVoice('one', big, 60);
+    expect(TestBed.inject(Notice).text()).toBe('Voice messages up to 1 MB.');
+  });
+
   it('turns a received file into a link and lets it go with the chat', () => {
     const createObjectURL = vi.fn(() => 'blob:photo');
     const revokeObjectURL = vi.fn();

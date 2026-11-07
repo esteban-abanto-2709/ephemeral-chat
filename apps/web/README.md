@@ -150,6 +150,16 @@ Tapping a photo opens `room/photo-viewer` over the whole page, a native
 `<dialog>` with who sent it, its caption and a download button; X, `Esc` or a
 tap beside the photo closes it and leaves the chat open.
 
+With the input empty, the mic records a voice message
+(`room/room-chat/voice-recorder.ts`, the browser's `MediaRecorder`, mono
+speech at 32 kbps, so a minute is about 240 KB). The browser asks for the
+microphone the first time; a refusal says how to allow it. The bar counts up
+to 1:00 and sends by itself there; the trash discards it, and changing chats
+or leaving drops a recording in progress. `ChatClient.sendVoice()` sends it as
+a `file` frame with its `seconds` (and the reply, if one is open).
+`room/voice-note` plays it in the bubble with a progress bar; starting one
+pauses any other. Chrome and Firefox record WebM/Opus and Safari MP4/AAC.
+
 The client is provided by the page itself (`providers: [ChatClient]`), not at
 the root, so leaving the page closes the connection (`ngOnDestroy`). Tests
 replace it with `TestBed.overrideComponent`, since a component-level provider

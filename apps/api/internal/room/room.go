@@ -23,10 +23,18 @@ const (
 	FileNameMaxLength = 120
 	FileInterval      = 2 * time.Second
 	FileBurst         = 3
+	VoiceMaxBytes     = 1 << 20
+	VoiceMaxSeconds   = 60
 	emptyLifetime     = time.Minute
 )
 
 var imageTypes = []string{"image/png", "image/jpeg", "image/gif", "image/webp"}
+
+var voiceTypes = map[string]string{
+	"video/webm":      "audio/webm",
+	"video/mp4":       "audio/mp4",
+	"application/ogg": "audio/ogg",
+}
 
 var (
 	ErrRoomGone = errors.New("room no longer exists")
@@ -54,16 +62,20 @@ type Message struct {
 }
 
 type File struct {
-	Kind string `json:"kind"`
-	Name string `json:"name"`
-	Mime string `json:"mime,omitempty"`
-	Size int    `json:"size"`
-	Data string `json:"data,omitempty"`
+	Kind    string `json:"kind"`
+	Name    string `json:"name"`
+	Mime    string `json:"mime,omitempty"`
+	Size    int    `json:"size"`
+	Seconds int    `json:"seconds,omitempty"`
+	Data    string `json:"data,omitempty"`
 }
 
-func NewFile(name, data string) (*File, bool) {
+func NewFile(name, data string, seconds int) (*File, bool) {
 	name = strings.TrimSpace(name)
 	if name == "" || utf8.RuneCountInString(name) > FileNameMaxLength || base64.StdEncoding.DecodedLen(len(data)) > FileMaxBytes+2 {
+		return nil, false
+	}
+	if seconds < 0 || seconds > VoiceMaxSeconds {
 		return nil, false
 	}
 	raw, err := base64.StdEncoding.DecodeString(data)
@@ -71,7 +83,14 @@ func NewFile(name, data string) (*File, bool) {
 		return nil, false
 	}
 	file := &File{Kind: "file", Name: name, Size: len(raw), Data: data}
-	if mime := http.DetectContentType(raw); slices.Contains(imageTypes, mime) {
+	mime := http.DetectContentType(raw)
+	if seconds > 0 {
+		audio, ok := voiceTypes[mime]
+		if !ok || len(raw) > VoiceMaxBytes {
+			return nil, false
+		}
+		file.Kind, file.Mime, file.Seconds = "voice", audio, seconds
+	} else if slices.Contains(imageTypes, mime) {
 		file.Kind, file.Mime = "image", mime
 	}
 	return file, true
