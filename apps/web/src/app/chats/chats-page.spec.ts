@@ -4,6 +4,7 @@ import { Location } from '@angular/common';
 import { Attachment } from './attachment';
 import { Chat, ChatClient, SocketStatus } from './chat-client';
 import { ChatsPage } from './chats-page';
+import { qrPath } from '../room/qr-dialog/qr-dialog';
 
 const juan = { id: 'j', name: 'Juan' };
 const ana = { id: 'a', name: 'Ana' };
@@ -295,6 +296,46 @@ describe('ChatsPage', () => {
       .find((b) => b.textContent?.includes('Delete chat'))!
       .click();
     expect(fakeClient.remove).toHaveBeenCalledWith('trip');
+  });
+
+  it('shows your own QR from the list and keeps it up when a chat arrives', async () => {
+    const { fixture, page, submitName } = await render();
+    await submitName('Juan');
+    (page.querySelector('[aria-label="Show QR code"]') as HTMLElement).click();
+    await fixture.whenStable();
+    const dialog = page.querySelector('app-qr-dialog dialog') as HTMLDialogElement;
+    expect(dialog.open).toBe(true);
+    expect(dialog.querySelector('h2')?.textContent).toContain('Your private QR');
+    expect(dialog.querySelector('svg[role="img"] path')?.getAttribute('d')).toBe(
+      qrPath(`${location.origin}/chat/j`).path,
+    );
+
+    chats.update((list) => [...list, { ...list[0], id: 'new', kind: 'private', title: 'Ana' }]);
+    await fixture.whenStable();
+    expect(page.querySelector('app-qr-dialog dialog')).toBe(dialog);
+    expect(fakeClient.open).not.toHaveBeenCalled();
+
+    (dialog.querySelector('[aria-label="Close"]') as HTMLElement).click();
+    await fixture.whenStable();
+    expect(page.querySelector('app-qr-dialog')).toBeNull();
+  });
+
+  it('shows the QR of the open group from its header', async () => {
+    const { fixture, page } = await openChat();
+    (page.querySelector('[aria-label="Show group QR code"]') as HTMLElement).click();
+    await fixture.whenStable();
+    const dialog = page.querySelector('app-qr-dialog dialog') as HTMLDialogElement;
+    expect(dialog.querySelector('h2')?.textContent).toContain('Weekend trip');
+    expect(dialog.querySelector('svg[role="img"] path')?.getAttribute('d')).toBe(
+      qrPath(`${location.origin}/room/trip`).path,
+    );
+
+    dialog.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }),
+    );
+    await fixture.whenStable();
+    expect(page.querySelector('app-qr-dialog')).toBeNull();
+    expect(fakeClient.open).not.toHaveBeenCalledWith(null);
   });
 
   it('goes back to the list with Escape', async () => {

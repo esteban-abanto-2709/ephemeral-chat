@@ -1,9 +1,10 @@
-import { Component, DOCUMENT, inject, input, signal } from '@angular/core';
+import { Component, DOCUMENT, computed, inject, input, signal } from '@angular/core';
 import { Location } from '@angular/common';
 import { LucideCheck, LucideInfo } from '@lucide/angular';
 import { Glass } from '../glass/glass';
 import { Notice } from '../notice';
 import { NameDialog } from '../room/name-dialog/name-dialog';
+import { QrDialog } from '../room/qr-dialog/qr-dialog';
 import { RoomChat } from '../room/room-chat/room-chat';
 import { VisibleViewport } from '../room/room-chat/visible-viewport';
 import { ChatClient } from './chat-client';
@@ -18,6 +19,7 @@ import { ChatsWelcome } from './chats-welcome';
     LucideCheck,
     LucideInfo,
     NameDialog,
+    QrDialog,
     RoomChat,
     VisibleViewport,
   ],
@@ -33,7 +35,9 @@ export class ChatsPage {
   protected readonly notice = inject(Notice);
   protected readonly creating = signal(false);
   protected readonly joined = signal<string | null>(null);
+  protected readonly qr = signal<'private' | 'group' | null>(null);
   private readonly origin = inject(DOCUMENT).location.origin;
+  protected readonly invite = computed(() => `${this.origin}/chat/${this.client.me()}`);
   private readonly location = inject(Location);
 
   protected start(name: string): void {

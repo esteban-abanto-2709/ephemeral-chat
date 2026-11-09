@@ -1,10 +1,24 @@
 import { Component, DOCUMENT, computed, inject, input, output } from '@angular/core';
-import { LucideHourglass, LucideIdCard, LucideLink, LucideUsersRound } from '@lucide/angular';
+import {
+  LucideHourglass,
+  LucideIdCard,
+  LucideLink,
+  LucideQrCode,
+  LucideUsersRound,
+} from '@lucide/angular';
 import { CopyLink } from '../room/copy-link/copy-link';
 import { Glass } from '../glass/glass';
 
 @Component({
-  imports: [CopyLink, Glass, LucideHourglass, LucideIdCard, LucideLink, LucideUsersRound],
+  imports: [
+    CopyLink,
+    Glass,
+    LucideHourglass,
+    LucideIdCard,
+    LucideLink,
+    LucideQrCode,
+    LucideUsersRound,
+  ],
   selector: 'app-chats-welcome',
   host: { class: 'min-w-0 flex-1 items-center justify-center p-6' },
   template: `
@@ -25,11 +39,11 @@ import { Glass } from '../glass/glass';
           tab.
         </p>
       </div>
-      <ul class="flex gap-6">
+      <ul class="flex gap-3">
         <li>
           <button
             type="button"
-            class="group flex w-24 flex-col items-center gap-2 text-xs font-medium"
+            class="group flex w-20 flex-col items-center gap-2 text-xs font-medium"
             (click)="newGroup.emit()"
           >
             <span
@@ -44,10 +58,27 @@ import { Glass } from '../glass/glass';
         </li>
         <li>
           <button
+            type="button"
+            [disabled]="!me()"
+            class="group flex w-20 flex-col items-center gap-2 text-xs font-medium disabled:opacity-50"
+            (click)="showQr.emit()"
+          >
+            <span
+              appGlass="bubble"
+              class="grid size-14 place-items-center rounded-full transition group-hover:scale-105"
+              aria-hidden="true"
+            >
+              <svg lucideQrCode class="size-5"></svg>
+            </span>
+            My QR
+          </button>
+        </li>
+        <li>
+          <button
             [appCopyLink]="invite()"
             copied="Invite link copied"
             [disabled]="!me()"
-            class="group flex w-24 flex-col items-center gap-2 text-xs font-medium disabled:opacity-50"
+            class="group flex w-20 flex-col items-center gap-2 text-xs font-medium disabled:opacity-50"
           >
             <span
               appGlass="bubble"
@@ -64,7 +95,7 @@ import { Glass } from '../glass/glass';
             [appCopyLink]="me()"
             copied="ID copied"
             [disabled]="!me()"
-            class="group flex w-24 flex-col items-center gap-2 text-xs font-medium disabled:opacity-50"
+            class="group flex w-20 flex-col items-center gap-2 text-xs font-medium disabled:opacity-50"
           >
             <span
               appGlass="bubble"
@@ -83,6 +114,7 @@ import { Glass } from '../glass/glass';
 export class ChatsWelcome {
   readonly me = input('');
   readonly newGroup = output();
+  readonly showQr = output();
 
   private readonly origin = inject(DOCUMENT).location.origin;
   protected readonly invite = computed(() => `${this.origin}/chat/${this.me()}`);

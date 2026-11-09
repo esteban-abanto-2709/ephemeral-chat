@@ -1,6 +1,6 @@
 import { Component, computed, signal } from '@angular/core';
 import { DesignDevice } from './design-device';
-import { PhotoView, photoViews } from './design-chats';
+import { DesignView, photoViews, qrViews } from './design-chats';
 import { DesignScreen, designScreens } from './design-frame';
 
 @Component({
@@ -20,15 +20,15 @@ import { DesignScreen, designScreens } from './design-frame';
                 [class.bg-glass-strong]="screen() === option"
                 [class.font-semibold]="screen() === option"
                 [attr.aria-checked]="screen() === option"
-                (click)="screen.set(option)"
+                (click)="pick(option)"
               >
                 {{ option }}
               </button>
             }
           </div>
-          @if (screen() === 'photos') {
-            <div class="flex basis-full justify-end gap-1.5" role="radiogroup" aria-label="Photos">
-              @for (option of views; track option) {
+          @if (views().length) {
+            <div class="flex basis-full justify-end gap-1.5" role="radiogroup" aria-label="View">
+              @for (option of views(); track option) {
                 <button
                   type="button"
                   role="radio"
@@ -80,12 +80,19 @@ import { DesignScreen, designScreens } from './design-frame';
 export class DesignBoard {
   protected readonly screens = designScreens;
   protected readonly themes = ['light', 'dark'] as const;
-  protected readonly views = photoViews;
   protected readonly screen = signal<DesignScreen>('chats');
-  protected readonly view = signal<PhotoView>('chat');
+  protected readonly view = signal<DesignView>('chat');
+  protected readonly views = computed((): readonly DesignView[] =>
+    this.screen() === 'photos' ? photoViews : this.screen() === 'qr' ? qrViews : [],
+  );
   private readonly query = computed(
     () => `/design/frame?screen=${this.screen()}&view=${this.view()}`,
   );
+
+  protected pick(screen: DesignScreen): void {
+    this.screen.set(screen);
+    this.view.set(screen === 'qr' ? 'invite' : 'chat');
+  }
 
   protected frame(theme: string): string {
     return `${this.query()}&theme=${theme}`;

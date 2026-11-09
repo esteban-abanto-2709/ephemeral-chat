@@ -1,0 +1,76 @@
+<dialog
+  #dialog
+  appGlass
+  class="m-auto w-[calc(100%-1.5rem)] max-w-sm rounded-[2rem] p-0 text-ink animate-appear backdrop:animate-fade backdrop:bg-scrim motion-reduce:animate-none motion-reduce:backdrop:animate-none"
+  aria-labelledby="qr-title"
+  (close)="closed.emit()"
+  (keydown.escape)="close($event)"
+  (click)="closeOutside($event)"
+>
+  <div class="relative flex flex-col items-center gap-4 p-6 text-center md:p-8">
+    <button
+      type="button"
+      class="absolute top-3 right-3 grid size-10 place-items-center rounded-full transition hover:bg-glass-strong focus-visible:outline-2 focus-visible:outline-accent-ink"
+      aria-label="Close"
+      (click)="close()"
+    >
+      <svg lucideX class="size-5" aria-hidden="true"></svg>
+    </button>
+
+    <div class="flex flex-col gap-1 px-6">
+      <h2 id="qr-title" class="flex items-center justify-center gap-2 text-xl font-semibold">
+        @if (kind() === 'private') {
+          <svg lucideLock class="size-5 shrink-0 text-accent-ink" aria-hidden="true"></svg>
+          Your private QR
+        } @else {
+          <svg lucideUsersRound class="size-5 shrink-0 text-accent-ink" aria-hidden="true"></svg>
+          <span class="min-w-0 wrap-anywhere">{{ title() }}</span>
+        }
+      </h2>
+      <p class="text-sm text-ink-soft">
+        {{
+          kind() === 'private'
+            ? 'Anyone who scans it can message you privately.'
+            : 'Anyone who scans it joins this group.'
+        }}
+      </p>
+    </div>
+
+    <svg
+      class="aspect-square w-full max-w-64 rounded-2xl bg-qr-plate text-qr-ink shadow-lift"
+      [attr.viewBox]="'0 0 ' + qr().size + ' ' + qr().size"
+      shape-rendering="crispEdges"
+      role="img"
+      aria-label="QR code"
+    >
+      <path [attr.d]="qr().path" fill="currentColor" />
+    </svg>
+
+    @if (kind() === 'private') {
+      <p class="flex items-center gap-2 text-sm font-medium">
+        <span
+          class="size-2 animate-pulse rounded-full bg-accent-ink motion-reduce:animate-none"
+          aria-hidden="true"
+        ></span>
+        Shows up in your chats once they write
+      </p>
+    }
+
+    <button
+      [appCopyLink]="url()"
+      class="flex items-center gap-2 rounded-full border border-edge bg-glass-strong/50 px-4 py-2 text-sm font-medium transition hover:bg-glass-strong focus-visible:outline-2 focus-visible:outline-accent-ink"
+    >
+      <svg lucideCopy class="size-4 text-accent-ink" aria-hidden="true"></svg>
+      Copy link instead
+    </button>
+
+    <p class="flex items-start gap-1.5 text-left text-xs text-ink-soft">
+      <svg lucideInfo class="mt-px size-3.5 shrink-0" aria-hidden="true"></svg>
+      {{
+        kind() === 'private'
+          ? 'It stops working when you close this tab.'
+          : "They'll see new messages, not earlier ones."
+      }}
+    </p>
+  </div>
+</dialog>

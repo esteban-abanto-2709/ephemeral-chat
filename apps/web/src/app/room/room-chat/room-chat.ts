@@ -22,6 +22,7 @@ import {
   LucideLogOut,
   LucideMic,
   LucidePaperclip,
+  LucideQrCode,
   LucideRefreshCw,
   LucideShieldCheck,
   LucideTrash2,
@@ -62,6 +63,7 @@ const statusLabels = {
     LucideLogOut,
     LucideMic,
     LucidePaperclip,
+    LucideQrCode,
     LucideRefreshCw,
     LucideShieldCheck,
     LucideTrash2,
@@ -105,6 +107,7 @@ export class RoomChat {
   readonly filesDiscarded = output();
   readonly voiced = output<{ blob: Blob; seconds: number; reply?: number }>();
   readonly reconnect = output();
+  readonly showQr = output();
   readonly typed = output();
   readonly closed = output();
   readonly deleted = output();

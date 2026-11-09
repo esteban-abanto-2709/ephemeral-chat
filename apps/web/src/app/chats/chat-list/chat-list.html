@@ -119,6 +119,15 @@
       <span class="truncate text-xs text-ink-soft">ID {{ me() || '…' }}</span>
     </span>
     <button
+      type="button"
+      [disabled]="!me()"
+      class="grid size-9 shrink-0 place-items-center rounded-full text-accent-ink transition hover:bg-glass-strong disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-accent-ink"
+      aria-label="Show QR code"
+      (click)="showQr.emit()"
+    >
+      <svg lucideQrCode class="size-4" aria-hidden="true"></svg>
+    </button>
+    <button
       [appCopyLink]="me()"
       copied="ID copied"
       [disabled]="!me()"

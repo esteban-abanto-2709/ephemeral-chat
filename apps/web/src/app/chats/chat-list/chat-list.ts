@@ -5,6 +5,7 @@ import {
   LucideHourglass,
   LucideKeyRound,
   LucidePlus,
+  LucideQrCode,
   LucideUsersRound,
 } from '@lucide/angular';
 import { Notice } from '../../notice';
@@ -31,6 +32,7 @@ export function codeIn(text: string): string | null {
     LucideHourglass,
     LucideKeyRound,
     LucidePlus,
+    LucideQrCode,
     LucideUsersRound,
     ThemeToggle,
   ],
@@ -44,6 +46,7 @@ export class ChatList {
   readonly name = input<string | null>(null);
   readonly selected = output<string>();
   readonly newGroup = output();
+  readonly showQr = output();
   readonly opened = output<string>();
 
   protected readonly avatarHue = avatarHue;

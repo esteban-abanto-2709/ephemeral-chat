@@ -33,6 +33,14 @@
   </div>
   @if (kind() === 'group') {
     <button
+      type="button"
+      class="grid size-10 place-items-center rounded-full text-accent-ink transition hover:bg-glass-strong focus-visible:outline-2 focus-visible:outline-accent-ink"
+      aria-label="Show group QR code"
+      (click)="showQr.emit()"
+    >
+      <svg lucideQrCode class="size-5" aria-hidden="true"></svg>
+    </button>
+    <button
       [appCopyLink]="link()"
       class="grid size-10 place-items-center rounded-full text-accent-ink transition hover:bg-glass-strong focus-visible:outline-2 focus-visible:outline-accent-ink"
       aria-label="Copy group link"

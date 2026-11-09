@@ -12,6 +12,9 @@ Summary in ≤2 lines of what was done.
 
 ---
 
+## [WL-013] QR codes for links (2026-11-09 17:25)
+My QR opens a private chat with you and each group has its own, shown on demand in a modal; a phone joins by scanning, with no typing.
+
 ## [WL-021] Clickable links in messages (2026-11-09 14:46)
 Web addresses in messages and photo captions open in a new tab, found with `linkifyjs`; only `http` and `https` become links.
 

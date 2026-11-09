@@ -28,9 +28,6 @@ The hourglass says ephemeral but not chat; a mark that reads as a message that f
 ## [WL-012] Installable app (PWA)
 A manifest and icons so the app installs to the home screen and opens full screen, without a service worker. Dropped from v0.3: it pays off now that v0.4 keeps several chats in one page, since iOS opens shared links in Safari, not in the installed app.
 
-## [WL-013] QR code for links
-Show an invite or group link as a QR code, so a phone joins a chat open on a computer by scanning it.
-
 ## [WL-014] No "You:" in private chat previews
 A private chat's preview still starts with "You:" when the last message is yours; WhatsApp shows only the text there (with its checks). Drop the prefix in private chats.
 

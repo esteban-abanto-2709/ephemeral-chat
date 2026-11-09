@@ -1,6 +1,6 @@
 import { Component, effect, inject, input } from '@angular/core';
 import { Theme, ThemeMode } from '../theme/theme';
-import { ChatsState, DesignChats, PhotoView, chatsStates } from './design-chats';
+import { ChatsState, DesignChats, DesignView, chatsStates } from './design-chats';
 
 export const designScreens = chatsStates;
 export type DesignScreen = ChatsState;
@@ -12,7 +12,7 @@ export type DesignScreen = ChatsState;
 })
 export class DesignFrame {
   readonly screen = input<DesignScreen>('chats');
-  readonly view = input<PhotoView>('chat');
+  readonly view = input<DesignView>('chat');
   readonly theme = input<ThemeMode>('light');
 
   constructor() {

@@ -14,6 +14,7 @@
     (selected)="select($event)"
     (newGroup)="creating.set(true)"
     (opened)="join($event)"
+    (showQr)="qr.set('private')"
   />
 
   @if (active) {
@@ -37,6 +38,7 @@
       (voiced)="client.sendVoice(active.id, $event.blob, $event.seconds, $event.reply)"
       (typed)="client.sendTyping(active.id)"
       (reconnect)="client.reconnect()"
+      (showQr)="qr.set('group')"
       (closed)="client.open(null)"
       (deleted)="client.remove(active.id)"
     />
@@ -45,6 +47,7 @@
       class="hidden"
       [class.md:flex]="client.name() && !creating()"
       (newGroup)="creating.set(true)"
+      (showQr)="qr.set('private')"
       [me]="client.me()"
     />
   }
@@ -68,6 +71,19 @@
     <app-name-dialog
       hint="It's how others see you in every chat. It lasts until you close this tab."
       (chosen)="start($event)"
+    />
+  }
+
+  @if (qr() === 'private') {
+    <app-qr-dialog kind="private" [url]="invite()" (closed)="qr.set(null)" />
+  }
+
+  @if (qr() === 'group' && active) {
+    <app-qr-dialog
+      kind="group"
+      [title]="active.title"
+      [url]="link(active.id)"
+      (closed)="qr.set(null)"
     />
   }
 

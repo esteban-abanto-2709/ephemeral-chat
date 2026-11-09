@@ -112,6 +112,12 @@ original's `seq`. `ChatClient` turns a received `reply` into a quote from its
 own copy of that message (`quoteOf`), or "Earlier message" when the tab never
 saw it. Tapping a quote in a bubble scrolls back to the original.
 
+Two QR codes open `room/qr-dialog` (drawn by `uqr`, on a light plate in both
+themes so phones can read it), and close only when you do: the X, Escape or a
+click outside. **My QR**, on the welcome side and next to your name in the
+list, holds your invite link. Whoever scans it gets a private chat with you,
+each their own. The one in a group's header holds the group's link.
+
 Web addresses in messages and captions are links (`room/linked-text`, found by
 `linkifyjs`) that open in a new tab. Only `http` and `https` become links, and
 a bare domain opens over `https`.

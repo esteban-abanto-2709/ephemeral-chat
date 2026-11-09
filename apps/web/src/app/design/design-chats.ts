@@ -6,12 +6,16 @@ import { ChatsWelcome } from '../chats/chats-welcome';
 import { Glass } from '../glass/glass';
 import { NameDialog } from '../room/name-dialog/name-dialog';
 import { PhotoViewer } from '../room/photo-viewer/photo-viewer';
+import { QrDialog } from '../room/qr-dialog/qr-dialog';
 import { RoomChat } from '../room/room-chat/room-chat';
 
-export const chatsStates = ['start', 'chats', 'group', 'media', 'photos', 'left'] as const;
+export const chatsStates = ['start', 'chats', 'group', 'media', 'photos', 'qr', 'left'] as const;
 export type ChatsState = (typeof chatsStates)[number];
 export const photoViews = ['chat', 'send', 'tall', 'viewer'] as const;
 export type PhotoView = (typeof photoViews)[number];
+export const qrViews = ['invite', 'group'] as const;
+export type QrView = (typeof qrViews)[number];
+export type DesignView = PhotoView | QrView;
 
 const start = new Date(2026, 10, 4, 14, 2).getTime();
 const minute = 60_000;
@@ -225,7 +229,7 @@ const chats: Chat[] = [
 ];
 
 @Component({
-  imports: [ChatList, ChatsWelcome, Glass, NameDialog, PhotoViewer, RoomChat],
+  imports: [ChatList, ChatsWelcome, Glass, NameDialog, PhotoViewer, QrDialog, RoomChat],
   selector: 'app-design-chats',
   template: `
     <div class="relative flex h-dvh md:gap-4 md:p-4">
@@ -258,12 +262,23 @@ const chats: Chat[] = [
       } @else {
         <app-chats-welcome
           class="hidden"
-          [class.md:flex]="state() === 'chats'"
+          [class.md:flex]="state() === 'chats' || state() === 'qr'"
           me="u7Qm2xKp9RtLw4Zb8NcVhA"
         />
       }
       @if (state() === 'photos' && view() === 'viewer') {
         <app-photo-viewer [message]="ridgePhoto" />
+      }
+      @if (state() === 'qr') {
+        @if (view() === 'group') {
+          <app-qr-dialog
+            kind="group"
+            title="Weekend trip"
+            url="https://ephemeral.chat/room/aB3xQ9mK2pLt7vRw4ZcN8e"
+          />
+        } @else {
+          <app-qr-dialog kind="private" url="https://ephemeral.chat/chat/u7Qm2xKp9RtLw4Zb8NcVhA" />
+        }
       }
       @if (state() === 'start') {
         <app-name-dialog
@@ -277,7 +292,7 @@ export class DesignChats {
   protected readonly ridgePhoto = ridgePhoto;
   protected readonly replying = { ...ana, own: false, text: 'I can bring the tent' };
   readonly state = input<ChatsState>('chats');
-  readonly view = input<PhotoView>('chat');
+  readonly view = input<DesignView>('chat');
 
   protected readonly preview = computed((): Attachment[] => {
     if (this.state() !== 'photos') {
@@ -304,7 +319,12 @@ export class DesignChats {
   });
   protected readonly open = computed(() => {
     const state = this.state();
-    if (state === 'group' || state === 'media' || state === 'photos') {
+    if (
+      state === 'group' ||
+      state === 'media' ||
+      state === 'photos' ||
+      (state === 'qr' && this.view() === 'group')
+    ) {
       return this.chats()[0];
     }
     return state === 'left' ? luisLeft : null;
