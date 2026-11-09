@@ -41,7 +41,13 @@ const tripEvents: ChatEvent[] = [
     reply: { ...ana, own: false, text: 'Saturday at 9, the usual place?' },
     at: start + 2 * minute,
   },
-  { type: 'message', ...sam, own: true, text: 'Got it, I am in', at: start + 3 * minute },
+  {
+    type: 'message',
+    ...sam,
+    own: true,
+    text: 'Got it, I am in: https://maps.example.com/trail',
+    at: start + 3 * minute,
+  },
 ];
 
 const photo = `data:image/svg+xml,${encodeURIComponent(

@@ -27,6 +27,7 @@ import { CopyLink } from '../copy-link/copy-link';
 import { avatarHue } from '../avatar-hue';
 import { ChatEvent, ChatMessage } from '../../chats/chat-client';
 import { duration, fileSize } from '../../chats/attachment';
+import { LinkedText } from '../linked-text/linked-text';
 import { QuoteCard } from '../quote/quote';
 import { VoiceNote } from '../voice-note/voice-note';
 
@@ -37,6 +38,7 @@ const stickyDistance = 80;
     CopyLink,
     DatePipe,
     Glass,
+    LinkedText,
     QuoteCard,
     VoiceNote,
     LucideCopy,

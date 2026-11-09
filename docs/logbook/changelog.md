@@ -12,6 +12,9 @@ Summary in ≤2 lines of what was done.
 
 ---
 
+## [WL-021] Clickable links in messages (2026-11-09 14:46)
+Web addresses in messages and photo captions open in a new tab, found with `linkifyjs`; only `http` and `https` become links.
+
 ## [RM-012] Media (v0.5) (2026-11-07 09:26)
 Photos, files, replies and voice messages up to a minute, relayed and never stored. Stickers (WL-004) and QR codes (WL-013) went back to the wishlist. Completes v0.5.
 

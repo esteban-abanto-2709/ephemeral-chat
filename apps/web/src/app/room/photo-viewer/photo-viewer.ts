@@ -3,9 +3,10 @@ import { DatePipe } from '@angular/common';
 import { LucideDownload, LucideX } from '@lucide/angular';
 import { ChatMessage } from '../../chats/chat-client';
 import { avatarHue } from '../avatar-hue';
+import { LinkedText } from '../linked-text/linked-text';
 
 @Component({
-  imports: [DatePipe, LucideDownload, LucideX],
+  imports: [DatePipe, LinkedText, LucideDownload, LucideX],
   selector: 'app-photo-viewer',
   templateUrl: './photo-viewer.html',
 })

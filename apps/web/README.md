@@ -112,6 +112,10 @@ original's `seq`. `ChatClient` turns a received `reply` into a quote from its
 own copy of that message (`quoteOf`), or "Earlier message" when the tab never
 saw it. Tapping a quote in a bubble scrolls back to the original.
 
+Web addresses in messages and captions are links (`room/linked-text`, found by
+`linkifyjs`) that open in a new tab. Only `http` and `https` become links, and
+a bare domain opens over `https`.
+
 On phones the page fits above the keyboard, as in WhatsApp: Android resizes
 the page (`interactive-widget=resizes-content` in the viewport meta) and iOS,
 which ignores that, gets the visible height from `visualViewport`

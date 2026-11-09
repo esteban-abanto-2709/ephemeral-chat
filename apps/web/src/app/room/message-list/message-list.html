@@ -166,14 +166,16 @@
                 <app-voice-note [file]="file!" [at]="event.at" />
               }
               @default {
-                <span class="wrap-anywhere whitespace-pre-wrap">{{ event.text }}</span>
+                <app-linked-text class="wrap-anywhere whitespace-pre-wrap" [text]="event.text" />
                 &ngsp;<time class="ml-1.5 align-bottom text-[0.6875rem] text-ink-soft">{{
                   event.at | date: 'HH:mm'
                 }}</time>
               }
             }
             @if (file && event.text) {
-              <p class="px-2.5 pt-1.5 pb-1 wrap-anywhere whitespace-pre-wrap">{{ event.text }}</p>
+              <p class="px-2.5 pt-1.5 pb-1 wrap-anywhere whitespace-pre-wrap">
+                <app-linked-text [text]="event.text" />
+              </p>
             }
           </li>
         }
