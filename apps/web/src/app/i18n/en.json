@@ -137,7 +137,8 @@
   },
   "events": {
     "joined": "{{ name }} joined",
-    "left": "{{ name }} left"
+    "left": "{{ name }} left",
+    "renamed": "\"{{ from }}\" changed their name to \"{{ name }}\""
   },
   "theme": {
     "label": "Dark theme",
@@ -173,6 +174,7 @@
     "limit": "You're in {{ max }} chats, the most a tab can hold.",
     "slow-messages": "Slow down: up to 5 messages per second.",
     "slow-files": "Slow down: one file every 2 seconds.",
+    "slow-renames": "Slow down: one name change every 10 seconds.",
     "groupFailed": "Couldn't create the group. Try again.",
     "fileTooBig": "Files up to 5 MB.",
     "voiceTooBig": "Voice messages up to 1 MB.",

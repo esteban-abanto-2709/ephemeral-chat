@@ -24,6 +24,7 @@ describe('MessageList', () => {
     const { items } = await render([
       { type: 'joined', ...ana, members: [ana], at },
       { type: 'left', ...ana, members: [], at },
+      { type: 'renamed', ...ana, name: 'Búho Infeliz', from: 'Ana', at },
       { type: 'error', code: 'slow-files', at },
       { type: 'message', ...juan, own: true, text: 'hola', at },
     ]);
@@ -31,6 +32,7 @@ describe('MessageList', () => {
     expect(items.map((li) => li.textContent?.replace(/\s+/g, ' ').trim())).toEqual([
       'Ana se unió',
       'Ana salió',
+      '"Ana" cambió su nombre a "Búho Infeliz"',
       'Más despacio: un archivo cada 2 segundos.',
       expect.stringMatching(/^Tú:\s?hola 21:04$/),
     ]);
@@ -41,6 +43,7 @@ describe('MessageList', () => {
       { type: 'joined', ...ana, members: [ana], at },
       { type: 'message', ...ana, own: false, text: 'hola', at },
       { type: 'left', ...ana, members: [], at },
+      { type: 'renamed', ...ana, name: 'Búho Infeliz', from: 'Ana', at },
       { type: 'error', code: 'slow-messages', at },
     ]);
 
@@ -48,9 +51,10 @@ describe('MessageList', () => {
       'Ana joined',
       'Ana hola 21:04',
       'Ana left',
+      '"Ana" changed their name to "Búho Infeliz"',
       'Slow down: up to 5 messages per second.',
     ]);
-    expect(items[3].getAttribute('role')).toBe('alert');
+    expect(items[4].getAttribute('role')).toBe('alert');
   });
 
   it('opens with the group name, its code and a reminder that nothing is stored', async () => {

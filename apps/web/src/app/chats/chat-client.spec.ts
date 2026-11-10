@@ -210,6 +210,71 @@ describe('ChatClient', () => {
     expect(client.chats().find((chat) => chat.id === 'l')?.ended).toBe(true);
   });
 
+  it('asks the server to rename and only changes the name once it confirms', () => {
+    ready();
+    client.rename('Cráneo Negro');
+    expect(server.sent.at(-1)).toEqual({ type: 'rename', name: 'Cráneo Negro' });
+    expect(client.name()).toBe('Juan');
+
+    server.receive({ type: 'renamed', ...juan, name: 'Cráneo Negro' });
+    expect(client.name()).toBe('Cráneo Negro');
+
+    client.reconnect();
+    expect(FakeWebSocket.last.url).toContain(`name=${encodeURIComponent('Cráneo Negro')}`);
+  });
+
+  it('shows a rename in the chat and in its member list', () => {
+    ready();
+    client.join('one');
+    server.receive({
+      type: 'joined',
+      room: 'one',
+      ...ana,
+      title: 'Trip',
+      members: [juan, ana],
+    });
+    const unread = client.active()!.unread;
+
+    server.receive({ type: 'renamed', room: 'one', id: 'a', name: 'Búho Infeliz' });
+    const chat = client.active()!;
+    expect(chat.events.at(-1)).toEqual({
+      type: 'renamed',
+      id: 'a',
+      name: 'Búho Infeliz',
+      from: 'Ana',
+      at: expect.any(Number),
+    });
+    expect(chat.members).toEqual([juan, { id: 'a', name: 'Búho Infeliz' }]);
+    expect(chat.unread).toBe(unread);
+    expect(chat.title).toBe('Trip');
+  });
+
+  it('retitles a private chat when the other person renames, not when you do', () => {
+    ready();
+    server.receive({
+      type: 'joined',
+      room: 'l',
+      ...luis,
+      title: 'Luis',
+      private: true,
+      members: [juan, luis],
+    });
+    server.receive({ type: 'renamed', room: 'l', id: 'j', name: 'Cráneo Negro' });
+    expect(client.chats()[0].title).toBe('Luis');
+
+    server.receive({ type: 'renamed', room: 'l', id: 'l', name: 'Búho Infeliz' });
+    expect(client.chats()[0].title).toBe('Búho Infeliz');
+  });
+
+  it('shows a notice for a rename that came too fast and leaves the chats alone', () => {
+    ready();
+    client.join('one');
+    server.receive({ type: 'error', code: 'slow-renames' });
+    expect(TestBed.inject(Notice).text()).toBe('Slow down: one name change every 10 seconds.');
+    expect(client.chats()).toHaveLength(1);
+    expect(client.active()?.events).toEqual([]);
+  });
+
   it('shows who is typing in each chat until they send, leave or go quiet', () => {
     ready();
     client.join('one');

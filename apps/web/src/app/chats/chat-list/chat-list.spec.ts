@@ -67,6 +67,21 @@ describe('ChatList', () => {
     expect(row?.textContent).not.toContain('Ana:');
   });
 
+  it('previews a rename as the last event', async () => {
+    const fixture = TestBed.createComponent(ChatList);
+    fixture.componentRef.setInput('chats', [
+      {
+        ...chat('3', 'Weekend trip'),
+        events: [{ type: 'renamed', id: 'a', name: 'Búho Infeliz', from: 'Ana', at: 0 }],
+      },
+    ]);
+    await fixture.whenStable();
+    const row = (fixture.nativeElement as HTMLElement).querySelector(
+      '[aria-label="Your chats"] li',
+    );
+    expect(row?.textContent).toContain('"Ana" changed their name to "Búho Infeliz"');
+  });
+
   it('names what a media message holds', async () => {
     const fixture = TestBed.createComponent(ChatList);
     const voice = chat('4', 'Trip');

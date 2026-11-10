@@ -84,7 +84,7 @@ export class ChatList {
         ? text
         : this.i18n.t('chatList.from', { name: last.name, text });
     }
-    return this.i18n.t(`events.${last.type}`, { name: last.name });
+    return this.i18n.t(`events.${last.type}`, last);
   }
 
   protected lastAt(chat: Chat): number {

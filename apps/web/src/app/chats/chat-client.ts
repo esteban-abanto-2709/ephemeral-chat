@@ -25,6 +25,7 @@ export type ChatEvent = (
       seq?: number;
     }
   | { type: 'joined' | 'left'; id: string; name: string; members: Person[] }
+  | { type: 'renamed'; id: string; name: string; from: string }
   | { type: 'error'; code: string }
 ) & { at: number };
 
@@ -151,6 +152,10 @@ export class ChatClient implements OnDestroy {
     if (name) {
       this.connect(name);
     }
+  }
+
+  rename(name: string): void {
+    this.write({ type: 'rename', name });
   }
 
   create(title: string): void {
@@ -321,7 +326,32 @@ export class ChatClient implements OnDestroy {
         .forEach((chat) => this.write({ type: 'join', room: chat.id }));
       return;
     }
+    if (frame.type === 'renamed' && !frame.room) {
+      this._name.set(frame.name!);
+      return;
+    }
+    if (frame.type === 'error' && !frame.room) {
+      this.fail(frame.code!);
+      return;
+    }
     const room = frame.room!;
+    if (frame.type === 'renamed') {
+      this.update(room, (chat) => {
+        const from = chat.members.find((member) => member.id === frame.id)?.name ?? frame.name!;
+        return {
+          ...chat,
+          title: chat.kind === 'private' && frame.id !== this._me() ? frame.name! : chat.title,
+          members: chat.members.map((member) =>
+            member.id === frame.id ? { ...member, name: frame.name! } : member,
+          ),
+          events: [
+            ...chat.events,
+            { type: 'renamed', id: frame.id!, name: frame.name!, from, at: Date.now() },
+          ],
+        };
+      });
+      return;
+    }
     if (frame.type === 'error' && !frame.code?.startsWith('slow-')) {
       this.fail(failures.includes(frame.code ?? '') ? frame.code! : 'gone');
       this._chats.update((chats) => chats.filter((chat) => chat.id !== room));

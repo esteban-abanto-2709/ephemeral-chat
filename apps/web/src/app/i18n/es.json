@@ -137,7 +137,8 @@
   },
   "events": {
     "joined": "{{ name }} se unió",
-    "left": "{{ name }} salió"
+    "left": "{{ name }} salió",
+    "renamed": "\"{{ from }}\" cambió su nombre a \"{{ name }}\""
   },
   "theme": {
     "label": "Tema oscuro",
@@ -173,6 +174,7 @@
     "limit": "Estás en {{ max }} chats, lo máximo que admite una pestaña.",
     "slow-messages": "Más despacio: hasta 5 mensajes por segundo.",
     "slow-files": "Más despacio: un archivo cada 2 segundos.",
+    "slow-renames": "Más despacio: un cambio de nombre cada 10 segundos.",
     "groupFailed": "No se pudo crear el grupo. Inténtalo de nuevo.",
     "fileTooBig": "Archivos de hasta 5 MB.",
     "voiceTooBig": "Mensajes de voz de hasta 1 MB.",
