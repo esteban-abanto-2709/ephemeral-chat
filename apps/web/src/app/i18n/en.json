@@ -1,0 +1,81 @@
+{
+  "nameDialog": {
+    "name": {
+      "heading": "What's your name?",
+      "label": "Name",
+      "placeholder": "Ana",
+      "hint": "It's how others see you in every chat. It lasts until you close this tab.",
+      "action": "Start chatting"
+    },
+    "group": {
+      "heading": "New group",
+      "label": "Group name",
+      "placeholder": "Weekend trip",
+      "hint": "It can't be changed later, and the group vanishes once everyone leaves.",
+      "action": "Create group"
+    },
+    "invalid": "Enter a name, up to {{ max }} characters.",
+    "cancel": "Cancel"
+  },
+  "welcome": {
+    "title": "Talk, then let it go",
+    "body": "Nothing is stored. A chat vanishes when everyone leaves, and your ID when you close this tab.",
+    "newGroup": "New group",
+    "myQr": "My QR",
+    "invite": "Invite with link",
+    "copyId": "Copy my ID"
+  },
+  "chatList": {
+    "newGroup": "New group",
+    "join": "Join with a code, link or ID",
+    "show": "Show",
+    "filter": {
+      "all": "All",
+      "unread": "Unread",
+      "groups": "Groups",
+      "private": "Private"
+    },
+    "chats": "Your chats",
+    "joining": "Joining…",
+    "unread": "unread",
+    "nothing": "Nothing here.",
+    "empty": "No chats yet. Create a group, or paste a code, link or someone's ID above.",
+    "you": "you",
+    "id": "ID {{ id }}",
+    "showQr": "Show QR code",
+    "copyId": "Copy your ID",
+    "notCode": "That's not a code, link or ID.",
+    "noMessages": "No messages yet",
+    "own": "You: {{ text }}",
+    "from": "{{ name }}: {{ text }}"
+  },
+  "events": {
+    "joined": "{{ name }} joined",
+    "left": "{{ name }} left"
+  },
+  "theme": {
+    "label": "Dark theme",
+    "dark": "Dark",
+    "light": "Light"
+  },
+  "copy": {
+    "link": "Link copied",
+    "id": "ID copied",
+    "invite": "Invite link copied"
+  },
+  "qr": {
+    "private": {
+      "title": "Your private QR",
+      "body": "Anyone who scans it can message you privately.",
+      "waiting": "Shows up in your chats once they write",
+      "note": "It stops working when you close this tab."
+    },
+    "group": {
+      "body": "Anyone who scans it joins this group.",
+      "note": "They'll see new messages, not earlier ones."
+    },
+    "close": "Close",
+    "image": "QR code",
+    "copy": "Copy link instead"
+  }
+}

@@ -1,4 +1,5 @@
 import { Component, computed, signal } from '@angular/core';
+import { Language, languages } from '../i18n/i18n';
 import { DesignDevice } from './design-device';
 import { DesignView, photoViews, qrViews } from './design-chats';
 import { DesignScreen, designScreens } from './design-frame';
@@ -11,6 +12,21 @@ import { DesignScreen, designScreens } from './design-frame';
       <div class="mx-auto flex max-w-[1600px] flex-col gap-8 p-6">
         <header class="flex flex-wrap items-center gap-4">
           <h1 class="flex-1 text-xl font-semibold">Design</h1>
+          <div class="flex gap-1.5" role="radiogroup" aria-label="Language">
+            @for (option of languages; track option) {
+              <button
+                type="button"
+                role="radio"
+                class="rounded-full border border-edge px-4 py-1.5 text-sm uppercase transition"
+                [class.bg-glass-strong]="lang() === option"
+                [class.font-semibold]="lang() === option"
+                [attr.aria-checked]="lang() === option"
+                (click)="lang.set(option)"
+              >
+                {{ option }}
+              </button>
+            }
+          </div>
           <div class="flex gap-1.5" role="radiogroup" aria-label="Screen">
             @for (option of screens; track option) {
               <button
@@ -80,13 +96,15 @@ import { DesignScreen, designScreens } from './design-frame';
 export class DesignBoard {
   protected readonly screens = designScreens;
   protected readonly themes = ['light', 'dark'] as const;
+  protected readonly languages = languages;
+  protected readonly lang = signal<Language>('en');
   protected readonly screen = signal<DesignScreen>('chats');
   protected readonly view = signal<DesignView>('chat');
   protected readonly views = computed((): readonly DesignView[] =>
     this.screen() === 'photos' ? photoViews : this.screen() === 'qr' ? qrViews : [],
   );
   private readonly query = computed(
-    () => `/design/frame?screen=${this.screen()}&view=${this.view()}`,
+    () => `/design/frame?screen=${this.screen()}&view=${this.view()}&lang=${this.lang()}`,
   );
 
   protected pick(screen: DesignScreen): void {

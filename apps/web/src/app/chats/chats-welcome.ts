@@ -6,6 +6,7 @@ import {
   LucideQrCode,
   LucideUsersRound,
 } from '@lucide/angular';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { CopyLink } from '../room/copy-link/copy-link';
 import { Glass } from '../glass/glass';
 
@@ -18,6 +19,7 @@ import { Glass } from '../glass/glass';
     LucideLink,
     LucideQrCode,
     LucideUsersRound,
+    TranslocoPipe,
   ],
   selector: 'app-chats-welcome',
   host: { class: 'min-w-0 flex-1 items-center justify-center p-6' },
@@ -33,11 +35,8 @@ import { Glass } from '../glass/glass';
         <svg lucideHourglass class="size-7"></svg>
       </span>
       <div class="flex flex-col gap-2">
-        <h1 class="text-2xl font-semibold tracking-tight">Talk, then let it go</h1>
-        <p class="text-ink-soft">
-          Nothing is stored. A chat vanishes when everyone leaves, and your ID when you close this
-          tab.
-        </p>
+        <h1 class="text-2xl font-semibold tracking-tight">{{ 'welcome.title' | transloco }}</h1>
+        <p class="text-ink-soft">{{ 'welcome.body' | transloco }}</p>
       </div>
       <ul class="flex gap-3">
         <li>
@@ -53,7 +52,7 @@ import { Glass } from '../glass/glass';
             >
               <svg lucideUsersRound class="size-5"></svg>
             </span>
-            New group
+            {{ 'welcome.newGroup' | transloco }}
           </button>
         </li>
         <li>
@@ -70,13 +69,13 @@ import { Glass } from '../glass/glass';
             >
               <svg lucideQrCode class="size-5"></svg>
             </span>
-            My QR
+            {{ 'welcome.myQr' | transloco }}
           </button>
         </li>
         <li>
           <button
             [appCopyLink]="invite()"
-            copied="Invite link copied"
+            [copied]="'copy.invite' | transloco"
             [disabled]="!me()"
             class="group flex w-20 flex-col items-center gap-2 text-xs font-medium disabled:opacity-50"
           >
@@ -87,13 +86,13 @@ import { Glass } from '../glass/glass';
             >
               <svg lucideLink class="size-5"></svg>
             </span>
-            Invite with link
+            {{ 'welcome.invite' | transloco }}
           </button>
         </li>
         <li>
           <button
             [appCopyLink]="me()"
-            copied="ID copied"
+            [copied]="'copy.id' | transloco"
             [disabled]="!me()"
             class="group flex w-20 flex-col items-center gap-2 text-xs font-medium disabled:opacity-50"
           >
@@ -104,7 +103,7 @@ import { Glass } from '../glass/glass';
             >
               <svg lucideIdCard class="size-5"></svg>
             </span>
-            Copy my ID
+            {{ 'welcome.copyId' | transloco }}
           </button>
         </li>
       </ul>

@@ -8,6 +8,8 @@ import {
   LucideQrCode,
   LucideUsersRound,
 } from '@lucide/angular';
+import { TranslocoPipe } from '@jsverse/transloco';
+import { I18n } from '../../i18n/i18n';
 import { Notice } from '../../notice';
 import { CopyLink } from '../../room/copy-link/copy-link';
 import { avatarHue } from '../../room/avatar-hue';
@@ -15,7 +17,7 @@ import { ThemeToggle } from '../../theme/theme-toggle/theme-toggle';
 import { describe } from '../attachment';
 import { Chat } from '../chat-client';
 
-const filters = ['All', 'Unread', 'Groups', 'Private'] as const;
+const filters = ['all', 'unread', 'groups', 'private'] as const;
 type Filter = (typeof filters)[number];
 
 const codePattern = /(?:^|\/(?:room|chat)\/)([A-Za-z0-9_-]{22})\/?$/;
@@ -35,6 +37,7 @@ export function codeIn(text: string): string | null {
     LucideQrCode,
     LucideUsersRound,
     ThemeToggle,
+    TranslocoPipe,
   ],
   selector: 'app-chat-list',
   templateUrl: './chat-list.html',
@@ -51,32 +54,35 @@ export class ChatList {
 
   protected readonly avatarHue = avatarHue;
   protected readonly filters = filters;
-  protected readonly filter = signal<Filter>('All');
+  protected readonly filter = signal<Filter>('all');
   protected readonly shown = computed(() =>
     this.chats().filter(
       (chat) =>
-        this.filter() === 'All' ||
-        (this.filter() === 'Unread' && chat.unread > 0) ||
-        (this.filter() === 'Groups' && chat.kind === 'group') ||
-        (this.filter() === 'Private' && chat.kind === 'private'),
+        this.filter() === 'all' ||
+        (this.filter() === 'unread' && chat.unread > 0) ||
+        (this.filter() === 'groups' && chat.kind === 'group') ||
+        (this.filter() === 'private' && chat.kind === 'private'),
     ),
   );
 
   private readonly notice = inject(Notice);
+  private readonly i18n = inject(I18n);
 
   protected preview(chat: Chat): string {
     const last = chat.events.filter((event) => event.type !== 'error').at(-1);
     if (!last) {
-      return 'No messages yet';
+      return this.i18n.t('chatList.noMessages');
     }
     if (last.type === 'message') {
       const text = last.file ? describe(last.file) : last.text;
       if (last.own) {
-        return `You: ${text}`;
+        return this.i18n.t('chatList.own', { text });
       }
-      return chat.kind === 'private' ? text : `${last.name}: ${text}`;
+      return chat.kind === 'private'
+        ? text
+        : this.i18n.t('chatList.from', { name: last.name, text });
     }
-    return `${last.name} ${last.type}`;
+    return this.i18n.t(`events.${last.type}`, { name: last.name });
   }
 
   protected lastAt(chat: Chat): number {
@@ -89,7 +95,7 @@ export class ChatList {
       this.opened.emit(code);
       field.value = '';
     } else if (field.value.trim()) {
-      this.notice.show("That's not a code, link or ID.");
+      this.notice.show(this.i18n.t('chatList.notCode'));
     }
   }
 }

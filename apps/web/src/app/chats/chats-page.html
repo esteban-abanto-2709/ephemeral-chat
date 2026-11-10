@@ -68,10 +68,7 @@
   }
 
   @if (!client.name()) {
-    <app-name-dialog
-      hint="It's how others see you in every chat. It lasts until you close this tab."
-      (chosen)="start($event)"
-    />
+    <app-name-dialog (chosen)="start($event)" />
   }
 
   @if (qr() === 'private') {
@@ -88,15 +85,6 @@
   }
 
   @if (creating()) {
-    <app-name-dialog
-      heading="New group"
-      label="Group name"
-      placeholder="Weekend trip"
-      hint="It can't be changed later, and the group vanishes once everyone leaves."
-      action="Create group"
-      [cancelable]="true"
-      (chosen)="create($event)"
-      (dismissed)="creating.set(false)"
-    />
+    <app-name-dialog kind="group" (chosen)="create($event)" (dismissed)="creating.set(false)" />
   }
 </div>

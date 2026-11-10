@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { I18n } from '../../i18n/i18n';
 import { Notice } from '../../notice';
 import { Chat } from '../chat-client';
 import { ChatList, codeIn } from './chat-list';
@@ -29,8 +30,7 @@ describe('ChatList', () => {
     fixture.componentInstance.opened.subscribe((id) => opened.push(id));
     await fixture.whenStable();
     const list = fixture.nativeElement as HTMLElement;
-    const titles = () =>
-      [...list.querySelectorAll('[aria-label="Your chats"] li')].map((li) => li.textContent);
+    const titles = () => [...list.querySelectorAll('ul li')].map((li) => li.textContent);
     function submit(text: string) {
       const field = list.querySelector('#join') as HTMLInputElement;
       field.value = text;
@@ -95,6 +95,24 @@ describe('ChatList', () => {
       .dispatchEvent(new Event('click'));
     await fixture.whenStable();
     expect(titles()).toEqual([expect.stringContaining('Book club')]);
+  });
+
+  it('switches to Spanish without reloading, previews included', async () => {
+    const { fixture, list, titles } = await render();
+    fixture.componentRef.setInput('chats', [
+      chat('1', 'Weekend trip'),
+      { ...chat('2', 'Book club', 3), events: [{ ...chat('2', '').events[0], own: true }] },
+    ]);
+    await fixture.whenStable();
+
+    TestBed.inject(I18n).use('es');
+    await fixture.whenStable();
+
+    expect(list.querySelector('[role="radiogroup"]')?.textContent).toContain('No leídos');
+    expect(titles()).toEqual([
+      expect.stringContaining('Ana: hi from Weekend trip'),
+      expect.stringMatching(/Tú: hi from .*3 sin leer/),
+    ]);
   });
 
   it('joins with a pasted code, link or ID and says when it is none', async () => {

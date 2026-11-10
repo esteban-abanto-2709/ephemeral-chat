@@ -281,9 +281,7 @@ const chats: Chat[] = [
         }
       }
       @if (state() === 'start') {
-        <app-name-dialog
-          hint="It's how others see you in every chat. It lasts until you close this tab."
-        />
+        <app-name-dialog />
       }
     </div>
   `,

@@ -1,3 +1,10 @@
+import { TestBed } from '@angular/core/testing';
+import { provideI18n } from './app/i18n/i18n';
+
+beforeEach(() => {
+  TestBed.configureTestingModule({ providers: [provideI18n()] });
+});
+
 globalThis.ResizeObserver ??= class {
   observe(): void {}
   unobserve(): void {}

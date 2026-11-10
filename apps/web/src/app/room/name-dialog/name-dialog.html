@@ -7,22 +7,26 @@
 >
   <form class="flex flex-col gap-4" [formRoot]="nameForm">
     <div class="flex flex-col gap-1">
-      <h2 id="name-title" class="text-xl font-semibold">{{ heading() }}</h2>
-      <p class="text-sm text-ink-soft">{{ hint() }}</p>
+      <h2 id="name-title" class="text-xl font-semibold">
+        {{ 'nameDialog.' + kind() + '.heading' | transloco }}
+      </h2>
+      <p class="text-sm text-ink-soft">{{ 'nameDialog.' + kind() + '.hint' | transloco }}</p>
     </div>
 
     <div class="flex flex-col gap-2">
-      <label for="name" class="text-xs font-medium text-ink-soft">{{ label() }}</label>
+      <label for="name" class="text-xs font-medium text-ink-soft">{{
+        'nameDialog.' + kind() + '.label' | transloco
+      }}</label>
       <input
         id="name"
         class="rounded-full border border-edge bg-glass-strong/50 px-5 py-3 placeholder:text-ink-soft focus-visible:outline-2 focus-visible:outline-accent-ink"
-        [placeholder]="placeholder()"
+        [placeholder]="'nameDialog.' + kind() + '.placeholder' | transloco"
         autocomplete="off"
         [formField]="nameForm.name"
       />
       @if (nameForm.name().touched() && nameForm.name().invalid()) {
         <p class="text-sm text-danger-ink" role="alert">
-          Enter a name, up to {{ maxLength }} characters.
+          {{ 'nameDialog.invalid' | transloco: { max: maxLength } }}
         </p>
       }
     </div>
@@ -32,15 +36,15 @@
       appGlass="primary"
       class="rounded-full px-6 py-3 font-semibold shadow-lift transition hover:scale-[1.02] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink"
     >
-      {{ action() }}
+      {{ 'nameDialog.' + kind() + '.action' | transloco }}
     </button>
-    @if (cancelable()) {
+    @if (kind() === 'group') {
       <button
         type="button"
         class="-mt-1 rounded-full px-6 py-2 text-sm font-medium text-ink-soft transition hover:bg-glass-strong focus-visible:outline-2 focus-visible:outline-accent-ink"
         (click)="cancel($event)"
       >
-        Cancel
+        {{ 'nameDialog.cancel' | transloco }}
       </button>
     }
   </form>

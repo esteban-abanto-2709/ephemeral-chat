@@ -11,7 +11,7 @@
     <button
       type="button"
       class="absolute top-3 right-3 grid size-10 place-items-center rounded-full transition hover:bg-glass-strong focus-visible:outline-2 focus-visible:outline-accent-ink"
-      aria-label="Close"
+      [attr.aria-label]="'qr.close' | transloco"
       (click)="close()"
     >
       <svg lucideX class="size-5" aria-hidden="true"></svg>
@@ -21,18 +21,14 @@
       <h2 id="qr-title" class="flex items-center justify-center gap-2 text-xl font-semibold">
         @if (kind() === 'private') {
           <svg lucideLock class="size-5 shrink-0 text-accent-ink" aria-hidden="true"></svg>
-          Your private QR
+          {{ 'qr.private.title' | transloco }}
         } @else {
           <svg lucideUsersRound class="size-5 shrink-0 text-accent-ink" aria-hidden="true"></svg>
           <span class="min-w-0 wrap-anywhere">{{ title() }}</span>
         }
       </h2>
       <p class="text-sm text-ink-soft">
-        {{
-          kind() === 'private'
-            ? 'Anyone who scans it can message you privately.'
-            : 'Anyone who scans it joins this group.'
-        }}
+        {{ 'qr.' + kind() + '.body' | transloco }}
       </p>
     </div>
 
@@ -41,7 +37,7 @@
       [attr.viewBox]="'0 0 ' + qr().size + ' ' + qr().size"
       shape-rendering="crispEdges"
       role="img"
-      aria-label="QR code"
+      [attr.aria-label]="'qr.image' | transloco"
     >
       <path [attr.d]="qr().path" fill="currentColor" />
     </svg>
@@ -52,7 +48,7 @@
           class="size-2 animate-pulse rounded-full bg-accent-ink motion-reduce:animate-none"
           aria-hidden="true"
         ></span>
-        Shows up in your chats once they write
+        {{ 'qr.private.waiting' | transloco }}
       </p>
     }
 
@@ -61,16 +57,12 @@
       class="flex items-center gap-2 rounded-full border border-edge bg-glass-strong/50 px-4 py-2 text-sm font-medium transition hover:bg-glass-strong focus-visible:outline-2 focus-visible:outline-accent-ink"
     >
       <svg lucideCopy class="size-4 text-accent-ink" aria-hidden="true"></svg>
-      Copy link instead
+      {{ 'qr.copy' | transloco }}
     </button>
 
     <p class="flex items-start gap-1.5 text-left text-xs text-ink-soft">
       <svg lucideInfo class="mt-px size-3.5 shrink-0" aria-hidden="true"></svg>
-      {{
-        kind() === 'private'
-          ? 'It stops working when you close this tab.'
-          : "They'll see new messages, not earlier ones."
-      }}
+      {{ 'qr.' + kind() + '.note' | transloco }}
     </p>
   </div>
 </dialog>

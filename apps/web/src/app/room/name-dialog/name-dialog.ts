@@ -15,22 +15,18 @@ import {
   requiredError,
   validate,
 } from '@angular/forms/signals';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { Glass } from '../../glass/glass';
 
 export const nameMaxLength = 24;
 
 @Component({
-  imports: [FormField, FormRoot, Glass],
+  imports: [FormField, FormRoot, Glass, TranslocoPipe],
   selector: 'app-name-dialog',
   templateUrl: './name-dialog.html',
 })
 export class NameDialog {
-  readonly heading = input("What's your name?");
-  readonly label = input('Name');
-  readonly placeholder = input('Ana');
-  readonly hint = input("It's how others see you. It lasts until you close this tab.");
-  readonly action = input('Start chatting');
-  readonly cancelable = input(false);
+  readonly kind = input<'name' | 'group'>('name');
   readonly chosen = output<string>();
   readonly dismissed = output();
 
@@ -57,7 +53,7 @@ export class NameDialog {
 
   protected cancel(event: Event): void {
     event.preventDefault();
-    if (this.cancelable()) {
+    if (this.kind() === 'group') {
       this.dialog().nativeElement.close();
       this.dismissed.emit();
     }

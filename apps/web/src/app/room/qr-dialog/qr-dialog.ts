@@ -8,6 +8,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { LucideCopy, LucideInfo, LucideLock, LucideUsersRound, LucideX } from '@lucide/angular';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { encode } from 'uqr';
 import { Glass } from '../../glass/glass';
 import { CopyLink } from '../copy-link/copy-link';
@@ -21,7 +22,16 @@ export function qrPath(text: string): { size: number; path: string } {
 }
 
 @Component({
-  imports: [CopyLink, Glass, LucideCopy, LucideInfo, LucideLock, LucideUsersRound, LucideX],
+  imports: [
+    CopyLink,
+    Glass,
+    LucideCopy,
+    LucideInfo,
+    LucideLock,
+    LucideUsersRound,
+    LucideX,
+    TranslocoPipe,
+  ],
   selector: 'app-qr-dialog',
   templateUrl: './qr-dialog.html',
 })

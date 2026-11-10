@@ -8,7 +8,7 @@
     <button
       type="button"
       class="grid size-10 place-items-center rounded-full border border-edge bg-glass-strong/50 transition hover:bg-glass-strong focus-visible:outline-2 focus-visible:outline-accent-ink"
-      aria-label="New group"
+      [attr.aria-label]="'chatList.newGroup' | transloco"
       (click)="newGroup.emit()"
     >
       <svg lucidePlus class="size-5" aria-hidden="true"></svg>
@@ -21,18 +21,18 @@
   (submit)="$event.preventDefault(); open(join)"
 >
   <svg lucideKeyRound class="size-4 shrink-0 text-ink-soft" aria-hidden="true"></svg>
-  <label for="join" class="sr-only">Join with a code, link or ID</label>
+  <label for="join" class="sr-only">{{ 'chatList.join' | transloco }}</label>
   <input
     #join
     id="join"
     class="min-w-0 flex-1 bg-transparent py-2.5 text-sm outline-none placeholder:text-ink-soft"
-    placeholder="Join with a code, link or ID"
+    [placeholder]="'chatList.join' | transloco"
     autocomplete="off"
     enterkeyhint="go"
   />
 </form>
 
-<div class="flex gap-1.5" role="radiogroup" aria-label="Show">
+<div class="flex gap-1.5" role="radiogroup" [attr.aria-label]="'chatList.show' | transloco">
   @for (option of filters; track option) {
     <button
       type="button"
@@ -43,14 +43,14 @@
       [attr.aria-checked]="filter() === option"
       (click)="filter.set(option)"
     >
-      {{ option }}
+      {{ 'chatList.filter.' + option | transloco }}
     </button>
   }
 </div>
 
 <ul
   class="scroll-glass relative -mx-2 flex min-h-0 flex-1 flex-col overflow-y-auto"
-  aria-label="Your chats"
+  [attr.aria-label]="'chatList.chats' | transloco"
 >
   @for (chat of shown(); track chat.id) {
     <li>
@@ -73,7 +73,9 @@
           }
         </span>
         <span class="flex min-w-0 flex-1 flex-col gap-0.5">
-          <span class="truncate font-medium">{{ chat.title || 'Joining…' }}</span>
+          <span class="truncate font-medium">{{
+            chat.title || ('chatList.joining' | transloco)
+          }}</span>
           <span class="truncate text-sm text-ink-soft">{{ preview(chat) }}</span>
         </span>
         <span class="flex shrink-0 flex-col items-end gap-1 self-stretch pt-0.5">
@@ -85,7 +87,8 @@
           @if (chat.unread) {
             <span
               class="grid h-5 min-w-5 place-items-center rounded-full bg-accent-ink px-1.5 text-xs font-semibold text-canvas"
-              >{{ chat.unread }}<span class="sr-only"> unread</span></span
+              >{{ chat.unread
+              }}<span class="sr-only"> {{ 'chatList.unread' | transloco }}</span></span
             >
           }
         </span>
@@ -94,9 +97,9 @@
   } @empty {
     <li class="m-auto max-w-56 text-center text-sm text-ink-soft">
       @if (chats().length) {
-        Nothing here.
+        {{ 'chatList.nothing' | transloco }}
       } @else {
-        No chats yet. Create a group, or paste a code, link or someone's ID above.
+        {{ 'chatList.empty' | transloco }}
       }
     </li>
   }
@@ -114,25 +117,28 @@
     >
     <span class="flex min-w-0 flex-1 flex-col">
       <span class="truncate text-sm font-medium"
-        >{{ name }} <span class="font-normal text-ink-soft">· you</span></span
+        >{{ name }}
+        <span class="font-normal text-ink-soft">· {{ 'chatList.you' | transloco }}</span></span
       >
-      <span class="truncate text-xs text-ink-soft">ID {{ me() || '…' }}</span>
+      <span class="truncate text-xs text-ink-soft">{{
+        'chatList.id' | transloco: { id: me() || '…' }
+      }}</span>
     </span>
     <button
       type="button"
       [disabled]="!me()"
       class="grid size-9 shrink-0 place-items-center rounded-full text-accent-ink transition hover:bg-glass-strong disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-accent-ink"
-      aria-label="Show QR code"
+      [attr.aria-label]="'chatList.showQr' | transloco"
       (click)="showQr.emit()"
     >
       <svg lucideQrCode class="size-4" aria-hidden="true"></svg>
     </button>
     <button
       [appCopyLink]="me()"
-      copied="ID copied"
+      [copied]="'copy.id' | transloco"
       [disabled]="!me()"
       class="grid size-9 shrink-0 place-items-center rounded-full text-accent-ink transition hover:bg-glass-strong disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-accent-ink"
-      aria-label="Copy your ID"
+      [attr.aria-label]="'chatList.copyId' | transloco"
     >
       <svg lucideCopy class="size-4" aria-hidden="true"></svg>
     </button>

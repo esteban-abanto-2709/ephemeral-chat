@@ -1,0 +1,81 @@
+{
+  "nameDialog": {
+    "name": {
+      "heading": "¿Cómo te llamas?",
+      "label": "Nombre",
+      "placeholder": "Ana",
+      "hint": "Así te ven los demás en cada chat. Dura hasta que cierres esta pestaña.",
+      "action": "Empezar a chatear"
+    },
+    "group": {
+      "heading": "Nuevo grupo",
+      "label": "Nombre del grupo",
+      "placeholder": "Viaje de fin de semana",
+      "hint": "No se puede cambiar después, y el grupo desaparece cuando todos salen.",
+      "action": "Crear grupo"
+    },
+    "invalid": "Escribe un nombre de hasta {{ max }} caracteres.",
+    "cancel": "Cancelar"
+  },
+  "welcome": {
+    "title": "Habla y déjalo ir",
+    "body": "No se guarda nada. Un chat desaparece cuando todos salen, y tu ID cuando cierras esta pestaña.",
+    "newGroup": "Nuevo grupo",
+    "myQr": "Mi QR",
+    "invite": "Invitar con enlace",
+    "copyId": "Copiar mi ID"
+  },
+  "chatList": {
+    "newGroup": "Nuevo grupo",
+    "join": "Únete con un código, enlace o ID",
+    "show": "Mostrar",
+    "filter": {
+      "all": "Todos",
+      "unread": "No leídos",
+      "groups": "Grupos",
+      "private": "Privados"
+    },
+    "chats": "Tus chats",
+    "joining": "Uniéndote…",
+    "unread": "sin leer",
+    "nothing": "No hay nada aquí.",
+    "empty": "Aún no tienes chats. Crea un grupo o pega arriba un código, un enlace o el ID de alguien.",
+    "you": "tú",
+    "id": "ID {{ id }}",
+    "showQr": "Mostrar código QR",
+    "copyId": "Copiar tu ID",
+    "notCode": "Eso no es un código, enlace ni ID.",
+    "noMessages": "Aún no hay mensajes",
+    "own": "Tú: {{ text }}",
+    "from": "{{ name }}: {{ text }}"
+  },
+  "events": {
+    "joined": "{{ name }} se unió",
+    "left": "{{ name }} salió"
+  },
+  "theme": {
+    "label": "Tema oscuro",
+    "dark": "Oscuro",
+    "light": "Claro"
+  },
+  "copy": {
+    "link": "Enlace copiado",
+    "id": "ID copiado",
+    "invite": "Enlace de invitación copiado"
+  },
+  "qr": {
+    "private": {
+      "title": "Tu QR privado",
+      "body": "Quien lo escanee puede escribirte en privado.",
+      "waiting": "Aparece en tus chats cuando te escriba",
+      "note": "Deja de funcionar cuando cierres esta pestaña."
+    },
+    "group": {
+      "body": "Quien lo escanee se une a este grupo.",
+      "note": "Verá los mensajes nuevos, no los anteriores."
+    },
+    "close": "Cerrar",
+    "image": "Código QR",
+    "copy": "Mejor copiar el enlace"
+  }
+}
