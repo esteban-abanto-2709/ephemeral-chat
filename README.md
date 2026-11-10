@@ -47,10 +47,11 @@ everything you had is gone.
 
 ## Status
 
-**v0.6**: the journey above, deployed: groups and private chats in one page,
-with photos, files, voice messages and replies, clickable links, QR codes and
-the whole page in English and Spanish, over a glass design in light and dark.
-Stickers and end-to-end encryption are ideas for later versions.
+**v0.7**: the journey above, deployed: you come in with a generated nickname
+you can change, then groups and private chats in one page, with photos, files,
+voice messages and replies, clickable links, QR codes and the whole page in
+English and Spanish, over a glass design in light and dark. End-to-end
+encryption is an idea for a later version.
 
 The detail and the order are in the [roadmap](./docs/logbook/roadmap.md).
 

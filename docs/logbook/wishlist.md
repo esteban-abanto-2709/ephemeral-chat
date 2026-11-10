@@ -7,9 +7,6 @@ If an idea is promoted, it's deleted from here and a new `RM` is born.
 
 ---
 
-## [WL-004] Stickers
-Images shown without a bubble, with a collection to send them from. Left out of v0.5: copying a sticker and pasting it already sends it as a photo, and a collection that lasts needs browser storage, against the no-persistence rule. Decide that before building.
-
 ## [WL-005] End-to-end encryption
 The key travels in the link after `#`, which browsers never send to the server; Web Crypto encrypts in the browser and the API only relays ciphertext. Candidate for a later version.
 

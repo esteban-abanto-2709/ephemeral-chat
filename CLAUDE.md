@@ -26,21 +26,22 @@ clever shortcuts.
 
 ## Current state (2026-11)
 
-- **v0.6 is feature-complete**: one page like WhatsApp Web. Each tab enters
+- **v0.7 is feature-complete**: one page like WhatsApp Web. Each tab enters
   with a generated nickname (a noun and an adjective, like "Silver Wolf") that
   you can change anytime from your card, and an id that lives while it is
   open; then several chats at once over one connection: named groups joined
   by link or code, and private chats opened by someone's id or invite link,
-  which reach them only with your first message and end when either leaves. Chats carry photos
-  (compressed in the browser, reviewed before sending, opened in the page),
-  files up to 5 MB, voice messages up to a minute and replies; the server
-  relays them and keeps none. v0.6 added clickable links, QR codes for
-  your invite and for groups, and the whole page in English and Spanish
-  (Transloco), following the browser with a switch. Earlier versions brought
-  the glass design (WebGL liquid glass with a frosted fallback, light and dark
-  themes), the layout kept above the phone keyboard, a typing indicator, and
-  limits on message length, rate, group size and chats per tab. Groups vanish
-  a minute after they empty. The protocol is in the
+  which reach them only with your first message and end when either leaves.
+  Chats carry photos (compressed in the browser, reviewed before sending,
+  opened in the page), files up to 5 MB, voice messages up to a minute and
+  replies; the server relays them as binary frames and keeps none. v0.7
+  brought the generated names and files in binary frames; v0.6 added
+  clickable links, QR codes for your invite and for groups, and the whole page
+  in English and Spanish (Transloco), following the browser with a switch.
+  Earlier versions brought the glass design (WebGL liquid glass with a frosted
+  fallback, light and dark themes), the layout kept above the phone keyboard,
+  a typing indicator, and limits on message length, rate, group size and
+  chats per tab. Groups vanish a minute after they empty. The protocol is in the
   [API README](./apps/api/README.md#room-chat), the look in the
   [web README](./apps/web/README.md#look-and-feel).
 - Next versions are ideas in `docs/logbook/wishlist.md` until committed to
