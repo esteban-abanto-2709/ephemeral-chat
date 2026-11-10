@@ -14,12 +14,12 @@ and is deleted from here.
 
 ---
 
-## [TD-006] Text on controls that an icon already says
-- **Location:** `apps/web/src/app/theme/theme-toggle/theme-toggle.ts` and any other control across `apps/web/src/app`
+## [TD-006] Too much text in the UI
+- **Location:** `apps/web/src/app/i18n/en.json`, `apps/web/src/app/i18n/es.json` and every template in `apps/web/src/app`
 - **Risk:** 3/10
-- **Problem:** some controls carry a visible label where a well-known icon is enough. The theme toggle shows "Light"/"Dark" beside the sun and moon, and had to grow for "Oscuro" to fit. The user wants the whole app reviewed for more cases like it.
-- **Future impact:** cluttered controls that change width with each language; every new language risks another one that doesn't fit.
-- **Suggestion:** audit every control, list where the text can go (keeping a translated `aria-label`) and where it must stay, and agree on the list with the user on `/design` before changing anything.
+- **Problem:** the page says more than people read. Some controls carry a label where a well-known icon is enough (the theme toggle shows "Light"/"Dark" beside the sun and moon, and had to grow for "Oscuro"), and some notes and hints are longer than they need to be. The goal is the least text possible, trusting the user to understand: short words that read at a glance.
+- **Future impact:** cluttered controls that change width with each language, and text people skip.
+- **Suggestion:** audit every visible string: drop the ones an icon already says (keeping a translated `aria-label`), shorten the rest, and agree on the list with the user on `/design` before changing anything.
 - **Date:** 2026-11-09 · **Status:** Open
 
 ## [TD-007] Placeholders that invent an example
@@ -29,3 +29,11 @@ and is deleted from here.
 - **Future impact:** fields that look already filled in, and odd examples to keep translating.
 - **Suggestion:** review every placeholder and propose to the user which to drop or turn into an instruction; the name dialog may go away with generated names, so check that first.
 - **Date:** 2026-11-09 · **Status:** Open
+
+## [TD-008] Desktop scrollbar runs behind the header and the composer
+- **Location:** `apps/web/src/app/room/message-list/message-list.html` (the `scroll-glass` scroller)
+- **Risk:** 2/10
+- **Problem:** on desktop the messages scroll under the floating chat header and composer, so the scrollbar runs the full height and crosses both. The padding keeps the messages clear, but not the scrollbar track.
+- **Future impact:** cosmetic: the scrollbar looks like it belongs to the header and the composer too.
+- **Suggestion:** keep the track between the two, e.g. a top and bottom margin on the scrollbar track in `scroll-glass`, without losing the messages sliding under the glass.
+- **Date:** 2026-11-10 · **Status:** Open
