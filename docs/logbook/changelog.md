@@ -12,6 +12,9 @@ Summary in ≤2 lines of what was done.
 
 ---
 
+## [WL-019] Files in binary frames (2026-11-10 15:26)
+Files travel as binary WebSocket frames with a small JSON header of our own, without base64's 33% overhead. The web no longer uses FileReader or atob.
+
 ## [WL-022] Spanish and English (2026-11-09 21:29)
 The whole page in both languages with Transloco, following the browser with an `ES`/`EN` switch that is remembered; the server sends error codes, never words.
 

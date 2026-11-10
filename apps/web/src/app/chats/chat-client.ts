@@ -57,7 +57,6 @@ interface Frame {
   code?: string;
   private?: boolean;
   members?: Person[];
-  data?: string;
   seq?: number;
   reply?: number;
   seconds?: number;
@@ -67,7 +66,6 @@ interface Frame {
     mime?: string;
     size: number;
     seconds?: number;
-    data?: string;
     bytes?: Uint8Array<ArrayBuffer>;
   };
 }
@@ -384,11 +382,7 @@ export class ChatClient implements OnDestroy {
   }
 
   private attach(room: string, file: NonNullable<Frame['file']>): Attachment | undefined {
-    const content =
-      file.bytes ??
-      (file.data
-        ? Uint8Array.from(atob(file.data), (char) => char.charCodeAt(0))
-        : this.takeSent(room, file.name, file.size));
+    const content = file.bytes ?? this.takeSent(room, file.name, file.size);
     if (!content) {
       return undefined;
     }

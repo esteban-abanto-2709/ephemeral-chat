@@ -311,19 +311,15 @@ describe('ChatClient', () => {
       bytes: bytesOf('hola'),
     });
 
-    server.receive({
-      type: 'message',
-      room: 'one',
-      ...ana,
-      file: {
-        kind: 'voice',
-        name: 'voice.m4a',
-        mime: 'audio/mp4',
-        size: 4,
-        seconds: 7,
-        data: btoa('hola'),
+    await server.receiveBinary(
+      {
+        type: 'message',
+        room: 'one',
+        ...ana,
+        file: { kind: 'voice', name: 'voice.m4a', mime: 'audio/mp4', size: 4, seconds: 7 },
       },
-    });
+      new TextEncoder().encode('hola'),
+    );
     expect(client.active()!.events.at(-1)).toMatchObject({
       file: { kind: 'voice', seconds: 7, url: 'blob:voice' },
     });
@@ -335,18 +331,22 @@ describe('ChatClient', () => {
     expect(TestBed.inject(Notice).text()).toBe('Voice messages up to 1 MB.');
   });
 
-  it('turns a received file into a link and lets it go with the chat', () => {
+  it('turns a received file into a link and lets it go with the chat', async () => {
+    vi.useRealTimers();
     const createObjectURL = vi.fn(() => 'blob:photo');
     const revokeObjectURL = vi.fn();
     vi.stubGlobal('URL', Object.assign(URL, { createObjectURL, revokeObjectURL }));
     ready();
     client.join('one');
-    server.receive({
-      type: 'message',
-      room: 'one',
-      ...ana,
-      file: { kind: 'image', name: 'a.png', mime: 'image/png', size: 4, data: btoa('hola') },
-    });
+    await server.receiveBinary(
+      {
+        type: 'message',
+        room: 'one',
+        ...ana,
+        file: { kind: 'image', name: 'a.png', mime: 'image/png', size: 4 },
+      },
+      new TextEncoder().encode('hola'),
+    );
 
     const [event] = client.active()!.events;
     expect(event).toMatchObject({
