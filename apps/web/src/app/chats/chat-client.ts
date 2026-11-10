@@ -4,6 +4,7 @@ import { I18n } from '../i18n/i18n';
 import { Notice } from '../notice';
 import { Attachment, Outgoing, Quote } from './attachment';
 import { compressPhoto } from './compress-photo';
+import { decodeFrame, encodeFrame } from './frame';
 
 export type SocketStatus = 'connecting' | 'open' | 'closed';
 
@@ -67,6 +68,7 @@ interface Frame {
     size: number;
     seconds?: number;
     data?: string;
+    bytes?: Uint8Array<ArrayBuffer>;
   };
 }
 
@@ -130,7 +132,19 @@ export class ChatClient implements OnDestroy {
       this._status.set('closed');
       this.ready = false;
     };
-    socket.onmessage = (message: MessageEvent<string>) => this.receive(JSON.parse(message.data));
+    socket.binaryType = 'arraybuffer';
+    socket.onmessage = (message: MessageEvent<string | ArrayBuffer>) => {
+      if (typeof message.data === 'string') {
+        this.receive(JSON.parse(message.data));
+        return;
+      }
+      const { header, data } = decodeFrame(message.data);
+      const frame = header as Frame;
+      if (frame.file) {
+        frame.file.bytes = data;
+      }
+      this.receive(frame);
+    };
     this.socket = socket;
   }
 
@@ -263,18 +277,8 @@ export class ChatClient implements OnDestroy {
       .slice(-fileNameMaxLength)
       .join('')
       .trim();
-    const reader = new FileReader();
-    reader.onload = () => {
-      this.sentFiles.set(room, [...(this.sentFiles.get(room) ?? []), new File([file], name)]);
-      this.write({
-        type: 'file',
-        room,
-        name,
-        data: String(reader.result).split(',')[1],
-        ...extra,
-      });
-    };
-    reader.readAsDataURL(file);
+    this.sentFiles.set(room, [...(this.sentFiles.get(room) ?? []), new File([file], name)]);
+    this.sendBinary(encodeFrame({ type: 'file', room, name, ...extra }, file));
   }
 
   sendTyping(room: string): void {
@@ -296,6 +300,12 @@ export class ChatClient implements OnDestroy {
   private write(frame: Frame): void {
     if (this.socket?.readyState === WebSocket.OPEN) {
       this.socket.send(JSON.stringify(frame));
+    }
+  }
+
+  private sendBinary(blob: Blob): void {
+    if (this.socket?.readyState === WebSocket.OPEN) {
+      this.socket.send(blob);
     }
   }
 
@@ -374,9 +384,11 @@ export class ChatClient implements OnDestroy {
   }
 
   private attach(room: string, file: NonNullable<Frame['file']>): Attachment | undefined {
-    const content = file.data
-      ? Uint8Array.from(atob(file.data), (char) => char.charCodeAt(0))
-      : this.takeSent(room, file.name, file.size);
+    const content =
+      file.bytes ??
+      (file.data
+        ? Uint8Array.from(atob(file.data), (char) => char.charCodeAt(0))
+        : this.takeSent(room, file.name, file.size));
     if (!content) {
       return undefined;
     }

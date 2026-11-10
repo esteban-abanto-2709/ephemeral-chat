@@ -3,28 +3,40 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { Notice } from '../notice';
 import { ChatClient, fileMaxBytes, maxChats } from './chat-client';
+import { decodeFrame, encodeFrame } from './frame';
 
 class FakeWebSocket {
   static readonly OPEN = 1;
   static last: FakeWebSocket;
   readyState = FakeWebSocket.OPEN;
   sent: object[] = [];
+  binary: Blob[] = [];
+  binaryType = 'blob';
   onopen?: () => void;
   onclose?: () => void;
-  onmessage?: (message: { data: string }) => void;
+  onmessage?: (message: { data: string | ArrayBuffer }) => void;
 
   constructor(readonly url: string) {
     FakeWebSocket.last = this;
   }
 
-  send(data: string): void {
-    this.sent.push(JSON.parse(data));
+  send(data: string | Blob): void {
+    if (typeof data === 'string') {
+      this.sent.push(JSON.parse(data));
+    } else {
+      this.binary.push(data);
+    }
   }
 
   close(): void {}
 
   receive(data: object): void {
     this.onmessage?.({ data: JSON.stringify(data) });
+  }
+
+  async receiveBinary(header: object, bytes: Uint8Array): Promise<void> {
+    const blob = encodeFrame(header, new Blob([bytes as BlobPart]));
+    this.onmessage?.({ data: await blob.arrayBuffer() });
   }
 }
 
@@ -56,6 +68,14 @@ describe('ChatClient', () => {
   function ready(): void {
     server.receive({ type: 'ready', ...juan });
   }
+
+  async function lastFile(): Promise<{ header: unknown; bytes: number[] }> {
+    const { header, data } = decodeFrame(await server.binary.at(-1)!.arrayBuffer());
+    expect(server.sent.some((frame) => (frame as { type: string }).type === 'file')).toBe(false);
+    return { header, bytes: Array.from(data) };
+  }
+
+  const bytesOf = (text: string): number[] => Array.from(new TextEncoder().encode(text));
 
   it('joins the chats picked before the connection was ready', () => {
     expect(server.url).toContain('/api/ws?name=Juan');
@@ -222,7 +242,7 @@ describe('ChatClient', () => {
     expect(server.sent.at(-1)).toEqual({ type: 'typing', room: 'one' });
   });
 
-  it('sends files in base64 and refuses the ones over 5 MB', async () => {
+  it('sends files in binary frames and refuses the ones over 5 MB', async () => {
     vi.useRealTimers();
     ready();
     client.join('one');
@@ -235,11 +255,11 @@ describe('ChatClient', () => {
       { file: big, caption: '' },
     ]);
     expect(TestBed.inject(Notice).text()).toBe('Files up to 5 MB.');
-    await vi.waitFor(() =>
-      expect(server.sent).toEqual([
-        { type: 'file', room: 'one', name: 'notes.txt', data: btoa('hola') },
-      ]),
-    );
+    expect(server.binary).toHaveLength(1);
+    expect(await lastFile()).toEqual({
+      header: { type: 'file', room: 'one', name: 'notes.txt' },
+      bytes: bytesOf('hola'),
+    });
   });
 
   it('holds picked files for review and sends the ones kept, with their captions', async () => {
@@ -266,11 +286,10 @@ describe('ChatClient', () => {
     await client.sendPicked([{ file: notes, caption: ' for Saturday ' }], true);
     expect(client.picked()).toEqual([]);
     expect(revokeObjectURL.mock.calls).toEqual([['blob:1'], ['blob:2']]);
-    await vi.waitFor(() =>
-      expect(server.sent).toEqual([
-        { type: 'file', room: 'one', name: 'notes.txt', data: btoa('hola'), text: 'for Saturday' },
-      ]),
-    );
+    expect(await lastFile()).toEqual({
+      header: { type: 'file', room: 'one', name: 'notes.txt', text: 'for Saturday' },
+      bytes: bytesOf('hola'),
+    });
 
     client.pick('one', [new File(['hola'], 'notes.txt')]);
     client.discardPicked();
@@ -287,18 +306,10 @@ describe('ChatClient', () => {
     server.sent = [];
 
     client.sendVoice('one', new Blob(['hola'], { type: 'audio/webm;codecs=opus' }), 12, 3);
-    await vi.waitFor(() =>
-      expect(server.sent).toEqual([
-        {
-          type: 'file',
-          room: 'one',
-          name: 'voice.webm',
-          data: btoa('hola'),
-          seconds: 12,
-          reply: 3,
-        },
-      ]),
-    );
+    expect(await lastFile()).toEqual({
+      header: { type: 'file', room: 'one', name: 'voice.webm', seconds: 12, reply: 3 },
+      bytes: bytesOf('hola'),
+    });
 
     server.receive({
       type: 'message',
@@ -351,6 +362,30 @@ describe('ChatClient', () => {
     expect(revokeObjectURL).toHaveBeenCalledWith('blob:photo');
   });
 
+  it('shows a file received in a binary frame', async () => {
+    vi.useRealTimers();
+    const createObjectURL = vi.fn(() => 'blob:bin');
+    vi.stubGlobal('URL', Object.assign(URL, { createObjectURL, revokeObjectURL: vi.fn() }));
+    ready();
+    client.join('one');
+    await server.receiveBinary(
+      {
+        type: 'message',
+        room: 'one',
+        ...ana,
+        file: { kind: 'file', name: 'notes.txt', size: 4 },
+      },
+      new TextEncoder().encode('hola'),
+    );
+
+    expect(client.active()!.events.at(-1)).toMatchObject({
+      own: false,
+      file: { kind: 'file', name: 'notes.txt', size: 4, url: 'blob:bin' },
+    });
+    const blob = (createObjectURL.mock.calls[0] as unknown[])[0] as Blob;
+    expect(Array.from(new Uint8Array(await blob.arrayBuffer()))).toEqual(bytesOf('hola'));
+  });
+
   it('shows your own file from the local copy when the server confirms it', async () => {
     vi.useRealTimers();
     const createObjectURL = vi.fn((blob: Blob) => `blob:${blob.size}`);
@@ -358,7 +393,7 @@ describe('ChatClient', () => {
     ready();
     client.join('one');
     await client.sendFiles('one', [{ file: new File(['hola'], ' notes.txt '), caption: '' }]);
-    await vi.waitFor(() => expect(server.sent.at(-1)).toMatchObject({ name: 'notes.txt' }));
+    expect(await lastFile()).toMatchObject({ header: { name: 'notes.txt' } });
 
     server.receive({
       type: 'message',
