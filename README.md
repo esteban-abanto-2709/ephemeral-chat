@@ -46,10 +46,10 @@ everything you had is gone.
 
 ## Status
 
-**v0.4**: the journey above, text only, deployed: groups and private chats in
-one page, with a glass design in light and dark, a layout that stays above the
-phone keyboard and a typing indicator. Images and files, voice messages,
-stickers and end-to-end encryption are ideas for later versions.
+**v0.6**: the journey above, deployed: groups and private chats in one page,
+with photos, files, voice messages and replies, clickable links, QR codes and
+the whole page in English and Spanish, over a glass design in light and dark.
+Stickers and end-to-end encryption are ideas for later versions.
 
 The detail and the order are in the [roadmap](./docs/logbook/roadmap.md).
 

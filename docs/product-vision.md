@@ -68,10 +68,11 @@ Each version is a milestone. When all its work is done, it gets a git tag
 | v0.3 | Comfort | Clearer room design, mobile keyboard handling, typing indicator |
 | v0.4 | Chats | One page with several chats: named groups, private chats by id or invite link |
 | v0.5 | Media | Photos and files, replies, voice messages |
-| v0.6 | Privacy | End-to-end encryption |
+| v0.6 | Sharing | Clickable links, QR codes, English and Spanish |
+| Next | Privacy | End-to-end encryption |
 
-v0.6 is an idea in the [wishlist](./logbook/wishlist.md) until it is
-committed.
+Versions after v0.6 are ideas in the [wishlist](./logbook/wishlist.md) until
+they are committed.
 
 **Deploy early.** The app is on Render from the first steps, not at the end,
 so "no commit breaks production" means something from day one.
