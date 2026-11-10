@@ -12,6 +12,9 @@ Summary in ≤2 lines of what was done.
 
 ---
 
+## [RM-013] Generated names you can change (2026-11-10 16:24)
+Each tab enters with a random noun-and-adjective nickname in its language and can rename itself from its card, at most once every 10 seconds. Every chat it is in sees "A changed their name to B", and nothing is stored.
+
 ## [WL-019] Files in binary frames (2026-11-10 15:26)
 Files travel as binary WebSocket frames with a small JSON header of our own, without base64's 33% overhead. The web no longer uses FileReader or atob.
 

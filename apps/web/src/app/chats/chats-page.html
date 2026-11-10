@@ -15,6 +15,7 @@
     (newGroup)="creating.set(true)"
     (opened)="join($event)"
     (showQr)="qr.set('private')"
+    (rename)="renaming.set(true)"
   />
 
   @if (active) {
@@ -82,5 +83,14 @@
 
   @if (creating()) {
     <app-name-dialog kind="group" (chosen)="create($event)" (dismissed)="creating.set(false)" />
+  }
+
+  @if (renaming()) {
+    <app-name-dialog
+      kind="name"
+      [initial]="client.name() ?? ''"
+      (chosen)="rename($event)"
+      (dismissed)="renaming.set(false)"
+    />
   }
 </div>

@@ -33,6 +33,7 @@ describe('ChatsPage', () => {
     discardPicked: vi.fn(),
     reconnect: vi.fn(),
     remove: vi.fn(),
+    rename: vi.fn(),
   };
 
   beforeEach(async () => {
@@ -102,6 +103,52 @@ describe('ChatsPage', () => {
     input.form!.dispatchEvent(new Event('submit', { cancelable: true }));
     await fixture.whenStable();
     expect(fakeClient.create).toHaveBeenCalledWith('Weekend trip');
+  });
+
+  describe('renaming yourself', () => {
+    async function openRename() {
+      const rendered = await render();
+      (rendered.page.querySelector('[aria-label="Change your name"]') as HTMLElement).click();
+      await rendered.fixture.whenStable();
+      return rendered;
+    }
+
+    async function submit(
+      fixture: { whenStable(): Promise<unknown> },
+      page: HTMLElement,
+      v: string,
+    ) {
+      const input = page.querySelector('#name') as HTMLInputElement;
+      input.value = v;
+      input.dispatchEvent(new Event('input'));
+      input.form!.dispatchEvent(new Event('submit', { cancelable: true }));
+      await fixture.whenStable();
+    }
+
+    it('opens the dialog with the current name and saves a new one', async () => {
+      const { fixture, page } = await openRename();
+      expect((page.querySelector('#name') as HTMLInputElement).value).toBe(name());
+      await submit(fixture, page, 'Cráneo Negro');
+      expect(fakeClient.rename).toHaveBeenCalledWith('Cráneo Negro');
+      expect(page.querySelector('app-name-dialog')).toBeNull();
+    });
+
+    it('does nothing when the name is unchanged', async () => {
+      const { fixture, page } = await openRename();
+      await submit(fixture, page, name()!);
+      expect(fakeClient.rename).not.toHaveBeenCalled();
+      expect(page.querySelector('app-name-dialog')).toBeNull();
+    });
+
+    it('closes without renaming on Cancel', async () => {
+      const { fixture, page } = await openRename();
+      [...page.querySelectorAll('app-name-dialog button')]
+        .find((b) => b.textContent?.trim() === 'Cancel')!
+        .dispatchEvent(new Event('click'));
+      await fixture.whenStable();
+      expect(fakeClient.rename).not.toHaveBeenCalled();
+      expect(page.querySelector('app-name-dialog')).toBeNull();
+    });
   });
 
   async function openChat() {

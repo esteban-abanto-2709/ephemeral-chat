@@ -26,11 +26,12 @@ clever shortcuts.
 
 ## Current state (2026-11)
 
-- **v0.6 is feature-complete**: one page like WhatsApp Web. You pick a name
-  once and the tab gets an id that lives while it is open; then several chats
-  at once over one connection: named groups joined by link or code, and
-  private chats opened by someone's id or invite link, which reach them only
-  with your first message and end when either leaves. Chats carry photos
+- **v0.6 is feature-complete**: one page like WhatsApp Web. Each tab enters
+  with a generated nickname (a noun and an adjective, like "Silver Wolf") that
+  you can change anytime from your card, and an id that lives while it is
+  open; then several chats at once over one connection: named groups joined
+  by link or code, and private chats opened by someone's id or invite link,
+  which reach them only with your first message and end when either leaves. Chats carry photos
   (compressed in the browser, reviewed before sending, opened in the page),
   files up to 5 MB, voice messages up to a minute and replies; the server
   relays them and keeps none. v0.6 added clickable links, QR codes for

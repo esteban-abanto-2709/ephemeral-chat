@@ -87,11 +87,11 @@
   },
   "nameDialog": {
     "name": {
-      "heading": "¿Cómo te llamas?",
+      "heading": "Tu nombre",
       "label": "Nombre",
-      "placeholder": "Ana",
-      "hint": "Así te ven los demás en cada chat. Dura hasta que cierres esta pestaña.",
-      "action": "Empezar a chatear"
+      "placeholder": "Tu nombre",
+      "hint": "Así te ven en cada chat. Desaparece al cerrar esta pestaña.",
+      "action": "Guardar"
     },
     "group": {
       "heading": "Nuevo grupo",
@@ -130,6 +130,7 @@
     "id": "ID {{ id }}",
     "showQr": "Mostrar código QR",
     "copyId": "Copiar tu ID",
+    "rename": "Cambiar tu nombre",
     "notCode": "Eso no es un código, enlace ni ID.",
     "noMessages": "Aún no hay mensajes",
     "own": "Tú: {{ text }}",

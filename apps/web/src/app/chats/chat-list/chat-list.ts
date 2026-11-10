@@ -4,6 +4,7 @@ import {
   LucideCopy,
   LucideHourglass,
   LucideKeyRound,
+  LucidePencil,
   LucidePlus,
   LucideQrCode,
   LucideUsersRound,
@@ -35,6 +36,7 @@ export function codeIn(text: string): string | null {
     LucideCopy,
     LucideHourglass,
     LucideKeyRound,
+    LucidePencil,
     LucidePlus,
     LucideQrCode,
     LucideUsersRound,
@@ -52,6 +54,7 @@ export class ChatList {
   readonly selected = output<string>();
   readonly newGroup = output();
   readonly showQr = output();
+  readonly rename = output();
   readonly opened = output<string>();
 
   protected readonly avatarHue = avatarHue;

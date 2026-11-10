@@ -110,21 +110,31 @@
   <div
     class="flex items-center gap-3 rounded-2xl border border-edge bg-glass-strong/50 py-2 pr-2 pl-3"
   >
-    <span
-      class="avatar grid size-9 shrink-0 place-items-center rounded-full text-sm font-semibold"
-      [style.--hue]="avatarHue(name)"
-      aria-hidden="true"
-      >{{ name[0] }}</span
+    <button
+      type="button"
+      class="flex min-w-0 flex-1 items-center gap-3 rounded-xl text-left transition hover:bg-glass-strong/50 focus-visible:outline-2 focus-visible:outline-accent-ink"
+      [attr.aria-label]="'chatList.rename' | transloco"
+      (click)="rename.emit()"
     >
-    <span class="flex min-w-0 flex-1 flex-col">
-      <span class="truncate text-sm font-medium"
-        >{{ name }}
-        <span class="font-normal text-ink-soft">· {{ 'chatList.you' | transloco }}</span></span
+      <span
+        class="avatar grid size-9 shrink-0 place-items-center rounded-full text-sm font-semibold"
+        [style.--hue]="avatarHue(name)"
+        aria-hidden="true"
+        >{{ name[0] }}</span
       >
-      <span class="truncate text-xs text-ink-soft">{{
-        'chatList.id' | transloco: { id: me() || '…' }
-      }}</span>
-    </span>
+      <span class="flex min-w-0 flex-1 flex-col">
+        <span class="flex items-center gap-1.5 text-sm font-medium">
+          <span class="truncate"
+            >{{ name }}
+            <span class="font-normal text-ink-soft">· {{ 'chatList.you' | transloco }}</span></span
+          >
+          <svg lucidePencil class="size-3.5 shrink-0 text-ink-soft" aria-hidden="true"></svg>
+        </span>
+        <span class="truncate text-xs text-ink-soft">{{
+          'chatList.id' | transloco: { id: me() || '…' }
+        }}</span>
+      </span>
+    </button>
     <button
       type="button"
       [disabled]="!me()"

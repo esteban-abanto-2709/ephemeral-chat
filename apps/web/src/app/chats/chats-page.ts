@@ -39,6 +39,7 @@ export class ChatsPage implements OnInit {
   private readonly i18n = inject(I18n);
   protected readonly notice = inject(Notice);
   protected readonly creating = signal(false);
+  protected readonly renaming = signal(false);
   protected readonly joined = signal<string | null>(null);
   protected readonly qr = signal<'private' | 'group' | null>(null);
   private readonly origin = inject(DOCUMENT).location.origin;
@@ -71,6 +72,13 @@ export class ChatsPage implements OnInit {
   protected create(title: string): void {
     this.creating.set(false);
     this.client.create(title);
+  }
+
+  protected rename(name: string): void {
+    this.renaming.set(false);
+    if (name !== this.client.name()) {
+      this.client.rename(name);
+    }
   }
 
   protected link(id: string): string {

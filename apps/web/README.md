@@ -30,9 +30,9 @@ the page connects to it on load.
 
 | Route       | Page                  | What it does |
 | ----------- | --------------------- | ------------ |
-| `/`         | `chats/chats-page`    | The app, as in WhatsApp Web: asks your name, then the chat list beside the open chat |
-| `/room/:id` | `chats/chats-page`    | The same page, joining that group as soon as you pick a name: a shared link works at first click |
-| `/chat/:id` | `chats/chats-page`    | An invite: the same page, opening a private chat with that person once you pick a name |
+| `/`         | `chats/chats-page`    | The app, as in WhatsApp Web: opens right away, the chat list beside the open chat |
+| `/room/:id` | `chats/chats-page`    | The same page, joining that group as soon as it opens: a shared link works at first click |
+| `/chat/:id` | `chats/chats-page`    | An invite: the same page, opening a private chat with that person right away |
 | `/design`   | `design/design-board` | Development only: the design board (see [Design board](#design-board)) |
 
 Pages are lazy-loaded. The router binds `:id` straight to the page's `id`
@@ -59,15 +59,19 @@ The page is built from:
   group, Invite with link (copies `/chat/<your id>`) and Copy my ID.
 - `room/name-dialog`: a native `<dialog>` (`showModal()`) with a Signal Forms
   form (`@angular/forms/signals`) for a non-blank name of up to 24 characters.
-  It asks your name (`Esc` blocked) and, with `kind="group"`, a new group's name.
+  It renames yourself (`kind="name"`, prefilled, dismissable) and, with
+  `kind="group"`, names a new group.
 - `notice.ts`: one short message at the top ("Link copied", "That group
   doesn't exist anymore."), shown by `room/copy-link` buttons and the client.
 
 ## Your name
 
-The page shows nothing else until you pick a name. It lives only in memory,
-for every chat in the tab, so reloading asks again. A group's name is picked
-when it is created and never changes.
+Each tab enters with a generated name: `chats/random-name.ts` picks a noun and
+an adjective from the word lists under `names` in the i18n files, in the page's
+language. Tapping your card at the bottom of the list opens `room/name-dialog`
+to rename yourself (`ChatClient.rename`), at most once every 10 seconds. It
+lives only in memory, for every chat in the tab, so reloading gives a new one.
+A group's name is picked when it is created and never changes.
 
 ## Languages
 
@@ -88,8 +92,8 @@ language.
 
 ## Real-time connection
 
-`chats/chat-client.ts` opens the tab's connection once you've picked a name:
-one WebSocket to `/api/ws?name=<name>` on the page's own host (`ws://` or
+`chats/chat-client.ts` opens the tab's connection as soon as the page loads,
+with its generated name: one WebSocket to `/api/ws?name=<name>` on the page's own host (`ws://` or
 `wss://` to match the page). The server answers with your id, and every chat
 travels over that socket (see the [API](../api/README.md#room-chat)). People
 are `{id, name}`: your messages are the ones carrying your id, so two people

@@ -2,15 +2,16 @@
 
 ## The idea
 
-**You pick a name, open groups or private chats, share a link, and whoever has
-it comes in to talk. When everyone leaves, nothing is left.**
+**You come in with a generated name, open groups or private chats, share a
+link, and whoever has it comes in to talk. When everyone leaves, nothing is
+left.**
 
 ## Principles
 
 They hold in every version. Judge every change against them.
 
-1. **No accounts, no database.** You come in, pick a name and talk. Your tab
-   gets an id that lives while it is open, never stored.
+1. **No accounts, no database.** You come in with a generated nickname and
+   talk. Your tab gets an id that lives while it is open, never stored.
 2. **Truly ephemeral.** The server **never stores messages**: it only relays
    them to whoever is connected at that moment. Someone who joins late sees
    nothing from before. Reloading the page drops everything you had.
@@ -22,8 +23,11 @@ They hold in every version. Judge every change against them.
 
 ## User journey (v0.4)
 
-1. You open the site: a modal asks for **your name**, once for the whole tab.
-   The tab gets an id that lasts until you close it.
+1. You open the site: the tab enters with a generated **nickname** in its
+   language (a noun and an adjective, like "Cráneo Solitario" or "Silver Wolf"),
+   which you can change anytime from your card at the bottom of the list, and
+   every chat you are in sees it as a label. The tab gets an id that lasts
+   until you close it.
 2. You see the **chat list**, like WhatsApp Web: New group, Invite with link,
    Copy my ID, and a field to join with a code, link or ID.
 3. **A group**: you name it (it can't change), share its link or code, and

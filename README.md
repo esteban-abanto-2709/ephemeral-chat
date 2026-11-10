@@ -25,7 +25,8 @@ nothing to sign up for and nothing left behind.
 
 ## How it works
 
-1. **Pick a name.** Your tab gets an id that lasts until you close it.
+1. **Come in.** Your tab gets a generated nickname, like "Silver Wolf", and an
+   id that lasts until you close it. Change the name anytime from your card.
 2. **Create a group** and share its link or code. Whoever has it comes in,
    even if a friend forwarded it.
 3. **Or invite someone** with your link or id: they get a private chat with

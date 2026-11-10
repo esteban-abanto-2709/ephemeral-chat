@@ -87,11 +87,11 @@
   },
   "nameDialog": {
     "name": {
-      "heading": "What's your name?",
+      "heading": "Your name",
       "label": "Name",
-      "placeholder": "Ana",
-      "hint": "It's how others see you in every chat. It lasts until you close this tab.",
-      "action": "Start chatting"
+      "placeholder": "Your name",
+      "hint": "Others see it in every chat. It's gone when you close this tab.",
+      "action": "Save"
     },
     "group": {
       "heading": "New group",
@@ -130,6 +130,7 @@
     "id": "ID {{ id }}",
     "showQr": "Show QR code",
     "copyId": "Copy your ID",
+    "rename": "Change your name",
     "notCode": "That's not a code, link or ID.",
     "noMessages": "No messages yet",
     "own": "You: {{ text }}",

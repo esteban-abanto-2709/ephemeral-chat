@@ -27,6 +27,7 @@ export const nameMaxLength = 24;
 })
 export class NameDialog {
   readonly kind = input<'name' | 'group'>('name');
+  readonly initial = input('');
   readonly chosen = output<string>();
   readonly dismissed = output();
 
@@ -53,13 +54,14 @@ export class NameDialog {
 
   protected cancel(event: Event): void {
     event.preventDefault();
-    if (this.kind() === 'group') {
-      this.dialog().nativeElement.close();
-      this.dismissed.emit();
-    }
+    this.dialog().nativeElement.close();
+    this.dismissed.emit();
   }
 
   constructor() {
-    afterNextRender(() => this.dialog().nativeElement.showModal());
+    afterNextRender(() => {
+      this.model.set({ name: this.initial() });
+      this.dialog().nativeElement.showModal();
+    });
   }
 }

@@ -130,6 +130,16 @@ describe('ChatList', () => {
     ]);
   });
 
+  it('asks to rename from your card', async () => {
+    const { fixture, list } = await render();
+    fixture.componentRef.setInput('name', 'Silver Wolf');
+    await fixture.whenStable();
+    let renamed = 0;
+    fixture.componentInstance.rename.subscribe(() => renamed++);
+    (list.querySelector('[aria-label="Change your name"]') as HTMLButtonElement).click();
+    expect(renamed).toBe(1);
+  });
+
   it('joins with a pasted code, link or ID and says when it is none', async () => {
     const { opened, submit } = await render();
     expect(submit(`https://ephemeral.chat/chat/${code}`).value).toBe('');
