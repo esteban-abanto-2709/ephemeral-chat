@@ -67,10 +67,6 @@
     </p>
   }
 
-  @if (!client.name()) {
-    <app-name-dialog (chosen)="start($event)" />
-  }
-
   @if (qr() === 'private') {
     <app-qr-dialog kind="private" [url]="invite()" (closed)="qr.set(null)" />
   }

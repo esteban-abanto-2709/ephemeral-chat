@@ -4,7 +4,7 @@ import { Location } from '@angular/common';
 import { Attachment } from './attachment';
 import { Chat, ChatClient, SocketStatus } from './chat-client';
 import { ChatsPage } from './chats-page';
-import { I18n } from '../i18n/i18n';
+import { I18n, translations } from '../i18n/i18n';
 import { qrPath } from '../room/qr-dialog/qr-dialog';
 
 const juan = { id: 'j', name: 'Juan' };
@@ -68,48 +68,44 @@ describe('ChatsPage', () => {
     }
     await fixture.whenStable();
     const page = fixture.nativeElement as HTMLElement;
-    async function submitName(value: string) {
-      const input = page.querySelector('#name') as HTMLInputElement;
-      input.value = value;
-      input.dispatchEvent(new Event('input'));
-      input.form!.dispatchEvent(new Event('submit', { cancelable: true }));
-      await fixture.whenStable();
-    }
-    return { fixture, page, submitName };
+    return { fixture, page };
   }
 
-  it('asks for a name before connecting', async () => {
+  it('connects right away with a generated name and no dialog', async () => {
     const { page } = await render();
-    expect(page.querySelector('dialog')?.open).toBe(true);
-    expect(fakeClient.connect).not.toHaveBeenCalled();
+    expect(fakeClient.connect).toHaveBeenCalledTimes(1);
+    const [adjective, noun, ...rest] = fakeClient.connect.mock.calls[0][0].split(' ');
+    expect(rest).toEqual([]);
+    expect(translations.en.names.adjectives).toContain(adjective);
+    expect(translations.en.names.nouns).toContain(noun);
+    expect(page.querySelector('dialog')).toBeNull();
   });
 
-  it('connects with the name, joins the chat from the link and clears the address', async () => {
+  it('joins the chat from the link and clears the address', async () => {
     fakeClient.join.mockImplementation((id: string) => activeId.set(id));
     const replaceState = vi.spyOn(TestBed.inject(Location), 'replaceState');
-    const { page, submitName } = await render('trip');
-    await submitName('Juan');
-    expect(fakeClient.connect).toHaveBeenCalledWith('Juan');
+    await render('trip');
     expect(fakeClient.join).toHaveBeenCalledWith('trip');
     expect(replaceState).toHaveBeenCalledWith('/');
-    expect(page.querySelector('dialog')).toBeNull();
     expect(document.activeElement?.id).toBe('message');
   });
 
   it('creates a named group', async () => {
-    const { fixture, page, submitName } = await render();
-    await submitName('Juan');
+    const { fixture, page } = await render();
     (page.querySelector('[aria-label="New group"]') as HTMLButtonElement).click();
     await fixture.whenStable();
     expect(page.querySelector('#name-title')?.textContent).toContain('New group');
 
-    await submitName('Weekend trip');
+    const input = page.querySelector('#name') as HTMLInputElement;
+    input.value = 'Weekend trip';
+    input.dispatchEvent(new Event('input'));
+    input.form!.dispatchEvent(new Event('submit', { cancelable: true }));
+    await fixture.whenStable();
     expect(fakeClient.create).toHaveBeenCalledWith('Weekend trip');
   });
 
   async function openChat() {
     const rendered = await render();
-    await rendered.submitName('Juan');
     (rendered.page.querySelector('[aria-label="Your chats"] button') as HTMLButtonElement).click();
     await rendered.fixture.whenStable();
     return rendered;
@@ -316,8 +312,7 @@ describe('ChatsPage', () => {
   });
 
   it('shows your own QR from the list and keeps it up when a chat arrives', async () => {
-    const { fixture, page, submitName } = await render();
-    await submitName('Juan');
+    const { fixture, page } = await render();
     (page.querySelector('[aria-label="Show QR code"]') as HTMLElement).click();
     await fixture.whenStable();
     const dialog = page.querySelector('app-qr-dialog dialog') as HTMLDialogElement;
