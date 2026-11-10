@@ -26,4 +26,4 @@ Each entry is one commit, or a few when it spans both apps; no commit breaks pro
   - Tapping your name renames you while the tab is open; the API relays it and the chat shows "A is now B". Messages and members already follow the id. The name is not stored: a new tab gets a new name.
 - **Out of scope:** asking for gender or any profile; translating someone else's name.
 - **Done when:** a new tab enters the app with a generated name and no dialog, can rename itself from the page, and everyone in its chats sees the change.
-- **Date:** 2026-11-10 · **Status:** Open
+- **Date:** 2026-11-10 · **Status:** In progress (2026-11-10)

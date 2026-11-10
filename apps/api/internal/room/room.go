@@ -143,7 +143,7 @@ func startPrivate(a, b *Client) {
 	people := r.people()
 	for _, pair := range [][2]*Member{{ma, mb}, {mb, ma}} {
 		to, other := pair[0], pair[1]
-		r.deliver(to, Message{Type: "joined", ID: other.client.ID, Name: other.client.Name, Title: other.client.Name, Private: true, Members: people})
+		r.deliver(to, Message{Type: "joined", ID: other.client.ID, Name: other.client.Name(), Title: other.client.Name(), Private: true, Members: people})
 	}
 }
 
@@ -159,7 +159,7 @@ func (r *Room) Join(client *Client) (*Member, error) {
 		return nil, ErrRoomFull
 	}
 	r.members = append(r.members, member)
-	r.broadcast(Message{Type: "joined", ID: client.ID, Name: client.Name, Title: r.Name, Members: r.people()})
+	r.broadcast(Message{Type: "joined", ID: client.ID, Name: client.Name(), Title: r.Name, Members: r.people()})
 	return member, nil
 }
 
@@ -200,7 +200,7 @@ func (r *Room) post(from *Member, message Message, limiter *rate.Limiter, slow s
 		return
 	}
 	r.seq++
-	message.Type, message.ID, message.Name, message.Seq = "message", from.client.ID, from.client.Name, r.seq
+	message.Type, message.ID, message.Name, message.Seq = "message", from.client.ID, from.client.Name(), r.seq
 	if message.File == nil {
 		r.broadcast(message)
 		return
@@ -223,13 +223,22 @@ func (r *Room) Typing(from *Member) {
 	if !slices.Contains(r.members, from) || !from.typing.Allow() {
 		return
 	}
-	message := Message{Type: "typing", ID: from.client.ID, Name: from.client.Name}
+	message := Message{Type: "typing", ID: from.client.ID, Name: from.client.Name()}
 	for _, member := range r.members {
 		if member != from {
 			message.Room = member.label
 			member.client.push(message)
 		}
 	}
+}
+
+func (r *Room) Renamed(member *Member) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if !slices.Contains(r.members, member) {
+		return
+	}
+	r.broadcast(Message{Type: "renamed", ID: member.client.ID, Name: member.client.Name()})
 }
 
 func (r *Room) broadcast(message Message) {
@@ -271,7 +280,7 @@ func (r *Room) remove(member *Member) {
 	if len(r.members) == 0 {
 		r.expiry.Reset(emptyLifetime)
 	}
-	r.broadcast(Message{Type: "left", ID: member.client.ID, Name: member.client.Name, Members: r.people()})
+	r.broadcast(Message{Type: "left", ID: member.client.ID, Name: member.client.Name(), Members: r.people()})
 	if r.private {
 		for _, other := range r.members {
 			other.client.forget(other.label)

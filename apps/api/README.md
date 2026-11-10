@@ -68,14 +68,17 @@ client → server:   {"type": "join",    "room": "…"}
                    {"type": "message", "room": "…", "text": "hola", "reply": 1}
                    {"type": "typing",  "room": "…"}
                    {"type": "leave",   "room": "…"}
+                   {"type": "rename",  "name": "Cráneo Negro"}
                    binary: {"type": "file", "room": "…", "name": "photo.jpg", "text": "optional caption"} + bytes
                    binary: {"type": "file", "room": "…", "name": "voice.webm", "seconds": 12} + bytes
 server → client:   {"type": "ready",   "id": "…", "name": "Juan"}
+                   {"type": "renamed", "id": "…", "name": "Cráneo Negro"}
 server → room:     {"type": "message", "room": "…", "id": "…", "name": "Juan", "text": "hola", "seq": 2, "reply": 1}
                    binary: {"type": "message", "room": "…", "id": "…", "name": "Juan", "text": "optional caption", "file": {"kind": "image", "name": "photo.jpg", "mime": "image/jpeg", "size": 48213}} + bytes
                    (the sender gets the same event as a JSON text frame, a receipt)
                    {"type": "joined",  "room": "…", "id": "…", "name": "Ana", "title": "Weekend trip", "members": [{"id": "…", "name": "Juan"}, …]}
                    {"type": "left",    "room": "…", "id": "…", "name": "Ana", "members": […]}
+                   {"type": "renamed", "room": "…", "id": "…", "name": "Cráneo Negro"}
 server → others:   {"type": "typing",  "room": "…", "id": "…", "name": "Juan"}
 server → sender:   {"type": "error",   "room": "…", "code": "slow-messages" | "slow-files"}
                    {"type": "error",   "room": "…", "code": "gone" | "full" | "limit" | "self" | "busy"}
@@ -166,6 +169,13 @@ so typing never uses up the message limit); extra signals are dropped without
 an error. There is no "stopped typing": a client shows it for a few seconds
 after the last signal. It is never worth a disconnection: a tab whose
 mailbox is full just misses it.
+
+A tab renames itself with `rename`, under the same 1 to 24 character rule, at
+most once every 10 seconds (`RenameInterval`; otherwise the roomless error
+`slow-renames`). An invalid or unchanged name is ignored and does not use up
+that limit. The tab gets the roomless `renamed` as confirmation, and every chat
+it is in, groups and private chats, gets `renamed` (the tab included). Private
+chats stay open, and nothing is stored.
 
 ### Room lifecycle
 

@@ -35,7 +35,7 @@ func receive(t *testing.T, member *Member) Message {
 	case message := <-member.client.Messages():
 		return message
 	default:
-		t.Fatalf("%s got nothing", member.client.Name)
+		t.Fatalf("%s got nothing", member.client.Name())
 		return Message{}
 	}
 }
@@ -43,7 +43,7 @@ func receive(t *testing.T, member *Member) Message {
 func expect(t *testing.T, member *Member, want Message) {
 	t.Helper()
 	if got := receive(t, member); !reflect.DeepEqual(got, want) {
-		t.Errorf("%s got %+v, want %+v", member.client.Name, got, want)
+		t.Errorf("%s got %+v, want %+v", member.client.Name(), got, want)
 	}
 }
 
@@ -51,7 +51,7 @@ func assertEmpty(t *testing.T, member *Member) {
 	t.Helper()
 	select {
 	case message := <-member.client.Messages():
-		t.Fatalf("%s got %+v, want nothing", member.client.Name, message)
+		t.Fatalf("%s got %+v, want nothing", member.client.Name(), message)
 	default:
 	}
 }
@@ -61,11 +61,11 @@ func assertConnected(t *testing.T, member *Member, want bool) {
 	select {
 	case <-member.client.Gone():
 		if want {
-			t.Errorf("%s was disconnected", member.client.Name)
+			t.Errorf("%s was disconnected", member.client.Name())
 		}
 	default:
 		if !want {
-			t.Errorf("%s is still connected", member.client.Name)
+			t.Errorf("%s is still connected", member.client.Name())
 		}
 	}
 }
@@ -89,19 +89,19 @@ func people(members ...*Member) []Person {
 }
 
 func joined(who *Member, members ...*Member) Message {
-	return Message{Type: "joined", Room: roomID, ID: who.client.ID, Name: who.client.Name, Title: roomTitle, Members: people(members...)}
+	return Message{Type: "joined", Room: roomID, ID: who.client.ID, Name: who.client.Name(), Title: roomTitle, Members: people(members...)}
 }
 
 func left(who *Member, members ...*Member) Message {
-	return Message{Type: "left", Room: roomID, ID: who.client.ID, Name: who.client.Name, Members: people(members...)}
+	return Message{Type: "left", Room: roomID, ID: who.client.ID, Name: who.client.Name(), Members: people(members...)}
 }
 
 func said(who *Member, seq int, text string) Message {
-	return Message{Type: "message", Room: roomID, ID: who.client.ID, Name: who.client.Name, Text: text, Seq: seq}
+	return Message{Type: "message", Room: roomID, ID: who.client.ID, Name: who.client.Name(), Text: text, Seq: seq}
 }
 
 func typing(who *Member) Message {
-	return Message{Type: "typing", Room: roomID, ID: who.client.ID, Name: who.client.Name}
+	return Message{Type: "typing", Room: roomID, ID: who.client.ID, Name: who.client.Name()}
 }
 
 func TestJoinAnnouncesTheNewcomerToEveryone(t *testing.T) {
@@ -451,4 +451,87 @@ func TestACaptionTravelsWithItsFile(t *testing.T) {
 	room.SendFile(juan, file, "for Saturday", 0)
 	expect(t, ana, Message{Type: "message", Room: roomID, ID: juan.client.ID, Name: "Juan", Text: "for Saturday", File: file, Seq: 1})
 	expect(t, juan, Message{Type: "message", Room: roomID, ID: juan.client.ID, Name: "Juan", Text: "for Saturday", File: &File{Kind: "file", Name: "notes.txt", Size: 4}, Seq: 1})
+}
+
+func renamed(who *Member, label, name string) Message {
+	return Message{Type: "renamed", Room: label, ID: who.client.ID, Name: name}
+}
+
+func TestRenameTellsEveryChatTheTabIsIn(t *testing.T) {
+	rooms := NewRegistry()
+	room := newTestRoom()
+	juan, ana := join(t, room, "Juan"), join(t, room, "Ana")
+	luis := rooms.Connect("Luis")
+	juan.client.remember(room.ID, room, juan)
+	rooms.Open(juan.client, luis.ID)
+	rooms.Send(juan.client, luis.ID, "hi", 0)
+	drain(juan)
+	drain(ana)
+	for range 2 {
+		next(t, luis)
+	}
+
+	juan.client.Rename(" Cráneo ")
+
+	got := map[string]Message{}
+	for range 3 {
+		message := receive(t, juan)
+		got[message.Room] = message
+	}
+	assertEmpty(t, juan)
+	want := map[string]Message{
+		"":      {Type: "renamed", ID: juan.client.ID, Name: "Cráneo"},
+		roomID:  renamed(juan, roomID, "Cráneo"),
+		luis.ID: renamed(juan, luis.ID, "Cráneo"),
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("Juan got %+v, want %+v", got, want)
+	}
+	expect(t, ana, renamed(juan, roomID, "Cráneo"))
+	assertEmpty(t, ana)
+	if got := next(t, luis); !reflect.DeepEqual(got, renamed(juan, juan.client.ID, "Cráneo")) {
+		t.Errorf("Luis got %+v", got)
+	}
+	assertNothing(t, luis)
+
+	room.Send(juan, "again", 0)
+	expect(t, ana, said(juan, 1, "again"))
+}
+
+func TestRenameIsRateLimited(t *testing.T) {
+	room := newTestRoom()
+	juan, ana := join(t, room, "Juan"), join(t, room, "Ana")
+	juan.client.remember(room.ID, room, juan)
+	drain(juan)
+	drain(ana)
+
+	juan.client.Rename("One")
+	drain(juan)
+	drain(ana)
+	juan.client.Rename("Two")
+
+	expect(t, juan, Message{Type: "error", Code: "slow-renames"})
+	assertEmpty(t, juan)
+	assertEmpty(t, ana)
+	if juan.client.Name() != "One" {
+		t.Errorf("name = %q, want One", juan.client.Name())
+	}
+}
+
+func TestInvalidRenamesAreSilentAndFree(t *testing.T) {
+	room := newTestRoom()
+	juan, ana := join(t, room, "Juan"), join(t, room, "Ana")
+	juan.client.remember(room.ID, room, juan)
+	drain(juan)
+	drain(ana)
+
+	for _, name := range []string{"", "   ", strings.Repeat("x", 25), "Juan"} {
+		juan.client.Rename(name)
+		assertEmpty(t, juan)
+		assertEmpty(t, ana)
+	}
+
+	juan.client.Rename("Nuevo")
+	expect(t, juan, Message{Type: "renamed", ID: juan.client.ID, Name: "Nuevo"})
+	expect(t, juan, renamed(juan, roomID, "Nuevo"))
 }

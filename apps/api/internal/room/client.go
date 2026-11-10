@@ -1,10 +1,17 @@
 package room
 
-import "sync"
+import (
+	"strings"
+	"sync"
+	"time"
+
+	"golang.org/x/time/rate"
+)
 
 const (
-	MaxChats    = 20
-	mailboxSize = 32
+	MaxChats       = 20
+	mailboxSize    = 32
+	RenameInterval = 10 * time.Second
 )
 
 type chat struct {
@@ -14,21 +21,51 @@ type chat struct {
 
 type Client struct {
 	ID      string
-	Name    string
+	name    string
 	mailbox chan Message
 	gone    chan struct{}
 	once    sync.Once
 	mu      sync.Mutex
 	chats   map[string]chat
+	renames *rate.Limiter
 }
 
 func NewClient(name string) *Client {
 	return &Client{
 		ID:      newID(),
-		Name:    name,
+		name:    name,
 		mailbox: make(chan Message, mailboxSize),
 		gone:    make(chan struct{}),
 		chats:   make(map[string]chat),
+		renames: rate.NewLimiter(rate.Every(RenameInterval), 1),
+	}
+}
+
+func (c *Client) Name() string {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.name
+}
+
+func (c *Client) Rename(name string) {
+	name = strings.TrimSpace(name)
+	if !ValidName(name) || name == c.Name() {
+		return
+	}
+	if !c.renames.Allow() {
+		c.Notify(Message{Type: "error", Code: "slow-renames"})
+		return
+	}
+	c.mu.Lock()
+	c.name = name
+	chats := make([]chat, 0, len(c.chats))
+	for _, chat := range c.chats {
+		chats = append(chats, chat)
+	}
+	c.mu.Unlock()
+	c.Notify(Message{Type: "renamed", ID: c.ID, Name: name})
+	for _, chat := range chats {
+		chat.room.Renamed(chat.member)
 	}
 }
 
@@ -109,7 +146,7 @@ func (c *Client) forget(label string) {
 }
 
 func (c *Client) person() Person {
-	return Person{ID: c.ID, Name: c.Name}
+	return Person{ID: c.ID, Name: c.Name()}
 }
 
 func (c *Client) push(message Message) bool {

@@ -111,7 +111,7 @@ func next(t *testing.T, client *Client) Message {
 	case message := <-client.Messages():
 		return message
 	default:
-		t.Fatalf("%s got nothing", client.Name)
+		t.Fatalf("%s got nothing", client.Name())
 		return Message{}
 	}
 }
@@ -120,7 +120,7 @@ func assertNothing(t *testing.T, client *Client) {
 	t.Helper()
 	select {
 	case message := <-client.Messages():
-		t.Errorf("%s got %+v, want nothing", client.Name, message)
+		t.Errorf("%s got %+v, want nothing", client.Name(), message)
 	default:
 	}
 }

@@ -92,7 +92,7 @@ func connect(rooms *room.Registry, ping time.Duration) http.HandlerFunc {
 
 		go func() {
 			defer conn.CloseNow()
-			if wsjson.Write(r.Context(), conn, room.Message{Type: "ready", ID: client.ID, Name: client.Name}) != nil {
+			if wsjson.Write(r.Context(), conn, room.Message{Type: "ready", ID: client.ID, Name: client.Name()}) != nil {
 				return
 			}
 			for {
@@ -148,6 +148,8 @@ func connect(rooms *room.Registry, ping time.Duration) http.HandlerFunc {
 				rooms.SendFile(client, incoming.Room, incoming.Name, incoming.Data, incoming.Seconds, incoming.Text, incoming.Reply)
 			case "typing":
 				client.Typing(incoming.Room)
+			case "rename":
+				client.Rename(incoming.Name)
 			}
 		}
 	}

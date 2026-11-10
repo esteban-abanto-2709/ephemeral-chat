@@ -247,6 +247,11 @@ func TestChat(t *testing.T) {
 	if !reflect.DeepEqual(header, inBinary) || string(data) != "hola" {
 		t.Errorf("Luis got %+v with %q, want %+v with %q", header, data, inBinary, "hola")
 	}
+
+	send(luis, map[string]string{"type": "rename", "name": "Cráneo Negro"})
+	expect(room.Message{Type: "renamed", ID: luis.person.ID, Name: "Cráneo Negro"}, luis)
+	renamed := room.Message{Type: "renamed", Room: id, ID: luis.person.ID, Name: "Cráneo Negro"}
+	expect(renamed, luis, juan)
 }
 
 func TestAPIOnlyWithoutStaticDir(t *testing.T) {

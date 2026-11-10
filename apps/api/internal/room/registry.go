@@ -60,7 +60,7 @@ func (r *Registry) Open(client *Client, code string) {
 		fail(reason)
 		return
 	}
-	client.Notify(Message{Type: "joined", Room: other.ID, ID: other.ID, Name: other.Name, Title: other.Name, Private: true, Members: []Person{client.person(), other.person()}})
+	client.Notify(Message{Type: "joined", Room: other.ID, ID: other.ID, Name: other.Name(), Title: other.Name(), Private: true, Members: []Person{client.person(), other.person()}})
 }
 
 func (r *Registry) Send(client *Client, label, text string, reply int) {
