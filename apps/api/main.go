@@ -115,12 +115,22 @@ func connect(rooms *room.Registry, ping time.Duration) http.HandlerFunc {
 				Room    string `json:"room"`
 				Text    string `json:"text"`
 				Name    string `json:"name"`
-				Data    string `json:"data"`
+				Data    []byte `json:"data"`
 				Reply   int    `json:"reply"`
 				Seconds int    `json:"seconds"`
 			}
-			if err := wsjson.Read(r.Context(), conn, &incoming); err != nil {
+			kind, payload, err := conn.Read(r.Context())
+			if err != nil {
 				return
+			}
+			if kind == websocket.MessageBinary {
+				header, data, ok := decodeFrame(payload)
+				if !ok || json.Unmarshal(header, &incoming) != nil || incoming.Type != "file" {
+					continue
+				}
+				incoming.Data = data
+			} else if json.Unmarshal(payload, &incoming) != nil {
+				continue
 			}
 			switch incoming.Type {
 			case "join":

@@ -208,6 +208,29 @@ func TestChat(t *testing.T) {
 
 	send(juan, map[string]string{"type": "file", "room": id, "name": "notes.txt", "data": "aG9sYQ==", "text": "for Saturday"})
 	expect(room.Message{Type: "message", Room: id, ID: juan.person.ID, Name: "Juan", Text: "for Saturday", File: &room.File{Kind: "file", Name: "notes.txt", Size: 4}, Seq: 3}, juan)
+
+	luis := open("Luis")
+	send(luis, map[string]string{"type": "join", "room": id})
+	expect(joined(luis, juan, luis), juan, luis)
+	sendBinary := func(from tab, header any, data []byte) {
+		t.Helper()
+		frame, err := encodeFrame(header, data)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := from.conn.Write(ctx, websocket.MessageBinary, frame); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := juan.conn.Write(ctx, websocket.MessageBinary, []byte{0, 0, 0, 9, '{'}); err != nil {
+		t.Fatal(err)
+	}
+	sendBinary(juan, map[string]string{"type": "message", "room": id, "text": "not a file"}, nil)
+	sendBinary(juan, map[string]string{"type": "file", "room": id, "name": "notes.txt", "text": "in binary"}, []byte("hola"))
+	inBinary := room.Message{Type: "message", Room: id, ID: juan.person.ID, Name: "Juan", Text: "in binary", File: &room.File{Kind: "file", Name: "notes.txt", Size: 4}, Seq: 4}
+	expect(inBinary, juan)
+	inBinary.File = &room.File{Kind: "file", Name: "notes.txt", Size: 4, Data: []byte("hola")}
+	expect(inBinary, luis)
 }
 
 func TestAPIOnlyWithoutStaticDir(t *testing.T) {

@@ -119,7 +119,12 @@ even read, so no client can make the server buffer a huge message.
 A `file` frame carries one file in base64, up to 5 MiB once decoded
 (`FileMaxBytes`), with a name of 1 to 120 characters and an optional caption in
 `text`, held to the same rules as a message; anything else is dropped.
-The server decodes it to measure it and sniffs its first bytes
+A file can also arrive as a binary WebSocket frame: 4 bytes with the header
+length (uint32, big-endian), then the JSON header (the same `file` frame
+without `"data"`), then the raw bytes of the file. A binary frame that can't be
+parsed, or whose type isn't `file`, is ignored. The server still sends files in
+JSON with base64.
+Either way the server measures the raw bytes and sniffs the first ones
 (`http.DetectContentType`): only PNG, JPEG, GIF and WebP become `"kind":
 "image"` with their `mime`, which a client may show inline. Everything else is
 `"kind": "file"`, to be downloaded and never opened in the page, so an SVG or

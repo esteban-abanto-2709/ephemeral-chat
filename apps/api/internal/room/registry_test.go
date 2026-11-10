@@ -223,12 +223,12 @@ func TestAFileCanStartAPrivateChat(t *testing.T) {
 	rooms := NewRegistry()
 	sam, luis := rooms.Connect("Sam"), rooms.Connect("Luis")
 
-	rooms.SendFile(sam, luis.ID, "x.txt", "not base64!", 0, "", 0)
+	rooms.SendFile(sam, luis.ID, "x.txt", nil, 0, "", 0)
 	assertNothing(t, luis)
-	rooms.SendFile(sam, luis.ID, "notes.txt", "aG9sYQ==", 0, strings.Repeat("x", MessageMaxLength+1), 0)
+	rooms.SendFile(sam, luis.ID, "notes.txt", []byte("hola"), 0, strings.Repeat("x", MessageMaxLength+1), 0)
 	assertNothing(t, luis)
 
-	rooms.SendFile(sam, luis.ID, "notes.txt", "aG9sYQ==", 0, "", 0)
+	rooms.SendFile(sam, luis.ID, "notes.txt", []byte("hola"), 0, "", 0)
 	if got := next(t, luis); got.Type != "joined" || !got.Private {
 		t.Errorf("Luis got %+v, want the private chat", got)
 	}

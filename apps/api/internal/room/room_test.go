@@ -1,7 +1,7 @@
 package room
 
 import (
-	"encoding/base64"
+	"bytes"
 	"errors"
 	"fmt"
 	"reflect"
@@ -366,34 +366,30 @@ func TestValidName(t *testing.T) {
 	}
 }
 
-func encode(raw []byte) string {
-	return base64.StdEncoding.EncodeToString(raw)
-}
-
 func TestNewFileChecksWhatItHolds(t *testing.T) {
 	png := []byte("\x89PNG\r\n\x1a\nrest of the image")
 	webm := []byte("\x1a\x45\xdf\xa3rest of the recording")
 	cases := []struct {
-		label, name, data string
-		seconds           int
-		ok                bool
-		kind, mime        string
+		label, name string
+		data        []byte
+		seconds     int
+		ok          bool
+		kind, mime  string
 	}{
-		{"a voice message", "voice.webm", encode(webm), 12, true, "voice", "audio/webm"},
-		{"the longest voice message", "voice.webm", encode(webm), VoiceMaxSeconds, true, "voice", "audio/webm"},
-		{"a voice message too long", "voice.webm", encode(webm), VoiceMaxSeconds + 1, false, "", ""},
-		{"a voice message that isn't audio", "voice.webm", encode(png), 12, false, "", ""},
-		{"a voice message over its size", "voice.webm", encode(append(webm, make([]byte, VoiceMaxBytes)...)), 12, false, "", ""},
-		{"a negative length", "voice.webm", encode(webm), -1, false, "", ""},
-		{"a png", " photo.png ", encode(png), 0, true, "image", "image/png"},
-		{"text", "notes.txt", encode([]byte("hola")), 0, true, "file", ""},
-		{"an svg, never shown inline", "logo.svg", encode([]byte("<svg xmlns='http://www.w3.org/2000/svg'><script>x</script></svg>")), 0, true, "file", ""},
-		{"the largest allowed", "big.bin", encode(make([]byte, FileMaxBytes)), 0, true, "file", ""},
-		{"one byte too many", "big.bin", encode(make([]byte, FileMaxBytes+1)), 0, false, "", ""},
-		{"no name", "  ", encode(png), 0, false, "", ""},
-		{"a name too long", strings.Repeat("ñ", FileNameMaxLength+1), encode(png), 0, false, "", ""},
-		{"no data", "empty.txt", "", 0, false, "", ""},
-		{"not base64", "x.txt", "not base64!", 0, false, "", ""},
+		{"a voice message", "voice.webm", webm, 12, true, "voice", "audio/webm"},
+		{"the longest voice message", "voice.webm", webm, VoiceMaxSeconds, true, "voice", "audio/webm"},
+		{"a voice message too long", "voice.webm", webm, VoiceMaxSeconds + 1, false, "", ""},
+		{"a voice message that isn't audio", "voice.webm", png, 12, false, "", ""},
+		{"a voice message over its size", "voice.webm", append(webm, make([]byte, VoiceMaxBytes)...), 12, false, "", ""},
+		{"a negative length", "voice.webm", webm, -1, false, "", ""},
+		{"a png", " photo.png ", png, 0, true, "image", "image/png"},
+		{"text", "notes.txt", []byte("hola"), 0, true, "file", ""},
+		{"an svg, never shown inline", "logo.svg", []byte("<svg xmlns='http://www.w3.org/2000/svg'><script>x</script></svg>"), 0, true, "file", ""},
+		{"the largest allowed", "big.bin", make([]byte, FileMaxBytes), 0, true, "file", ""},
+		{"one byte too many", "big.bin", make([]byte, FileMaxBytes+1), 0, false, "", ""},
+		{"no name", "  ", png, 0, false, "", ""},
+		{"a name too long", strings.Repeat("ñ", FileNameMaxLength+1), png, 0, false, "", ""},
+		{"no data", "empty.txt", nil, 0, false, "", ""},
 	}
 	for _, c := range cases {
 		file, ok := NewFile(c.name, c.data, c.seconds)
@@ -401,11 +397,11 @@ func TestNewFileChecksWhatItHolds(t *testing.T) {
 			t.Errorf("%s: ok = %v, want %v", c.label, ok, c.ok)
 			continue
 		}
-		if ok && (file.Kind != c.kind || file.Mime != c.mime || file.Seconds != c.seconds || file.Name != strings.TrimSpace(c.name) || file.Data != c.data) {
+		if ok && (file.Kind != c.kind || file.Mime != c.mime || file.Seconds != c.seconds || file.Name != strings.TrimSpace(c.name) || !bytes.Equal(file.Data, c.data)) {
 			t.Errorf("%s: got %s %q %q, want %s %q", c.label, file.Kind, file.Mime, file.Name, c.kind, c.mime)
 		}
 	}
-	if file, _ := NewFile("photo.png", encode(png), 0); file.Size != len(png) {
+	if file, _ := NewFile("photo.png", png, 0); file.Size != len(png) {
 		t.Errorf("Size = %d, want %d", file.Size, len(png))
 	}
 }
@@ -416,7 +412,7 @@ func TestFilesReachEveryoneWithinTheirOwnLimit(t *testing.T) {
 		juan, ana := join(t, room, "Juan"), join(t, room, "Ana")
 		drain(juan)
 		drain(ana)
-		file, _ := NewFile("notes.txt", encode([]byte("hola")), 0)
+		file, _ := NewFile("notes.txt", []byte("hola"), 0)
 		sent := Message{Type: "message", Room: roomID, ID: juan.client.ID, Name: "Juan", File: file}
 		receipt := sent
 		receipt.File = &File{Kind: "file", Name: "notes.txt", Size: 4}
@@ -446,7 +442,7 @@ func TestACaptionTravelsWithItsFile(t *testing.T) {
 	juan, ana := join(t, room, "Juan"), join(t, room, "Ana")
 	drain(juan)
 	drain(ana)
-	file, _ := NewFile("notes.txt", encode([]byte("hola")), 0)
+	file, _ := NewFile("notes.txt", []byte("hola"), 0)
 
 	room.SendFile(juan, file, "   ", 0)
 	room.SendFile(juan, file, strings.Repeat("x", MessageMaxLength+1), 0)

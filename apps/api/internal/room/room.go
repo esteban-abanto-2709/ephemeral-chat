@@ -1,7 +1,6 @@
 package room
 
 import (
-	"encoding/base64"
 	"errors"
 	"net/http"
 	"slices"
@@ -67,26 +66,25 @@ type File struct {
 	Mime    string `json:"mime,omitempty"`
 	Size    int    `json:"size"`
 	Seconds int    `json:"seconds,omitempty"`
-	Data    string `json:"data,omitempty"`
+	Data    []byte `json:"data,omitempty"`
 }
 
-func NewFile(name, data string, seconds int) (*File, bool) {
+func NewFile(name string, data []byte, seconds int) (*File, bool) {
 	name = strings.TrimSpace(name)
-	if name == "" || utf8.RuneCountInString(name) > FileNameMaxLength || base64.StdEncoding.DecodedLen(len(data)) > FileMaxBytes+2 {
+	if name == "" || utf8.RuneCountInString(name) > FileNameMaxLength {
 		return nil, false
 	}
 	if seconds < 0 || seconds > VoiceMaxSeconds {
 		return nil, false
 	}
-	raw, err := base64.StdEncoding.DecodeString(data)
-	if err != nil || len(raw) == 0 || len(raw) > FileMaxBytes {
+	if len(data) == 0 || len(data) > FileMaxBytes {
 		return nil, false
 	}
-	file := &File{Kind: "file", Name: name, Size: len(raw), Data: data}
-	mime := http.DetectContentType(raw)
+	file := &File{Kind: "file", Name: name, Size: len(data), Data: data}
+	mime := http.DetectContentType(data)
 	if seconds > 0 {
 		audio, ok := voiceTypes[mime]
-		if !ok || len(raw) > VoiceMaxBytes {
+		if !ok || len(data) > VoiceMaxBytes {
 			return nil, false
 		}
 		file.Kind, file.Mime, file.Seconds = "voice", audio, seconds
@@ -208,7 +206,7 @@ func (r *Room) post(from *Member, message Message, limiter *rate.Limiter, slow s
 		return
 	}
 	receipt := *message.File
-	receipt.Data = ""
+	receipt.Data = nil
 	r.each(func(member *Member) Message {
 		if member == from {
 			mine := message

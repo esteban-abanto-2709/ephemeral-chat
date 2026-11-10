@@ -31,7 +31,7 @@ A private chat's preview still starts with "You:" when the last message is yours
 ## [WL-015] Read receipts
 Checks on your messages saying they arrived and were read, as in WhatsApp. Open product question: does "seen" fit an ephemeral chat, or is not knowing part of the point? Decide before building.
 
-## [WL-019] Files in binary frames
+## [WL-019] Files in binary frames · In progress (2026-11-10)
 Files travel as base64 inside JSON text frames, about 33% bigger than the file. Binary WebSocket frames would carry the raw bytes, at the cost of a small header of our own for the chat and the file name.
 
 ## [WL-020] Swipe to reply

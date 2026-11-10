@@ -69,7 +69,7 @@ func (r *Registry) Send(client *Client, label, text string, reply int) {
 	}
 }
 
-func (r *Registry) SendFile(client *Client, label, name, data string, seconds int, caption string, reply int) {
+func (r *Registry) SendFile(client *Client, label, name string, data []byte, seconds int, caption string, reply int) {
 	if file, ok := NewFile(name, data, seconds); ok && validCaption(caption) && r.reach(client, label) {
 		client.SendFile(label, file, caption, reply)
 	}
