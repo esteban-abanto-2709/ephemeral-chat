@@ -60,19 +60,20 @@ A browser tab opens one WebSocket, `GET /api/ws?name=…`, and every chat it
 holds travels over it. The name must be 1 to 24 characters once trimmed (`400`
 otherwise). The first frame gives the tab its id: 16 random bytes, like a room
 id, that lives while the connection does and is never stored. Two people may
-share a name; the id tells them apart. Then, as JSON text frames:
+share a name; the id tells them apart. Then, as JSON text frames (files as
+binary frames, see below):
 
 ```
 client → server:   {"type": "join",    "room": "…"}
                    {"type": "message", "room": "…", "text": "hola", "reply": 1}
                    {"type": "typing",  "room": "…"}
-                   {"type": "file",    "room": "…", "name": "photo.jpg", "data": "<base64>", "text": "optional caption"}
-                   {"type": "file",    "room": "…", "name": "voice.webm", "data": "<base64>", "seconds": 12}
                    {"type": "leave",   "room": "…"}
+                   binary: {"type": "file", "room": "…", "name": "photo.jpg", "text": "optional caption"} + bytes
+                   binary: {"type": "file", "room": "…", "name": "voice.webm", "seconds": 12} + bytes
 server → client:   {"type": "ready",   "id": "…", "name": "Juan"}
 server → room:     {"type": "message", "room": "…", "id": "…", "name": "Juan", "text": "hola", "seq": 2, "reply": 1}
-                   {"type": "message", "room": "…", "id": "…", "name": "Juan", "text": "optional caption", "file": {"kind": "image", "name": "photo.jpg", "mime": "image/jpeg", "size": 48213, "data": "<base64>"}}
-                   (the sender gets the same file event without "data")
+                   binary: {"type": "message", "room": "…", "id": "…", "name": "Juan", "text": "optional caption", "file": {"kind": "image", "name": "photo.jpg", "mime": "image/jpeg", "size": 48213}} + bytes
+                   (the sender gets the same event as a JSON text frame, a receipt)
                    {"type": "joined",  "room": "…", "id": "…", "name": "Ana", "title": "Weekend trip", "members": [{"id": "…", "name": "Juan"}, …]}
                    {"type": "left",    "room": "…", "id": "…", "name": "Ana", "members": […]}
 server → others:   {"type": "typing",  "room": "…", "id": "…", "name": "Juan"}
@@ -113,18 +114,19 @@ when it was created. `joined` and `left` carry the full list of who is in, in
 order of arrival, so a client never has to work it out. Nothing is stored:
 whoever joins later sees only what comes after. Blank messages and messages
 over 1000 characters (`MessageMaxLength`) are dropped; the web never sends
-those. Any frame over 7 MiB closes the connection with `1009` before it is
+those. Any frame over 6 MiB closes the connection with `1009` before it is
 even read, so no client can make the server buffer a huge message.
 
-A `file` frame carries one file in base64, up to 5 MiB once decoded
-(`FileMaxBytes`), with a name of 1 to 120 characters and an optional caption in
-`text`, held to the same rules as a message; anything else is dropped.
-A file can also arrive as a binary WebSocket frame: 4 bytes with the header
-length (uint32, big-endian), then the JSON header (the same `file` frame
-without `"data"`), then the raw bytes of the file. A binary frame that can't be
-parsed, or whose type isn't `file`, is ignored. The server still sends files in
-JSON with base64.
-Either way the server measures the raw bytes and sniffs the first ones
+A file travels only as a binary WebSocket frame, in both directions: 4 bytes
+with the header length (uint32, big-endian), then the JSON header, then the raw
+bytes of the file. Incoming, the header is the `file` frame without `"data"`;
+outgoing, it is the `message` event whose `file` has no `"data"`. A file is up
+to 5 MiB (`FileMaxBytes`), with a name of 1 to 120 characters and an optional
+caption in `text`, held to the same rules as a message; anything else is
+dropped. A binary frame that can't be parsed, or whose type isn't `file`, is
+ignored, and so is a `file` sent as a text frame. The sender's receipt stays
+JSON.
+The server measures the raw bytes and sniffs the first ones
 (`http.DetectContentType`): only PNG, JPEG, GIF and WebP become `"kind":
 "image"` with their `mime`, which a client may show inline. Everything else is
 `"kind": "file"`, to be downloaded and never opened in the page, so an SVG or

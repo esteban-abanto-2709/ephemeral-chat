@@ -19,7 +19,7 @@ import (
 
 const (
 	bodyMaxBytes  = 8 << 10
-	frameMaxBytes = 7 << 20
+	frameMaxBytes = 6 << 20
 )
 
 const pingInterval = 30 * time.Second
@@ -98,7 +98,12 @@ func connect(rooms *room.Registry, ping time.Duration) http.HandlerFunc {
 			for {
 				select {
 				case message := <-client.Messages():
-					if wsjson.Write(r.Context(), conn, message) != nil {
+					if message.File != nil && len(message.File.Data) > 0 {
+						frame, err := encodeFrame(message, message.File.Data)
+						if err != nil || conn.Write(r.Context(), websocket.MessageBinary, frame) != nil {
+							return
+						}
+					} else if wsjson.Write(r.Context(), conn, message) != nil {
 						return
 					}
 				case <-client.Gone():
@@ -115,7 +120,7 @@ func connect(rooms *room.Registry, ping time.Duration) http.HandlerFunc {
 				Room    string `json:"room"`
 				Text    string `json:"text"`
 				Name    string `json:"name"`
-				Data    []byte `json:"data"`
+				Data    []byte `json:"-"`
 				Reply   int    `json:"reply"`
 				Seconds int    `json:"seconds"`
 			}
@@ -129,7 +134,7 @@ func connect(rooms *room.Registry, ping time.Duration) http.HandlerFunc {
 					continue
 				}
 				incoming.Data = data
-			} else if json.Unmarshal(payload, &incoming) != nil {
+			} else if json.Unmarshal(payload, &incoming) != nil || incoming.Type == "file" {
 				continue
 			}
 			switch incoming.Type {

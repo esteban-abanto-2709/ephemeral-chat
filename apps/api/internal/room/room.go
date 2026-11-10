@@ -66,7 +66,7 @@ type File struct {
 	Mime    string `json:"mime,omitempty"`
 	Size    int    `json:"size"`
 	Seconds int    `json:"seconds,omitempty"`
-	Data    []byte `json:"data,omitempty"`
+	Data    []byte `json:"-"`
 }
 
 func NewFile(name string, data []byte, seconds int) (*File, bool) {

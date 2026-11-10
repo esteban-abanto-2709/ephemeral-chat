@@ -114,6 +114,22 @@ func TestChat(t *testing.T) {
 		}
 		return got
 	}
+	readBinary := func(conn *websocket.Conn) (room.Message, []byte) {
+		t.Helper()
+		kind, frame, err := conn.Read(ctx)
+		if err != nil {
+			t.Fatal(err)
+		}
+		head, data, ok := decodeFrame(frame)
+		if kind != websocket.MessageBinary || !ok {
+			t.Fatalf("got frame kind %v (parsed %v), want a binary frame", kind, ok)
+		}
+		var got room.Message
+		if err := json.Unmarshal(head, &got); err != nil {
+			t.Fatal(err)
+		}
+		return got, data
+	}
 	type tab struct {
 		conn   *websocket.Conn
 		person room.Person
@@ -206,9 +222,6 @@ func TestChat(t *testing.T) {
 	stillHere.Reply = 1
 	expect(stillHere, juan)
 
-	send(juan, map[string]string{"type": "file", "room": id, "name": "notes.txt", "data": "aG9sYQ==", "text": "for Saturday"})
-	expect(room.Message{Type: "message", Room: id, ID: juan.person.ID, Name: "Juan", Text: "for Saturday", File: &room.File{Kind: "file", Name: "notes.txt", Size: 4}, Seq: 3}, juan)
-
 	luis := open("Luis")
 	send(luis, map[string]string{"type": "join", "room": id})
 	expect(joined(luis, juan, luis), juan, luis)
@@ -226,11 +239,14 @@ func TestChat(t *testing.T) {
 		t.Fatal(err)
 	}
 	sendBinary(juan, map[string]string{"type": "message", "room": id, "text": "not a file"}, nil)
+	send(juan, map[string]string{"type": "file", "room": id, "name": "notes.txt", "data": "aG9sYQ==", "text": "as json"})
 	sendBinary(juan, map[string]string{"type": "file", "room": id, "name": "notes.txt", "text": "in binary"}, []byte("hola"))
-	inBinary := room.Message{Type: "message", Room: id, ID: juan.person.ID, Name: "Juan", Text: "in binary", File: &room.File{Kind: "file", Name: "notes.txt", Size: 4}, Seq: 4}
+	inBinary := room.Message{Type: "message", Room: id, ID: juan.person.ID, Name: "Juan", Text: "in binary", File: &room.File{Kind: "file", Name: "notes.txt", Size: 4}, Seq: 3}
 	expect(inBinary, juan)
-	inBinary.File = &room.File{Kind: "file", Name: "notes.txt", Size: 4, Data: []byte("hola")}
-	expect(inBinary, luis)
+	header, data := readBinary(luis.conn)
+	if !reflect.DeepEqual(header, inBinary) || string(data) != "hola" {
+		t.Errorf("Luis got %+v with %q, want %+v with %q", header, data, inBinary, "hola")
+	}
 }
 
 func TestAPIOnlyWithoutStaticDir(t *testing.T) {
