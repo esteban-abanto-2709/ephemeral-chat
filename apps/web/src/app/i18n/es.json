@@ -180,5 +180,8 @@
   "voice": {
     "play": "Reproducir mensaje de voz",
     "pause": "Pausar mensaje de voz"
+  },
+  "language": {
+    "switch": "Idioma: ES. Cambiar a inglés"
   }
 }

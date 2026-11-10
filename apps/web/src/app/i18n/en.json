@@ -180,5 +180,8 @@
   "voice": {
     "play": "Play voice message",
     "pause": "Pause voice message"
+  },
+  "language": {
+    "switch": "Language: EN. Switch to Spanish"
   }
 }

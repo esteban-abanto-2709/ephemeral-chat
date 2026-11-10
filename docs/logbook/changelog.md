@@ -12,6 +12,9 @@ Summary in ≤2 lines of what was done.
 
 ---
 
+## [WL-022] Spanish and English (2026-11-09 21:29)
+The whole page in both languages with Transloco, following the browser with an `ES`/`EN` switch that is remembered; the server sends error codes, never words.
+
 ## [WL-013] QR codes for links (2026-11-09 17:25)
 My QR opens a private chat with you and each group has its own, shown on demand in a modal; a phone joins by scanning, with no typing.
 

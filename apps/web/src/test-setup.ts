@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideI18n } from './app/i18n/i18n';
 
 beforeEach(() => {
+  localStorage.removeItem('lang');
   TestBed.configureTestingModule({ providers: [provideI18n()] });
 });
 

@@ -39,6 +39,3 @@ Files travel as base64 inside JSON text frames, about 33% bigger than the file. 
 
 ## [WL-020] Swipe to reply
 On a phone, dragging a message sideways starts a reply, as in WhatsApp. Today a tap shows the Reply button beside the bubble.
-
-## [WL-022] Spanish and English
-The whole app in both languages with Transloco, following the browser and switchable from the chat list; the server sends codes, not text. In progress (2026-11-09).

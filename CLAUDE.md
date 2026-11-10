@@ -33,7 +33,9 @@ clever shortcuts.
   with your first message and end when either leaves. Chats carry photos
   (compressed in the browser, reviewed before sending, opened in the page),
   files up to 5 MB, voice messages up to a minute and replies; the server
-  relays them and keeps none. Earlier versions brought
+  relays them and keeps none. Since then: clickable links, QR codes for
+  your invite and for groups, and the whole page in English and Spanish
+  (Transloco), following the browser with a switch. Earlier versions brought
   the glass design (WebGL liquid glass with a frosted fallback, light and dark
   themes), the layout kept above the phone keyboard, a typing indicator, and
   limits on message length, rate, group size and chats per tab. Groups vanish

@@ -59,7 +59,7 @@ The page is built from:
   group, Invite with link (copies `/chat/<your id>`) and Copy my ID.
 - `room/name-dialog`: a native `<dialog>` (`showModal()`) with a Signal Forms
   form (`@angular/forms/signals`) for a non-blank name of up to 24 characters.
-  It asks your name (`Esc` blocked) and, with `cancelable`, a new group's name.
+  It asks your name (`Esc` blocked) and, with `kind="group"`, a new group's name.
 - `notice.ts`: one short message at the top ("Link copied", "That group
   doesn't exist anymore."), shown by `room/copy-link` buttons and the client.
 
@@ -68,6 +68,23 @@ The page is built from:
 The page shows nothing else until you pick a name. It lives only in memory,
 for every chat in the tab, so reloading asks again. A group's name is picked
 when it is created and never changes.
+
+## Languages
+
+The page speaks English and Spanish with [Transloco](https://jsverse.gitbook.io/transloco)
+(`@jsverse/transloco`). Every word lives in `i18n/en.json` and `i18n/es.json`,
+bundled with the app and loaded before it starts, so a key never shows; a test
+checks both files have the same keys. Templates use the `transloco` pipe, and
+code that builds text (previews, who is typing, notices) asks the `I18n`
+service, whose `t()` reads the language as a signal, so everything on screen
+changes at once, without reloading.
+
+The language follows the browser (the first of its languages we speak,
+English otherwise) until you pick one with the `ES`/`EN` button next to the
+theme toggle, which is remembered in the browser (a preference, never chat
+data). `<html lang>` follows it. What people write is never translated, and
+the server sends no words: its errors are codes that the page writes in your
+language.
 
 ## Real-time connection
 
@@ -234,10 +251,10 @@ Backgrounds in `public/backdrops`, free under the Unsplash License:
 
 `/design` shows the app with sample data, no logic, in four frames at once:
 desktop (1280 × 800, scaled to fit) and mobile (390 × 844), each in light and
-dark, with a switch for the screen (start, chats, group, media, photos,
-left); photos has its own switch for the chat, the send preview with a wide
-or a tall photo, and the photo viewer. Each
-frame is an `iframe` of `/design/frame?screen=…&theme=…`, so it has its own
+dark, with a switch for the language and one for the screen (start, chats,
+group, media, photos, qr, left); photos has its own switch for the chat, the
+send preview with a wide or a tall photo, and the photo viewer. Each
+frame is an `iframe` of `/design/frame?screen=…&theme=…&lang=…`, so it has its own
 theme, its own liquid glass and a real viewport width. Visual changes are
 tried here first and moved into the app once approved; screens are the app's
 own components fed with sample chats (`design/design-chats.ts`), so the board

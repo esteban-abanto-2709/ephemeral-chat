@@ -10,6 +10,7 @@ import {
 } from '@lucide/angular';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { I18n } from '../../i18n/i18n';
+import { LangToggle } from '../../i18n/lang-toggle/lang-toggle';
 import { Notice } from '../../notice';
 import { CopyLink } from '../../room/copy-link/copy-link';
 import { avatarHue } from '../../room/avatar-hue';
@@ -30,6 +31,7 @@ export function codeIn(text: string): string | null {
   imports: [
     CopyLink,
     DatePipe,
+    LangToggle,
     LucideCopy,
     LucideHourglass,
     LucideKeyRound,
