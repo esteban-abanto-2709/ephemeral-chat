@@ -11,7 +11,7 @@
       class="avatar ml-1 grid size-9 shrink-0 place-items-center rounded-full text-sm font-semibold md:size-10"
       [style.--hue]="avatarHue(message().name)"
       aria-hidden="true"
-      >{{ message().name[0] }}</span
+      >{{ initials(message().name) }}</span
     >
     <div class="flex min-w-0 flex-1 flex-col">
       <p class="truncate text-sm font-semibold">

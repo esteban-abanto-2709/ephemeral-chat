@@ -14,7 +14,7 @@ import { I18n } from '../../i18n/i18n';
 import { LangToggle } from '../../i18n/lang-toggle/lang-toggle';
 import { Notice } from '../../notice';
 import { CopyLink } from '../../room/copy-link/copy-link';
-import { avatarHue } from '../../room/avatar-hue';
+import { avatarHue, initials } from '../../room/avatar-hue';
 import { ThemeToggle } from '../../theme/theme-toggle/theme-toggle';
 import { describe } from '../attachment';
 import { Chat } from '../chat-client';
@@ -58,6 +58,7 @@ export class ChatList {
   readonly opened = output<string>();
 
   protected readonly avatarHue = avatarHue;
+  protected readonly initials = initials;
   protected readonly filters = filters;
   protected readonly filter = signal<Filter>('all');
   protected readonly shown = computed(() =>

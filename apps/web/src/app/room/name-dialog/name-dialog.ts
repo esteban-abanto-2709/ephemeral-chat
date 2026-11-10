@@ -58,6 +58,12 @@ export class NameDialog {
     this.dismissed.emit();
   }
 
+  protected cancelOutside(event: Event): void {
+    if (event.target === this.dialog().nativeElement) {
+      this.cancel(event);
+    }
+  }
+
   constructor() {
     afterNextRender(() => {
       this.model.set({ name: this.initial() });

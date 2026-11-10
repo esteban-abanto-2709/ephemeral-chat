@@ -36,7 +36,7 @@ import { Attachment, Outgoing, Quote, duration } from '../../chats/attachment';
 import { ChatEvent, ChatMessage, Person, SocketStatus, quoteOf } from '../../chats/chat-client';
 import { Glass } from '../../glass/glass';
 import { I18n } from '../../i18n/i18n';
-import { avatarHue } from '../avatar-hue';
+import { avatarHue, initials } from '../avatar-hue';
 import { CopyLink } from '../copy-link/copy-link';
 import { MessageList } from '../message-list/message-list';
 import { PhotoViewer } from '../photo-viewer/photo-viewer';
@@ -110,6 +110,7 @@ export class RoomChat {
   readonly deleted = output();
 
   protected readonly avatarHue = avatarHue;
+  protected readonly initials = initials;
   protected readonly duration = duration;
   protected readonly voiceMaxSeconds = voiceMaxSeconds;
   protected readonly canRecord = VoiceRecorder.supported();

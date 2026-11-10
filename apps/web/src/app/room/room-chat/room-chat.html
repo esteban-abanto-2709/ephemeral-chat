@@ -16,7 +16,7 @@
     aria-hidden="true"
   >
     @if (kind() === 'private') {
-      {{ title()[0] }}
+      {{ initials(title()) }}
     } @else {
       <svg lucideUsersRound class="size-4"></svg>
     }

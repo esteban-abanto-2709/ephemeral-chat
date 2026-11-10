@@ -68,7 +68,7 @@
           aria-hidden="true"
         >
           @if (chat.kind === 'private') {
-            <span class="text-sm font-semibold">{{ chat.title[0] }}</span>
+            <span class="text-sm font-semibold">{{ initials(chat.title) }}</span>
           } @else {
             <svg lucideUsersRound class="size-5"></svg>
           }
@@ -120,7 +120,7 @@
         class="avatar grid size-9 shrink-0 place-items-center rounded-full text-sm font-semibold"
         [style.--hue]="avatarHue(name)"
         aria-hidden="true"
-        >{{ name[0] }}</span
+        >{{ initials(name) }}</span
       >
       <span class="flex min-w-0 flex-1 flex-col">
         <span class="flex items-center gap-1.5 text-sm font-medium">

@@ -34,12 +34,13 @@ describe('NameDialog', () => {
     expect((page.querySelector('#name') as HTMLInputElement).value).toBe('Silver Wolf');
   });
 
-  it('can be cancelled with the button or Escape', async () => {
+  it('can be cancelled with the button, Escape or a click outside', async () => {
     for (const close of [
       (page: HTMLElement) =>
         (page.querySelector('button[type="button"]') as HTMLButtonElement).click(),
       (page: HTMLElement) =>
         page.querySelector('dialog')!.dispatchEvent(new Event('cancel', { cancelable: true })),
+      (page: HTMLElement) => page.querySelector('dialog')!.click(),
     ]) {
       const { page, chosen, dialog, dismissed } = await render('Silver Wolf');
       close(page);
@@ -47,6 +48,13 @@ describe('NameDialog', () => {
       expect(dismissed()).toBe(1);
       expect(chosen).toEqual([]);
     }
+  });
+
+  it('stays open when you click inside it', async () => {
+    const { page, dialog, dismissed } = await render('Silver Wolf');
+    (page.querySelector('#name') as HTMLInputElement).click();
+    expect(dialog.open).toBe(true);
+    expect(dismissed()).toBe(0);
   });
 
   it('opens as soon as it appears', async () => {

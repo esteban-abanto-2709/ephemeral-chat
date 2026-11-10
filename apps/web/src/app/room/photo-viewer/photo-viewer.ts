@@ -3,7 +3,7 @@ import { DatePipe } from '@angular/common';
 import { LucideDownload, LucideX } from '@lucide/angular';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { ChatMessage } from '../../chats/chat-client';
-import { avatarHue } from '../avatar-hue';
+import { avatarHue, initials } from '../avatar-hue';
 import { LinkedText } from '../linked-text/linked-text';
 
 @Component({
@@ -16,6 +16,7 @@ export class PhotoViewer {
   readonly closed = output();
 
   protected readonly avatarHue = avatarHue;
+  protected readonly initials = initials;
   private readonly dialog = viewChild.required<ElementRef<HTMLDialogElement>>('viewer');
 
   constructor() {
