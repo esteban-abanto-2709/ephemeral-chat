@@ -76,11 +76,12 @@ server → room:     {"type": "message", "room": "…", "id": "…", "name": "Ju
                    {"type": "joined",  "room": "…", "id": "…", "name": "Ana", "title": "Weekend trip", "members": [{"id": "…", "name": "Juan"}, …]}
                    {"type": "left",    "room": "…", "id": "…", "name": "Ana", "members": […]}
 server → others:   {"type": "typing",  "room": "…", "id": "…", "name": "Juan"}
-server → sender:   {"type": "error",   "room": "…", "text": "Slow down: up to 5 messages per second."}
+server → sender:   {"type": "error",   "room": "…", "code": "slow-messages" | "slow-files"}
                    {"type": "error",   "room": "…", "code": "gone" | "full" | "limit" | "self" | "busy"}
 ```
 
-A join that fails answers only that tab, with a `code`: `gone` for a code
+Errors carry a `code`, never words: the web writes them in the reader's
+language. A join that fails answers only that tab, with a `code`: `gone` for a code
 that opens nothing (a room that doesn't exist or was just dropped, see below,
 or a tab that closed), `full` for a room that already has 50 people
 (`MaxMembers`), `limit` for a tab already in 20 chats (`MaxChats`). Frames for
@@ -136,7 +137,7 @@ record (`MediaRecorder`), and it goes out as `"kind": "voice"` with an audio
 
 Each member may send 3 files at once and then one every 2
 seconds (`FileBurst`, `FileInterval`, a bucket apart from messages); over that
-only the sender gets `"Slow down: one file every 2 seconds."` A file also
+only the sender gets an `error` with code `slow-files`. A file also
 starts a private chat, like a first message.
 
 Every message and file gets a `seq`, counting up from 1 in each chat: the
@@ -149,7 +150,8 @@ message.
 
 Each member may send 5 messages per second (`MessagesPerSecond`), with bursts
 of up to 5: a token bucket from `golang.org/x/time/rate`, one per member. A
-message over the limit is dropped and only its sender gets an `error` event.
+message over the limit is dropped and only its sender gets an `error` with
+code `slow-messages`.
 
 `typing` says someone is writing. It goes to everyone except the typist, at
 most once every 2 seconds per member (`TypingInterval`, its own token bucket,

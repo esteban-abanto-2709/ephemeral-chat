@@ -1,5 +1,6 @@
 import { DOCUMENT, OnDestroy, Service, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { I18n } from '../i18n/i18n';
 import { Notice } from '../notice';
 import { Attachment, Outgoing, Quote } from './attachment';
 import { compressPhoto } from './compress-photo';
@@ -23,7 +24,7 @@ export type ChatEvent = (
       seq?: number;
     }
   | { type: 'joined' | 'left'; id: string; name: string; members: Person[] }
-  | { type: 'error'; text: string }
+  | { type: 'error'; code: string }
 ) & { at: number };
 
 export type ChatMessage = Extract<ChatEvent, { type: 'message' }>;
@@ -77,13 +78,7 @@ const shownTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
 const typingShownFor = 3000;
 const typingSentEvery = 2000;
 
-const failures: Record<string, string> = {
-  gone: 'Nothing to open: that group or person is gone.',
-  self: "That's your own ID: share it so others can write to you.",
-  busy: `They're already in ${maxChats} chats and can't take another.`,
-  full: 'That group is full: it already has 50 people.',
-  limit: `You're in ${maxChats} chats, the most a tab can hold.`,
-};
+const failures = ['gone', 'self', 'busy', 'full', 'limit'];
 
 @Service({ autoProvided: false })
 export class ChatClient implements OnDestroy {
@@ -113,6 +108,7 @@ export class ChatClient implements OnDestroy {
 
   private readonly http = inject(HttpClient);
   private readonly notice = inject(Notice);
+  private readonly i18n = inject(I18n);
   private readonly location = inject(DOCUMENT).location;
   private socket?: WebSocket;
   private ready = false;
@@ -148,7 +144,7 @@ export class ChatClient implements OnDestroy {
   create(title: string): void {
     this.http.post<{ id: string }>('/api/rooms', { name: title }).subscribe({
       next: ({ id }) => this.join(id, title),
-      error: () => this.notice.show("Couldn't create the group. Try again."),
+      error: () => this.notice.show(this.i18n.t('errors.groupFailed')),
     });
   }
 
@@ -158,7 +154,7 @@ export class ChatClient implements OnDestroy {
       return;
     }
     if (this._chats().length >= maxChats) {
-      this.notice.show(failures['limit']);
+      this.fail('limit');
       return;
     }
     this._chats.update((chats) => [...chats, this.newChat(id, title)]);
@@ -239,7 +235,7 @@ export class ChatClient implements OnDestroy {
     for (const { file, caption } of files) {
       const ready = original ? file : await compressPhoto(file);
       if (ready.size > fileMaxBytes) {
-        this.notice.show('Files up to 5 MB.');
+        this.notice.show(this.i18n.t('errors.fileTooBig'));
       } else {
         this.sendFile(room, ready, { text: caption.trim() || undefined });
       }
@@ -248,7 +244,7 @@ export class ChatClient implements OnDestroy {
 
   sendVoice(room: string, voice: Blob, seconds: number, reply?: number): void {
     if (voice.size > voiceMaxBytes) {
-      this.notice.show('Voice messages up to 1 MB.');
+      this.notice.show(this.i18n.t('errors.voiceTooBig'));
       return;
     }
     const extension = voice.type.includes('mp4')
@@ -318,8 +314,8 @@ export class ChatClient implements OnDestroy {
       return;
     }
     const room = frame.room!;
-    if (frame.type === 'error' && frame.code) {
-      this.notice.show(failures[frame.code] ?? failures['gone']);
+    if (frame.type === 'error' && !frame.code?.startsWith('slow-')) {
+      this.fail(failures.includes(frame.code ?? '') ? frame.code! : 'gone');
       this._chats.update((chats) => chats.filter((chat) => chat.id !== room));
       if (this._active() === room) {
         this._active.set(null);
@@ -358,7 +354,7 @@ export class ChatClient implements OnDestroy {
             at,
           }
         : frame.type === 'error'
-          ? { type: 'error', text: frame.text, at }
+          ? { type: 'error', code: frame.code, at }
           : { type: frame.type, id: frame.id, name: frame.name, members: frame.members, at }
     ) as ChatEvent;
     if (event.type === 'message' || event.type === 'left') {
@@ -398,15 +394,17 @@ export class ChatClient implements OnDestroy {
     const original = this._chats()
       .find((chat) => chat.id === room)
       ?.events.find((event) => event.type === 'message' && event.seq === seq);
-    return original?.type === 'message'
-      ? quoteOf(original)
-      : { name: '', own: false, text: 'Earlier message' };
+    return original?.type === 'message' ? quoteOf(original) : { name: '', own: false, text: '' };
   }
 
   private takeSent(room: string, name: string, size: number): File | undefined {
     const sent = this.sentFiles.get(room) ?? [];
     const index = sent.findIndex((file) => file.name === name && file.size === size);
     return index < 0 ? undefined : sent.splice(index, 1)[0];
+  }
+
+  private fail(code: string): void {
+    this.notice.show(this.i18n.t(`errors.${code}`, { max: maxChats }));
   }
 
   private release(chats: Chat[]): void {

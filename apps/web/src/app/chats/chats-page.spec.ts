@@ -4,6 +4,7 @@ import { Location } from '@angular/common';
 import { Attachment } from './attachment';
 import { Chat, ChatClient, SocketStatus } from './chat-client';
 import { ChatsPage } from './chats-page';
+import { I18n } from '../i18n/i18n';
 import { qrPath } from '../room/qr-dialog/qr-dialog';
 
 const juan = { id: 'j', name: 'Juan' };
@@ -133,6 +134,22 @@ describe('ChatsPage', () => {
     input.value = 'h';
     input.dispatchEvent(new Event('input'));
     expect(fakeClient.sendTyping).toHaveBeenCalledWith('trip');
+  });
+
+  it('switches the open chat to Spanish without reloading', async () => {
+    const { fixture, page } = await openChat();
+    chats.update(([chat]) => [{ ...chat, typing: [ana, { id: 'e', name: 'Eva' }] }]);
+    await fixture.whenStable();
+
+    TestBed.inject(I18n).use('es');
+    await fixture.whenStable();
+
+    expect(page.querySelector('header [role="status"]')?.textContent).toContain(
+      'Ana y Eva están escribiendo…',
+    );
+    expect((page.querySelector('#message') as HTMLInputElement).placeholder).toBe(
+      'Escribe un mensaje',
+    );
   });
 
   it('sends the typed text, clears the input and caps it near the limit', async () => {

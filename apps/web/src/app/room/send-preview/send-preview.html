@@ -2,12 +2,14 @@
   <button
     type="button"
     class="grid size-10 shrink-0 place-items-center rounded-full transition hover:bg-glass-strong focus-visible:outline-2 focus-visible:outline-accent-ink"
-    aria-label="Discard"
+    [attr.aria-label]="'preview.discard' | transloco"
     (click)="confirm($event)"
   >
     <svg lucideX class="size-5" aria-hidden="true"></svg>
   </button>
-  <h2 class="min-w-0 flex-1 truncate text-sm font-semibold">Send to {{ to() }}</h2>
+  <h2 class="min-w-0 flex-1 truncate text-sm font-semibold">
+    {{ 'preview.to' | transloco: { name: to() } }}
+  </h2>
   @if (current().file.kind === 'image') {
     <button
       type="button"
@@ -15,11 +17,11 @@
       class="flex items-center gap-2 rounded-full border border-edge px-3 py-1.5 text-xs font-medium transition hover:bg-glass-strong focus-visible:outline-2 focus-visible:outline-accent-ink"
       [class]="original() ? 'bg-glass-strong text-accent-ink' : 'text-ink-soft'"
       [attr.aria-checked]="original()"
-      title="Send photos as files, in their original quality"
+      [title]="'preview.originalHint' | transloco"
       (click)="original.set(!original())"
     >
       <svg lucideFile class="size-4" aria-hidden="true"></svg>
-      Original quality
+      {{ 'preview.original' | transloco }}
     </button>
   }
 </header>
@@ -45,19 +47,21 @@
           <svg lucideFileText class="size-8"></svg>
         </span>
         <p class="w-full truncate font-semibold">{{ file.name }}</p>
-        <p class="text-sm text-ink-soft">{{ fileSize(file.size) }} · No preview</p>
+        <p class="text-sm text-ink-soft">
+          {{ fileSize(file.size) }} · {{ 'preview.noPreview' | transloco }}
+        </p>
       </div>
     }
   </div>
 </div>
 
 <div class="mx-auto w-full max-w-xl px-3 pb-3">
-  <label for="caption" class="sr-only">Caption</label>
+  <label for="caption" class="sr-only">{{ 'preview.caption' | transloco }}</label>
   <input
     id="caption"
     appGlass="composer"
     class="w-full rounded-full px-5 py-3 outline-none placeholder:text-ink-soft focus-visible:outline-2 focus-visible:outline-accent-ink"
-    placeholder="Add a caption"
+    [placeholder]="'preview.captionPlaceholder' | transloco"
     autocomplete="off"
     maxlength="1000"
     [value]="current().caption"
@@ -72,7 +76,7 @@
 >
   <ul
     class="scroll-glass relative flex min-w-0 flex-1 items-center gap-2 overflow-x-auto p-1 md:justify-center"
-    aria-label="Files to send"
+    [attr.aria-label]="'preview.files' | transloco"
   >
     @for (item of items(); track item.file.url; let i = $index) {
       <li class="relative shrink-0">
@@ -94,7 +98,7 @@
           <button
             type="button"
             class="absolute -top-1.5 -right-1.5 grid size-6 place-items-center rounded-full border border-edge bg-canvas text-ink-soft shadow-lift transition hover:text-danger-ink focus-visible:outline-2 focus-visible:outline-accent-ink"
-            [attr.aria-label]="'Remove ' + item.file.name"
+            [attr.aria-label]="'preview.remove' | transloco: { name: item.file.name }"
             (click)="remove(i)"
           >
             <svg lucideX class="size-3.5" aria-hidden="true"></svg>
@@ -106,7 +110,7 @@
       <button
         type="button"
         class="grid size-14 place-items-center rounded-xl border-2 border-dashed border-edge text-ink-soft transition hover:bg-glass-strong hover:text-ink focus-visible:outline-2 focus-visible:outline-accent-ink"
-        aria-label="Add more"
+        [attr.aria-label]="'preview.add' | transloco"
         (click)="added.emit()"
       >
         <svg lucidePlus class="size-5" aria-hidden="true"></svg>
@@ -116,7 +120,11 @@
   <button
     type="button"
     class="relative grid size-14 shrink-0 place-items-center rounded-full bg-accent-ink text-canvas shadow-lift transition hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-ink"
-    [attr.aria-label]="'Send ' + items().length + (items().length === 1 ? ' file' : ' files')"
+    [attr.aria-label]="
+      items().length === 1
+        ? ('preview.sendOne' | transloco)
+        : ('preview.sendMany' | transloco: { count: items().length })
+    "
     (click)="send()"
   >
     <svg lucideSendHorizontal class="size-6" aria-hidden="true"></svg>
@@ -139,16 +147,20 @@
   <div class="flex flex-col gap-4 text-center">
     <div class="flex flex-col gap-1">
       <h2 id="discard-title" class="text-lg font-semibold">
-        Discard {{ items().length === 1 ? 'this file' : items().length + ' files' }}?
+        {{
+          items().length === 1
+            ? ('preview.discardOne' | transloco)
+            : ('preview.discardMany' | transloco: { count: items().length })
+        }}
       </h2>
-      <p class="text-sm text-ink-soft">Nothing has been sent yet.</p>
+      <p class="text-sm text-ink-soft">{{ 'preview.nothingSent' | transloco }}</p>
     </div>
     <button
       type="button"
       class="rounded-full border border-edge px-6 py-2.5 font-semibold text-danger-ink transition hover:bg-glass-strong focus-visible:outline-2 focus-visible:outline-accent-ink"
       (click)="discard()"
     >
-      Discard
+      {{ 'preview.discard' | transloco }}
     </button>
     <button
       type="button"
@@ -156,7 +168,7 @@
       class="-mt-1 rounded-full px-6 py-2.5 font-semibold transition hover:scale-[1.02] focus-visible:outline-2 focus-visible:outline-accent-ink"
       (click)="dialog().nativeElement.close()"
     >
-      Keep editing
+      {{ 'preview.keep' | transloco }}
     </button>
   </div>
 </dialog>

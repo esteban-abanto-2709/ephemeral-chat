@@ -177,7 +177,7 @@ func validText(text string) bool {
 
 func (r *Room) Send(from *Member, text string, reply int) {
 	if validText(text) {
-		r.post(from, Message{Text: text, Reply: reply}, from.limiter, "Slow down: up to 5 messages per second.")
+		r.post(from, Message{Text: text, Reply: reply}, from.limiter, "slow-messages")
 	}
 }
 
@@ -187,7 +187,7 @@ func validCaption(caption string) bool {
 
 func (r *Room) SendFile(from *Member, file *File, caption string, reply int) {
 	if validCaption(caption) {
-		r.post(from, Message{Text: caption, File: file, Reply: reply}, from.files, "Slow down: one file every 2 seconds.")
+		r.post(from, Message{Text: caption, File: file, Reply: reply}, from.files, "slow-files")
 	}
 }
 
@@ -198,7 +198,7 @@ func (r *Room) post(from *Member, message Message, limiter *rate.Limiter, slow s
 		return
 	}
 	if !limiter.Allow() {
-		r.deliver(from, Message{Type: "error", Text: slow})
+		r.deliver(from, Message{Type: "error", Code: slow})
 		return
 	}
 	r.seq++

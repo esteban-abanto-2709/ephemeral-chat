@@ -15,11 +15,20 @@ import {
   LucideSendHorizontal,
   LucideX,
 } from '@lucide/angular';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { Attachment, Outgoing, fileSize } from '../../chats/attachment';
 import { Glass } from '../../glass/glass';
 
 @Component({
-  imports: [Glass, LucideFile, LucideFileText, LucidePlus, LucideSendHorizontal, LucideX],
+  imports: [
+    Glass,
+    LucideFile,
+    LucideFileText,
+    LucidePlus,
+    LucideSendHorizontal,
+    LucideX,
+    TranslocoPipe,
+  ],
   selector: 'app-send-preview',
   host: { class: 'flex flex-col', '(keydown.escape)': 'confirm($event)' },
   templateUrl: './send-preview.html',

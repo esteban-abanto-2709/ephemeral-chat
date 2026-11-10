@@ -22,6 +22,7 @@ import {
   LucideShieldCheck,
   LucideUsersRound,
 } from '@lucide/angular';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { Glass } from '../../glass/glass';
 import { CopyLink } from '../copy-link/copy-link';
 import { avatarHue } from '../avatar-hue';
@@ -48,6 +49,7 @@ const stickyDistance = 80;
     LucideReply,
     LucideShieldCheck,
     LucideUsersRound,
+    TranslocoPipe,
   ],
   selector: 'app-message-list',
   host: { class: 'flex min-h-0 flex-1 flex-col' },

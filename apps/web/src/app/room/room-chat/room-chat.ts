@@ -31,9 +31,11 @@ import {
   LucideWifiOff,
   LucideX,
 } from '@lucide/angular';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { Attachment, Outgoing, Quote, duration } from '../../chats/attachment';
 import { ChatEvent, ChatMessage, Person, SocketStatus, quoteOf } from '../../chats/chat-client';
 import { Glass } from '../../glass/glass';
+import { I18n } from '../../i18n/i18n';
 import { avatarHue } from '../avatar-hue';
 import { CopyLink } from '../copy-link/copy-link';
 import { MessageList } from '../message-list/message-list';
@@ -45,12 +47,6 @@ import { VoiceRecorder } from './voice-recorder';
 
 const messageMaxLength = 1000;
 const voiceMaxSeconds = 60;
-
-const statusLabels = {
-  connecting: 'Connecting…',
-  open: 'Connected',
-  closed: 'Disconnected',
-};
 
 @Component({
   imports: [
@@ -75,6 +71,7 @@ const statusLabels = {
     PhotoViewer,
     QuoteCard,
     SendPreview,
+    TranslocoPipe,
   ],
   selector: 'app-room-chat',
   host: {
@@ -119,24 +116,25 @@ export class RoomChat {
   protected readonly recorder = new VoiceRecorder(voiceMaxSeconds, () => this.sendVoice());
   protected readonly recordingSeconds = computed(() => this.recorder.seconds() ?? this.recording());
   private readonly notice = inject(Notice);
+  private readonly i18n = inject(I18n);
   protected readonly subtitle = computed(() => {
     const [first, second, ...rest] = this.typing().map((person) => person.name);
     if (this.status() !== 'open') {
-      return statusLabels[this.status()];
+      return this.i18n.t(`room.status.${this.status()}`);
     }
     if (!first && this.kind() === 'private') {
-      return this.ended() ? 'Left the chat' : 'Online';
+      return this.i18n.t(this.ended() ? 'room.leftChat' : 'room.online');
     }
     if (!first) {
       const others = this.members().filter((member) => member.id !== this.me());
-      return [...others.map((member) => member.name), 'you'].join(', ');
+      return [...others.map((member) => member.name), this.i18n.t('room.you')].join(', ');
     }
     if (!second) {
-      return `${first} is typing…`;
+      return this.i18n.t('room.typing.one', { name: first });
     }
     return rest.length
-      ? `${first} and ${rest.length + 1} more are typing…`
-      : `${first} and ${second} are typing…`;
+      ? this.i18n.t('room.typing.many', { first, count: rest.length + 1 })
+      : this.i18n.t('room.typing.two', { first, second });
   });
 
   private readonly composer = viewChild<ElementRef<HTMLInputElement>>('input');
@@ -206,9 +204,7 @@ export class RoomChat {
   }
 
   protected record(): void {
-    this.recorder
-      .start()
-      .catch(() => this.notice.show('Allow the microphone to record a voice message.'));
+    this.recorder.start().catch(() => this.notice.show(this.i18n.t('errors.microphone')));
   }
 
   protected async sendVoice(): Promise<void> {

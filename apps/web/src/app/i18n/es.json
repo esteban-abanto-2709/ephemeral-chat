@@ -77,5 +77,108 @@
     "close": "Cerrar",
     "image": "Código QR",
     "copy": "Mejor copiar el enlace"
+  },
+  "chats": "Chats",
+  "errors": {
+    "gone": "No hay nada que abrir: ese grupo o esa persona ya no está.",
+    "self": "Ese es tu propio ID: compártelo para que te escriban.",
+    "busy": "Ya está en {{ max }} chats y no puede abrir otro.",
+    "full": "Ese grupo está lleno: ya tiene 50 personas.",
+    "limit": "Estás en {{ max }} chats, lo máximo que admite una pestaña.",
+    "slow-messages": "Más despacio: hasta 5 mensajes por segundo.",
+    "slow-files": "Más despacio: un archivo cada 2 segundos.",
+    "groupFailed": "No se pudo crear el grupo. Inténtalo de nuevo.",
+    "fileTooBig": "Archivos de hasta 5 MB.",
+    "voiceTooBig": "Mensajes de voz de hasta 1 MB.",
+    "microphone": "Permite el micrófono para grabar un mensaje de voz."
+  },
+  "attachment": {
+    "photo": "Foto",
+    "voice": "Mensaje de voz ({{ duration }})",
+    "sticker": "Sticker"
+  },
+  "room": {
+    "back": "Volver a los chats",
+    "status": {
+      "connecting": "Conectando…",
+      "open": "Conectado",
+      "closed": "Desconectado"
+    },
+    "online": "En línea",
+    "leftChat": "Salió del chat",
+    "you": "tú",
+    "typing": {
+      "one": "{{ name }} está escribiendo…",
+      "two": "{{ first }} y {{ second }} están escribiendo…",
+      "many": "{{ first }} y {{ count }} más están escribiendo…"
+    },
+    "groupQr": "Mostrar el código QR del grupo",
+    "copyLink": "Copiar el enlace del grupo",
+    "about": "Sobre este chat",
+    "private": {
+      "title": "Chat privado con {{ name }}",
+      "body": "Solo ustedes dos. Nadie más puede unirse.",
+      "note": "No se guarda nada. Los mensajes desaparecen cuando uno de los dos sale."
+    },
+    "group": {
+      "title": "Grupo",
+      "body": "Cualquiera con el enlace o este código puede unirse.",
+      "copyCode": "Copiar el código del grupo",
+      "codeCopied": "Código copiado",
+      "note": "No se guarda nada. Los mensajes desaparecen cuando todos salen."
+    },
+    "drop": {
+      "title": "Suelta para enviar",
+      "hint": "Fotos y archivos de hasta 5 MB"
+    },
+    "disconnected": "Estás desconectado.",
+    "reconnect": "Reconectar",
+    "ended": "{{ name }} salió. Aún puedes leer este chat.",
+    "delete": "Borrar chat",
+    "recording": "Grabando",
+    "discardVoice": "Descartar mensaje de voz",
+    "sendVoice": "Enviar mensaje de voz",
+    "cancelReply": "Cancelar respuesta",
+    "attach": "Adjuntar una foto o un archivo",
+    "message": "Mensaje",
+    "placeholder": "Escribe un mensaje",
+    "record": "Grabar un mensaje de voz",
+    "send": "Enviar"
+  },
+  "messages": {
+    "list": "Mensajes",
+    "you": "Tú",
+    "reply": "Responder",
+    "sticker": "sticker",
+    "goTo": "Ir al mensaje de {{ name }}",
+    "goToOwn": "Ir a tu mensaje",
+    "earlier": "Mensaje anterior"
+  },
+  "preview": {
+    "discard": "Descartar",
+    "to": "Enviar a {{ name }}",
+    "original": "Calidad original",
+    "originalHint": "Envía las fotos como archivos, en su calidad original",
+    "noPreview": "Sin vista previa",
+    "caption": "Descripción",
+    "captionPlaceholder": "Añade una descripción",
+    "files": "Archivos para enviar",
+    "remove": "Quitar {{ name }}",
+    "add": "Agregar más",
+    "sendOne": "Enviar 1 archivo",
+    "sendMany": "Enviar {{ count }} archivos",
+    "discardOne": "¿Descartar este archivo?",
+    "discardMany": "¿Descartar {{ count }} archivos?",
+    "nothingSent": "Todavía no se ha enviado nada.",
+    "keep": "Seguir editando"
+  },
+  "photo": {
+    "label": "Foto",
+    "download": "Descargar",
+    "close": "Cerrar"
+  },
+  "voice": {
+    "play": "Reproducir mensaje de voz",
+    "pause": "Pausar mensaje de voz"
   }
 }

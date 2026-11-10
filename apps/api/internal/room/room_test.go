@@ -269,7 +269,7 @@ func TestSendingTooFastIsRefusedToTheSenderOnly(t *testing.T) {
 		}
 
 		room.Send(juan, "one too many", 0)
-		expect(t, juan, Message{Type: "error", Room: roomID, Text: "Slow down: up to 5 messages per second."})
+		expect(t, juan, Message{Type: "error", Room: roomID, Code: "slow-messages"})
 		assertEmpty(t, ana)
 
 		time.Sleep(time.Second / MessagesPerSecond)
@@ -429,7 +429,7 @@ func TestFilesReachEveryoneWithinTheirOwnLimit(t *testing.T) {
 		}
 		sent.Seq = FileBurst + 2
 		room.SendFile(juan, file, "", 0)
-		expect(t, juan, Message{Type: "error", Room: roomID, Text: "Slow down: one file every 2 seconds."})
+		expect(t, juan, Message{Type: "error", Room: roomID, Code: "slow-files"})
 		assertEmpty(t, ana)
 
 		room.Send(juan, "text still flows", 0)

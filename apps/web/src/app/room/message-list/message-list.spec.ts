@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { MessageList } from './message-list';
 import { ChatEvent } from '../../chats/chat-client';
+import { I18n } from '../../i18n/i18n';
 
 const ana = { id: 'a', name: 'Ana' };
 const juan = { id: 'j', name: 'Juan' };
@@ -15,15 +16,32 @@ describe('MessageList', () => {
     fixture.componentRef.setInput('code', 'abc');
     await fixture.whenStable();
     const list = fixture.nativeElement as HTMLElement;
-    return { fixture, list, items: [...list.querySelectorAll('[aria-label="Messages"] li')] };
+    return { fixture, list, items: [...list.querySelectorAll('ul[aria-live] li')] };
   }
+
+  it('says who joined or left and why it held a message back, in Spanish', async () => {
+    TestBed.inject(I18n).use('es');
+    const { items } = await render([
+      { type: 'joined', ...ana, members: [ana], at },
+      { type: 'left', ...ana, members: [], at },
+      { type: 'error', code: 'slow-files', at },
+      { type: 'message', ...juan, own: true, text: 'hola', at },
+    ]);
+
+    expect(items.map((li) => li.textContent?.replace(/\s+/g, ' ').trim())).toEqual([
+      'Ana se unió',
+      'Ana salió',
+      'Más despacio: un archivo cada 2 segundos.',
+      expect.stringMatching(/^Tú:\s?hola 21:04$/),
+    ]);
+  });
 
   it('shows messages, who joined or left and warnings', async () => {
     const { items } = await render([
       { type: 'joined', ...ana, members: [ana], at },
       { type: 'message', ...ana, own: false, text: 'hola', at },
       { type: 'left', ...ana, members: [], at },
-      { type: 'error', text: 'Slow down: up to 5 messages per second.', at },
+      { type: 'error', code: 'slow-messages', at },
     ]);
 
     expect(items.map((li) => li.textContent?.replace(/\s+/g, ' ').trim())).toEqual([

@@ -8,7 +8,7 @@
     <section
       appGlass="bubble"
       class="mx-auto flex w-full max-w-sm flex-col items-center gap-3 rounded-3xl px-5 py-6 text-center"
-      aria-label="About this chat"
+      [attr.aria-label]="'room.about' | transloco"
     >
       <span
         class="grid size-14 place-items-center rounded-2xl border border-edge bg-glass-strong/50 text-accent-ink"
@@ -17,14 +17,14 @@
         <svg lucideUsersRound class="size-7"></svg>
       </span>
       <div class="flex flex-col gap-1">
-        <h2 class="font-semibold">{{ title() || 'Group' }}</h2>
-        <p class="text-sm text-ink-soft">Anyone with the link or this code can join.</p>
+        <h2 class="font-semibold">{{ title() || ('room.group.title' | transloco) }}</h2>
+        <p class="text-sm text-ink-soft">{{ 'room.group.body' | transloco }}</p>
       </div>
       <button
         [appCopyLink]="code()"
-        copied="Code copied"
+        [copied]="'room.group.codeCopied' | transloco"
         class="flex w-full items-center gap-2 rounded-full border border-edge bg-glass-strong/50 px-4 py-2.5 text-sm transition hover:bg-glass-strong focus-visible:outline-2 focus-visible:outline-accent-ink"
-        aria-label="Copy group code"
+        [attr.aria-label]="'room.group.copyCode' | transloco"
       >
         <svg lucideKeyRound class="size-4 shrink-0 text-ink-soft" aria-hidden="true"></svg>
         <span class="min-w-0 flex-1 truncate text-left font-mono">{{ code() }}</span>
@@ -32,12 +32,16 @@
       </button>
       <p class="flex items-start gap-1.5 text-xs text-ink-soft">
         <svg lucideShieldCheck class="mt-px size-3.5 shrink-0" aria-hidden="true"></svg>
-        Nothing is stored. Messages vanish when everyone leaves.
+        {{ 'room.group.note' | transloco }}
       </p>
     </section>
   </ng-content>
 
-  <ul class="flex flex-col gap-1" aria-label="Messages" aria-live="polite">
+  <ul
+    class="flex flex-col gap-1"
+    [attr.aria-label]="'messages.list' | transloco"
+    aria-live="polite"
+  >
     @for (item of items(); track $index) {
       @let event = item.event;
       @if (event.type === 'message') {
@@ -55,12 +59,15 @@
               class="absolute top-1/2 grid size-8 -translate-y-1/2 place-items-center rounded-full text-ink-soft opacity-0 transition group-hover:opacity-100 hover:bg-glass-strong hover:text-ink focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-accent-ink"
               [class]="item.own ? '-left-10' : '-right-10'"
               [class.opacity-100!]="selected() === $index"
-              aria-label="Reply"
+              [attr.aria-label]="'messages.reply' | transloco"
               (click)="reply($event, event)"
             >
               <svg lucideReply class="size-4" aria-hidden="true"></svg>
             </button>
-            <span class="sr-only">{{ item.own ? 'You' : event.name }}: sticker</span>
+            <span class="sr-only"
+              >{{ item.own ? ('messages.you' | transloco) : event.name }}:
+              {{ 'messages.sticker' | transloco }}</span
+            >
             <img [src]="file!.url" alt="" class="size-36 object-contain" />
             <time
               appGlass="bubble"
@@ -81,7 +88,7 @@
             (click)="selected.set($index)"
           >
             @if (item.own) {
-              <span class="sr-only">You:</span>
+              <span class="sr-only">{{ 'messages.you' | transloco }}:</span>
             } @else {
               <p
                 class="person-ink text-xs font-semibold"
@@ -99,7 +106,7 @@
               class="absolute top-1/2 grid size-8 -translate-y-1/2 place-items-center rounded-full text-ink-soft opacity-0 transition group-hover:opacity-100 hover:bg-glass-strong hover:text-ink focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-accent-ink"
               [class]="item.own ? '-left-10' : '-right-10'"
               [class.opacity-100!]="selected() === $index"
-              aria-label="Reply"
+              [attr.aria-label]="'messages.reply' | transloco"
               (click)="reply($event, event)"
             >
               <svg lucideReply class="size-4" aria-hidden="true"></svg>
@@ -109,7 +116,11 @@
                 <button
                   type="button"
                   class="mb-1 block w-full rounded-lg text-left focus-visible:outline-2 focus-visible:outline-accent-ink"
-                  [attr.aria-label]="'Go to the message from ' + (reply.own ? 'you' : reply.name)"
+                  [attr.aria-label]="
+                    reply.own
+                      ? ('messages.goToOwn' | transloco)
+                      : ('messages.goTo' | transloco: { name: reply.name })
+                  "
                   (click)="jump(reply.seq)"
                 >
                   <app-quote [quote]="reply" />
@@ -184,14 +195,14 @@
           class="my-2 animate-rise self-center motion-reduce:animate-none rounded-full bg-danger-soft px-3 py-1 text-center text-xs text-danger-ink"
           role="alert"
         >
-          {{ event.text }}
+          {{ 'errors.' + event.code | transloco }}
         </li>
       } @else {
         <li
           appGlass="bubble"
           class="my-2 animate-rise self-center motion-reduce:animate-none rounded-full px-3 py-1 text-xs text-ink-soft"
         >
-          {{ event.name }} {{ event.type }}
+          {{ 'events.' + event.type | transloco: { name: event.name } }}
         </li>
       }
     }

@@ -2,7 +2,7 @@
 <dialog
   #viewer
   class="m-0 size-full max-h-none max-w-none flex-col bg-canvas p-0 text-ink animate-fade open:flex motion-reduce:animate-none"
-  aria-label="Photo"
+  [attr.aria-label]="'photo.label' | transloco"
   (close)="closed.emit()"
   (keydown.escape)="close($event)"
 >
@@ -15,7 +15,7 @@
     >
     <div class="flex min-w-0 flex-1 flex-col">
       <p class="truncate text-sm font-semibold">
-        {{ message().own ? 'You' : message().name }}
+        {{ message().own ? ('messages.you' | transloco) : message().name }}
       </p>
       <p class="truncate text-xs text-ink-soft">
         <time>{{ message().at | date: 'HH:mm' }}</time> · {{ photo.name }}
@@ -25,14 +25,14 @@
       [href]="photo.url"
       [download]="photo.name"
       class="grid size-10 shrink-0 place-items-center rounded-full transition hover:bg-glass-strong focus-visible:outline-2 focus-visible:outline-accent-ink"
-      aria-label="Download"
+      [attr.aria-label]="'photo.download' | transloco"
     >
       <svg lucideDownload class="size-5" aria-hidden="true"></svg>
     </a>
     <button
       type="button"
       class="grid size-10 shrink-0 place-items-center rounded-full transition hover:bg-glass-strong focus-visible:outline-2 focus-visible:outline-accent-ink"
-      aria-label="Close"
+      [attr.aria-label]="'photo.close' | transloco"
       (click)="close()"
     >
       <svg lucideX class="size-5" aria-hidden="true"></svg>

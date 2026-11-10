@@ -77,5 +77,108 @@
     "close": "Close",
     "image": "QR code",
     "copy": "Copy link instead"
+  },
+  "chats": "Chats",
+  "errors": {
+    "gone": "Nothing to open: that group or person is gone.",
+    "self": "That's your own ID: share it so others can write to you.",
+    "busy": "They're already in {{ max }} chats and can't take another.",
+    "full": "That group is full: it already has 50 people.",
+    "limit": "You're in {{ max }} chats, the most a tab can hold.",
+    "slow-messages": "Slow down: up to 5 messages per second.",
+    "slow-files": "Slow down: one file every 2 seconds.",
+    "groupFailed": "Couldn't create the group. Try again.",
+    "fileTooBig": "Files up to 5 MB.",
+    "voiceTooBig": "Voice messages up to 1 MB.",
+    "microphone": "Allow the microphone to record a voice message."
+  },
+  "attachment": {
+    "photo": "Photo",
+    "voice": "Voice message ({{ duration }})",
+    "sticker": "Sticker"
+  },
+  "room": {
+    "back": "Back to chats",
+    "status": {
+      "connecting": "Connecting…",
+      "open": "Connected",
+      "closed": "Disconnected"
+    },
+    "online": "Online",
+    "leftChat": "Left the chat",
+    "you": "you",
+    "typing": {
+      "one": "{{ name }} is typing…",
+      "two": "{{ first }} and {{ second }} are typing…",
+      "many": "{{ first }} and {{ count }} more are typing…"
+    },
+    "groupQr": "Show group QR code",
+    "copyLink": "Copy group link",
+    "about": "About this chat",
+    "private": {
+      "title": "Private chat with {{ name }}",
+      "body": "Just the two of you. No one else can join.",
+      "note": "Nothing is stored. Messages vanish when one of you leaves."
+    },
+    "group": {
+      "title": "Group",
+      "body": "Anyone with the link or this code can join.",
+      "copyCode": "Copy group code",
+      "codeCopied": "Code copied",
+      "note": "Nothing is stored. Messages vanish when everyone leaves."
+    },
+    "drop": {
+      "title": "Drop to send",
+      "hint": "Photos and files up to 5 MB"
+    },
+    "disconnected": "You're disconnected.",
+    "reconnect": "Reconnect",
+    "ended": "{{ name }} left. You can still read this chat.",
+    "delete": "Delete chat",
+    "recording": "Recording",
+    "discardVoice": "Discard voice message",
+    "sendVoice": "Send voice message",
+    "cancelReply": "Cancel reply",
+    "attach": "Attach a photo or file",
+    "message": "Message",
+    "placeholder": "Write a message",
+    "record": "Record a voice message",
+    "send": "Send"
+  },
+  "messages": {
+    "list": "Messages",
+    "you": "You",
+    "reply": "Reply",
+    "sticker": "sticker",
+    "goTo": "Go to the message from {{ name }}",
+    "goToOwn": "Go to your message",
+    "earlier": "Earlier message"
+  },
+  "preview": {
+    "discard": "Discard",
+    "to": "Send to {{ name }}",
+    "original": "Original quality",
+    "originalHint": "Send photos as files, in their original quality",
+    "noPreview": "No preview",
+    "caption": "Caption",
+    "captionPlaceholder": "Add a caption",
+    "files": "Files to send",
+    "remove": "Remove {{ name }}",
+    "add": "Add more",
+    "sendOne": "Send 1 file",
+    "sendMany": "Send {{ count }} files",
+    "discardOne": "Discard this file?",
+    "discardMany": "Discard {{ count }} files?",
+    "nothingSent": "Nothing has been sent yet.",
+    "keep": "Keep editing"
+  },
+  "photo": {
+    "label": "Photo",
+    "download": "Download",
+    "close": "Close"
+  },
+  "voice": {
+    "play": "Play voice message",
+    "pause": "Pause voice message"
   }
 }

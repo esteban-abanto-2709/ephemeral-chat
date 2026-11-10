@@ -74,7 +74,7 @@ export class ChatList {
       return this.i18n.t('chatList.noMessages');
     }
     if (last.type === 'message') {
-      const text = last.file ? describe(last.file) : last.text;
+      const text = last.file ? describe(last.file, this.i18n) : last.text;
       if (last.own) {
         return this.i18n.t('chatList.own', { text });
       }

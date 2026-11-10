@@ -1,6 +1,7 @@
 import { Component, DOCUMENT, computed, inject, input, signal } from '@angular/core';
 import { Location } from '@angular/common';
 import { LucideCheck, LucideInfo } from '@lucide/angular';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { Glass } from '../glass/glass';
 import { Notice } from '../notice';
 import { NameDialog } from '../room/name-dialog/name-dialog';
@@ -21,6 +22,7 @@ import { ChatsWelcome } from './chats-welcome';
     NameDialog,
     QrDialog,
     RoomChat,
+    TranslocoPipe,
     VisibleViewport,
   ],
   providers: [ChatClient],

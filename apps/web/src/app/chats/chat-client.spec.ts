@@ -99,7 +99,7 @@ describe('ChatClient', () => {
       seq: 2,
       reply: { name: 'Ana', own: false, text: 'Saturday?', seq: 1 },
     });
-    expect(sure).toMatchObject({ reply: { name: '', text: 'Earlier message' } });
+    expect(sure).toMatchObject({ reply: { name: '', text: '' } });
 
     client.send('one', 'me too', 1);
     expect(server.sent.at(-1)).toEqual({ type: 'message', room: 'one', text: 'me too', reply: 1 });
@@ -112,6 +112,16 @@ describe('ChatClient', () => {
     expect(client.chats()).toEqual([]);
     expect(client.active()).toBeNull();
     expect(TestBed.inject(Notice).text()).toContain('is gone');
+  });
+
+  it('keeps the chat when the server only asks to slow down', () => {
+    ready();
+    client.join('one');
+    server.receive({ type: 'error', room: 'one', code: 'slow-messages' });
+    expect(client.active()?.events).toEqual([
+      { type: 'error', code: 'slow-messages', at: expect.any(Number) },
+    ]);
+    expect(TestBed.inject(Notice).text()).toBeNull();
   });
 
   it(`holds at most ${maxChats} chats`, () => {

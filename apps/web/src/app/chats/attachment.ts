@@ -1,3 +1,5 @@
+import { I18n } from '../i18n/i18n';
+
 export interface Attachment {
   kind: 'image' | 'file' | 'voice' | 'sticker';
   name: string;
@@ -19,16 +21,16 @@ export interface Quote {
   seq?: number;
 }
 
-export function describe(file: Attachment): string {
+export function describe(file: Attachment, i18n: I18n): string {
   switch (file.kind) {
     case 'image':
-      return 'Photo';
+      return i18n.t('attachment.photo');
     case 'file':
       return file.name;
     case 'voice':
-      return `Voice message (${duration(file.seconds ?? 0)})`;
+      return i18n.t('attachment.voice', { duration: duration(file.seconds ?? 0) });
     case 'sticker':
-      return 'Sticker';
+      return i18n.t('attachment.sticker');
   }
 }
 

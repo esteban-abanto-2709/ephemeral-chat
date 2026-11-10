@@ -1,12 +1,13 @@
 import { Component, computed, input, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { LucidePause, LucidePlay } from '@lucide/angular';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { Attachment, duration } from '../../chats/attachment';
 
 let playing: HTMLAudioElement | null = null;
 
 @Component({
-  imports: [DatePipe, LucidePause, LucidePlay],
+  imports: [DatePipe, LucidePause, LucidePlay, TranslocoPipe],
   selector: 'app-voice-note',
   host: { class: 'flex w-64 max-w-full items-center gap-3 py-1 pr-2.5 pl-1' },
   template: `
@@ -22,7 +23,7 @@ let playing: HTMLAudioElement | null = null;
     <button
       type="button"
       class="grid size-10 shrink-0 place-items-center rounded-full bg-accent-ink text-canvas transition hover:scale-105 focus-visible:outline-2 focus-visible:outline-accent-ink"
-      [attr.aria-label]="paused() ? 'Play voice message' : 'Pause voice message'"
+      [attr.aria-label]="(paused() ? 'voice.play' : 'voice.pause') | transloco"
       (click)="toggle(audio)"
     >
       @if (paused()) {

@@ -3,7 +3,7 @@
   <app-chat-list
     appGlass
     role="navigation"
-    aria-label="Chats"
+    [attr.aria-label]="'chats' | transloco"
     class="m-2 min-w-0 flex-1 flex-col gap-4 rounded-3xl p-4 md:m-0 md:flex md:w-96 md:flex-none"
     [class.flex]="!active"
     [class.hidden]="active"

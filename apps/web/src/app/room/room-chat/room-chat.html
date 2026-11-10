@@ -5,7 +5,7 @@
   <button
     type="button"
     class="grid size-10 place-items-center rounded-full transition hover:bg-glass-strong focus-visible:outline-2 focus-visible:outline-accent-ink md:hidden"
-    aria-label="Back to chats"
+    [attr.aria-label]="'room.back' | transloco"
     (click)="closed.emit()"
   >
     <svg lucideArrowLeft class="size-5" aria-hidden="true"></svg>
@@ -22,7 +22,9 @@
     }
   </span>
   <div class="min-w-0 flex-1">
-    <h1 class="truncate text-sm font-semibold md:leading-tight">{{ title() || 'Joining…' }}</h1>
+    <h1 class="truncate text-sm font-semibold md:leading-tight">
+      {{ title() || ('chatList.joining' | transloco) }}
+    </h1>
     <p
       role="status"
       class="truncate text-xs md:leading-tight"
@@ -35,7 +37,7 @@
     <button
       type="button"
       class="grid size-10 place-items-center rounded-full text-accent-ink transition hover:bg-glass-strong focus-visible:outline-2 focus-visible:outline-accent-ink"
-      aria-label="Show group QR code"
+      [attr.aria-label]="'room.groupQr' | transloco"
       (click)="showQr.emit()"
     >
       <svg lucideQrCode class="size-5" aria-hidden="true"></svg>
@@ -43,7 +45,7 @@
     <button
       [appCopyLink]="link()"
       class="grid size-10 place-items-center rounded-full text-accent-ink transition hover:bg-glass-strong focus-visible:outline-2 focus-visible:outline-accent-ink"
-      aria-label="Copy group link"
+      [attr.aria-label]="'room.copyLink' | transloco"
     >
       <svg lucideCopy class="size-5" aria-hidden="true"></svg>
     </button>
@@ -55,7 +57,7 @@
     <section
       appGlass="bubble"
       class="mx-auto flex w-full max-w-sm flex-col items-center gap-3 rounded-3xl px-5 py-6 text-center"
-      aria-label="About this chat"
+      [attr.aria-label]="'room.about' | transloco"
     >
       <span
         class="grid size-14 place-items-center rounded-2xl border border-edge bg-glass-strong/50 text-accent-ink"
@@ -64,12 +66,12 @@
         <svg lucideLock class="size-7"></svg>
       </span>
       <div class="flex flex-col gap-1">
-        <h2 class="font-semibold">Private chat with {{ title() }}</h2>
-        <p class="text-sm text-ink-soft">Just the two of you. No one else can join.</p>
+        <h2 class="font-semibold">{{ 'room.private.title' | transloco: { name: title() } }}</h2>
+        <p class="text-sm text-ink-soft">{{ 'room.private.body' | transloco }}</p>
       </div>
       <p class="flex items-start gap-1.5 text-xs text-ink-soft">
         <svg lucideShieldCheck class="mt-px size-3.5 shrink-0" aria-hidden="true"></svg>
-        Nothing is stored. Messages vanish when one of you leaves.
+        {{ 'room.private.note' | transloco }}
       </p>
     </section>
   </app-message-list>
@@ -89,8 +91,8 @@
     role="status"
   >
     <svg lucideImagePlus class="size-10 text-accent-ink" aria-hidden="true"></svg>
-    <p class="text-lg font-semibold">Drop to send</p>
-    <p class="text-sm text-ink-soft">Photos and files up to 5 MB</p>
+    <p class="text-lg font-semibold">{{ 'room.drop.title' | transloco }}</p>
+    <p class="text-sm text-ink-soft">{{ 'room.drop.hint' | transloco }}</p>
   </div>
 }
 
@@ -119,14 +121,14 @@
       role="alert"
     >
       <svg lucideWifiOff class="size-4 shrink-0 text-ink-soft" aria-hidden="true"></svg>
-      <span class="flex-1">You're disconnected.</span>
+      <span class="flex-1">{{ 'room.disconnected' | transloco }}</span>
       <button
         type="button"
         class="flex items-center gap-2 rounded-full px-3 py-1.5 font-medium text-accent-ink transition hover:bg-glass-strong focus-visible:outline-2 focus-visible:outline-accent-ink"
         (click)="reconnect.emit()"
       >
         <svg lucideRefreshCw class="size-4" aria-hidden="true"></svg>
-        Reconnect
+        {{ 'room.reconnect' | transloco }}
       </button>
     </div>
   }
@@ -134,14 +136,14 @@
   @if (ended()) {
     <p appGlass="bubble" class="flex items-center gap-3 rounded-2xl py-1.5 pr-1.5 pl-4 text-sm">
       <svg lucideLogOut class="size-4 shrink-0 text-ink-soft" aria-hidden="true"></svg>
-      <span class="flex-1">{{ title() }} left. You can still read this chat.</span>
+      <span class="flex-1">{{ 'room.ended' | transloco: { name: title() } }}</span>
       <button
         type="button"
         class="flex items-center gap-2 rounded-full px-3 py-1.5 font-medium text-danger-ink transition hover:bg-glass-strong focus-visible:outline-2 focus-visible:outline-accent-ink"
         (click)="deleted.emit()"
       >
         <svg lucideTrash2 class="size-4" aria-hidden="true"></svg>
-        Delete chat
+        {{ 'room.delete' | transloco }}
       </button>
     </p>
   } @else if (recordingSeconds() !== null) {
@@ -149,7 +151,7 @@
       <button
         type="button"
         class="grid size-10 shrink-0 place-items-center rounded-full text-danger-ink transition hover:bg-glass-strong focus-visible:outline-2 focus-visible:outline-accent-ink"
-        aria-label="Discard voice message"
+        [attr.aria-label]="'room.discardVoice' | transloco"
         (click)="recorder.cancel()"
       >
         <svg lucideTrash2 class="size-5" aria-hidden="true"></svg>
@@ -159,13 +161,13 @@
         aria-hidden="true"
       ></span>
       <span class="flex-1 text-sm tabular-nums"
-        >Recording {{ duration(recordingSeconds() ?? 0) }}
+        >{{ 'room.recording' | transloco }} {{ duration(recordingSeconds() ?? 0) }}
         <span class="text-ink-soft">/ {{ duration(voiceMaxSeconds) }}</span></span
       >
       <button
         type="button"
         class="grid size-10 shrink-0 place-items-center rounded-full bg-accent-ink text-canvas transition hover:scale-105 focus-visible:outline-2 focus-visible:outline-accent-ink"
-        aria-label="Send voice message"
+        [attr.aria-label]="'room.sendVoice' | transloco"
         (click)="sendVoice()"
       >
         <svg lucideSendHorizontal class="size-5" aria-hidden="true"></svg>
@@ -178,7 +180,7 @@
         <button
           type="button"
           class="grid size-9 shrink-0 place-items-center rounded-full text-ink-soft transition hover:bg-glass-strong hover:text-ink focus-visible:outline-2 focus-visible:outline-accent-ink"
-          aria-label="Cancel reply"
+          [attr.aria-label]="'room.cancelReply' | transloco"
           (click)="quoting.set(null)"
         >
           <svg lucideX class="size-5" aria-hidden="true"></svg>
@@ -193,18 +195,18 @@
       <button
         type="button"
         class="grid size-10 shrink-0 place-items-center rounded-full text-ink-soft transition hover:bg-glass-strong hover:text-ink disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-accent-ink"
-        aria-label="Attach a photo or file"
+        [attr.aria-label]="'room.attach' | transloco"
         [disabled]="status() !== 'open'"
         (click)="picker.click()"
       >
         <svg lucidePaperclip class="size-5" aria-hidden="true"></svg>
       </button>
-      <label for="message" class="sr-only">Message</label>
+      <label for="message" class="sr-only">{{ 'room.message' | transloco }}</label>
       <input
         #input
         id="message"
         class="min-w-0 flex-1 bg-transparent py-2.5 outline-none placeholder:text-ink-soft"
-        placeholder="Write a message"
+        [placeholder]="'room.placeholder' | transloco"
         autocomplete="off"
         [maxLength]="messageMaxLength"
         (input)="write(input)"
@@ -219,7 +221,7 @@
         <button
           type="button"
           class="grid size-10 shrink-0 place-items-center rounded-full text-ink-soft transition hover:scale-110 hover:text-ink disabled:opacity-50 disabled:hover:scale-100 focus-visible:outline-2 focus-visible:outline-accent-ink"
-          aria-label="Record a voice message"
+          [attr.aria-label]="'room.record' | transloco"
           [disabled]="status() !== 'open'"
           (click)="record()"
         >
@@ -229,7 +231,7 @@
         <button
           type="submit"
           class="grid size-10 shrink-0 place-items-center rounded-full text-ink-soft transition hover:scale-110 disabled:opacity-50 disabled:hover:scale-100 focus-visible:outline-2 focus-visible:outline-accent-ink"
-          aria-label="Send"
+          [attr.aria-label]="'room.send' | transloco"
           (mousedown)="$event.preventDefault()"
           [class.text-ink]="length() > 0"
           [disabled]="status() !== 'open'"
