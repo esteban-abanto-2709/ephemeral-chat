@@ -20,7 +20,11 @@ A manifest and icons so the app installs to the home screen and opens full scree
 A private chat's preview still starts with "You:" when the last message is yours; WhatsApp shows only the text there (with its checks). Drop the prefix in private chats.
 
 ## [WL-015] Read receipts
-Checks on your messages saying they arrived and were read, as in WhatsApp. Open product question: does "seen" fit an ephemeral chat, or is not knowing part of the point? Decide before building.
+Checks on your own messages in private chats: one when sent, two when the other person has read it. Decided: it fits, since nothing is stored; groups are WL-023.
+**Status:** In progress (2026-11-11)
 
 ## [WL-020] Swipe to reply
 On a phone, dragging a message sideways starts a reply, as in WhatsApp. Today a tap shows the Reply button beside the bubble.
+
+## [WL-023] Read receipts in groups
+Extend WL-015 to groups of up to 50: decide what "read" means there (everyone present when it was sent, or "seen by 3 of 5") before building.

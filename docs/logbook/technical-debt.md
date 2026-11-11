@@ -30,3 +30,10 @@ and is deleted from here.
 - **Suggestion:** keep the track between the two, e.g. a top and bottom margin on the scrollbar track in `scroll-glass`, without losing the messages sliding under the glass.
 - **Date:** 2026-11-10 · **Status:** Open
 
+## [TD-010] Locking the phone ends your chats
+- **Location:** `apps/api/main.go` (`keepAlive`) and the browser's handling of a locked screen
+- **Risk:** 5/10
+- **Problem:** locking a phone (just the power button, same app open) shows the other side "left" shortly after: the mobile browser freezes the page, the WebSocket stops answering pings, and the server disconnects the tab, which ends its private chats.
+- **Future impact:** private chats end whenever someone locks their phone, which feels like a bug; with read receipts it reads as "read, then left".
+- **Suggestion:** evaluate first; any grace period clashes with "the id lives while the tab is open".
+- **Date:** 2026-11-11 · **Status:** Open

@@ -101,6 +101,12 @@ func (c *Client) Typing(label string) {
 	}
 }
 
+func (c *Client) Read(label string, seq int) {
+	if chat, ok := c.chat(label); ok {
+		chat.room.Read(chat.member, seq)
+	}
+}
+
 func (c *Client) Leave(label string) {
 	if chat, ok := c.chat(label); ok {
 		c.forget(label)

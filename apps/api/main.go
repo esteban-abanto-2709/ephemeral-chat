@@ -123,6 +123,7 @@ func connect(rooms *room.Registry, ping time.Duration) http.HandlerFunc {
 				Data    []byte `json:"-"`
 				Reply   int    `json:"reply"`
 				Seconds int    `json:"seconds"`
+				Seq     int    `json:"seq"`
 			}
 			kind, payload, err := conn.Read(r.Context())
 			if err != nil {
@@ -148,6 +149,8 @@ func connect(rooms *room.Registry, ping time.Duration) http.HandlerFunc {
 				rooms.SendFile(client, incoming.Room, incoming.Name, incoming.Data, incoming.Seconds, incoming.Text, incoming.Reply)
 			case "typing":
 				client.Typing(incoming.Room)
+			case "read":
+				client.Read(incoming.Room, incoming.Seq)
 			case "rename":
 				client.Rename(incoming.Name)
 			}

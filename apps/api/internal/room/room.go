@@ -100,6 +100,7 @@ type Member struct {
 	limiter *rate.Limiter
 	files   *rate.Limiter
 	typing  *rate.Limiter
+	read    int
 }
 
 func newMember(client *Client, label string) *Member {
@@ -228,6 +229,21 @@ func (r *Room) Typing(from *Member) {
 		if member != from {
 			message.Room = member.label
 			member.client.push(message)
+		}
+	}
+}
+
+func (r *Room) Read(from *Member, seq int) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if !r.private || !slices.Contains(r.members, from) || seq <= from.read || seq > r.seq {
+		return
+	}
+	from.read = seq
+	message := Message{Type: "read", ID: from.client.ID, Seq: seq}
+	for _, member := range slices.Clone(r.members) {
+		if member != from {
+			r.deliver(member, message)
 		}
 	}
 }

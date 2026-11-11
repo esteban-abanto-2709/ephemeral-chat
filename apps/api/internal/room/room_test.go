@@ -350,6 +350,55 @@ func TestTypingNeverDisconnectsASlowMember(t *testing.T) {
 	})
 }
 
+func privateChat(t *testing.T) (sam, luis *Client) {
+	t.Helper()
+	rooms := NewRegistry()
+	sam, luis = rooms.Connect("Sam"), rooms.Connect("Luis")
+	rooms.Send(sam, luis.ID, "hola", 0)
+	drainClient(sam)
+	drainClient(luis)
+	return sam, luis
+}
+
+func TestReadRelaysToTheOtherMember(t *testing.T) {
+	sam, luis := privateChat(t)
+
+	luis.Read(sam.ID, 1)
+
+	want := Message{Type: "read", Room: luis.ID, ID: luis.ID, Seq: 1}
+	if got := next(t, sam); !reflect.DeepEqual(got, want) {
+		t.Errorf("Sam got %+v, want %+v", got, want)
+	}
+	assertNothing(t, luis)
+}
+
+func TestReadIgnoresStaleAndFutureSeq(t *testing.T) {
+	sam, luis := privateChat(t)
+
+	luis.Read(sam.ID, 0)
+	luis.Read(sam.ID, 2)
+	assertNothing(t, sam)
+
+	luis.Read(sam.ID, 1)
+	next(t, sam)
+	luis.Read(sam.ID, 1)
+	luis.Read(sam.ID, 0)
+	assertNothing(t, sam)
+}
+
+func TestReadIgnoredInGroups(t *testing.T) {
+	room := newTestRoom()
+	juan, ana := join(t, room, "Juan"), join(t, room, "Ana")
+	room.Send(juan, "hola", 0)
+	drain(juan)
+	drain(ana)
+
+	room.Read(ana, 1)
+
+	assertEmpty(t, juan)
+	assertEmpty(t, ana)
+}
+
 func TestValidName(t *testing.T) {
 	cases := map[string]bool{
 		"Juan":                  true,

@@ -67,6 +67,7 @@ binary frames, see below):
 client → server:   {"type": "join",    "room": "…"}
                    {"type": "message", "room": "…", "text": "hola", "reply": 1}
                    {"type": "typing",  "room": "…"}
+                   {"type": "read",    "room": "…", "seq": 3}
                    {"type": "leave",   "room": "…"}
                    {"type": "rename",  "name": "Cráneo Negro"}
                    binary: {"type": "file", "room": "…", "name": "photo.jpg", "text": "optional caption"} + bytes
@@ -80,6 +81,7 @@ server → room:     {"type": "message", "room": "…", "id": "…", "name": "Ju
                    {"type": "left",    "room": "…", "id": "…", "name": "Ana", "members": […]}
                    {"type": "renamed", "room": "…", "id": "…", "name": "Cráneo Negro"}
 server → others:   {"type": "typing",  "room": "…", "id": "…", "name": "Juan"}
+server → other:    {"type": "read",    "room": "…", "id": "…", "seq": 3}
 server → sender:   {"type": "error",   "room": "…", "code": "slow-messages" | "slow-files"}
                    {"type": "error",   "room": "…", "code": "gone" | "full" | "limit" | "self" | "busy"}
 ```
@@ -110,6 +112,12 @@ chat comes labeled that way. Nobody else can join it (its own id is never handed
 other gets `left` and is taken out too, so the chat is over for both. Opening
 an id you already have a chat with does nothing; your own id answers `self`,
 and a tab already in 20 chats answers `busy`.
+
+`read` says the tab has read everything up to that `seq`. It only works in
+private chats (in a group it is ignored) and goes only to the other person,
+never back to the reader. The server keeps just the highest `seq` each member
+has read, never the messages, and drops a `read` that doesn't go up or points
+past the last `seq`.
 
 Every event goes to everyone connected to the room at that moment, sender and
 newcomer included. `joined` also carries the group's name (`title`), fixed

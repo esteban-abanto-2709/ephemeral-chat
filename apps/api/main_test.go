@@ -254,6 +254,61 @@ func TestChat(t *testing.T) {
 	expect(renamed, luis, juan)
 }
 
+func TestRoomChatRelaysRead(t *testing.T) {
+	server := httptest.NewServer(newMux(""))
+	defer server.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	read := func(conn *websocket.Conn) room.Message {
+		t.Helper()
+		var got room.Message
+		if err := wsjson.Read(ctx, conn, &got); err != nil {
+			t.Fatal(err)
+		}
+		return got
+	}
+	open := func(name string) (*websocket.Conn, string) {
+		t.Helper()
+		conn, _, err := websocket.Dial(ctx, server.URL+"/api/ws?name="+name, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Cleanup(func() { conn.CloseNow() })
+		return conn, read(conn).ID
+	}
+	send := func(conn *websocket.Conn, frame any) {
+		t.Helper()
+		if err := wsjson.Write(ctx, conn, frame); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	a, aID := open("Ana")
+	b, bID := open("Beto")
+
+	send(a, map[string]string{"type": "message", "room": bID, "text": "hola"})
+	if got := read(a); got.Type != "joined" || !got.Private {
+		t.Fatalf("Ana got %+v, want the private chat", got)
+	}
+	if got := read(a); got.Type != "message" || got.Seq != 1 {
+		t.Fatalf("Ana got %+v, want her message", got)
+	}
+	if got := read(b); got.Type != "joined" || got.Room != aID {
+		t.Fatalf("Beto got %+v, want the private chat", got)
+	}
+	if got := read(b); got.Type != "message" || got.Seq != 1 {
+		t.Fatalf("Beto got %+v, want the message", got)
+	}
+
+	send(b, map[string]any{"type": "read", "room": aID, "seq": 1})
+	want := room.Message{Type: "read", Room: bID, ID: bID, Seq: 1}
+	if got := read(a); !reflect.DeepEqual(got, want) {
+		t.Errorf("Ana got %+v, want %+v", got, want)
+	}
+}
+
 func TestAPIOnlyWithoutStaticDir(t *testing.T) {
 	rec := httptest.NewRecorder()
 	newMux("").ServeHTTP(rec, httptest.NewRequest("GET", "/", nil))
