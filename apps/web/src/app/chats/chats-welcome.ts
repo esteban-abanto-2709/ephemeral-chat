@@ -1,20 +1,15 @@
 import { Component, DOCUMENT, computed, inject, input, output } from '@angular/core';
-import {
-  LucideHourglass,
-  LucideIdCard,
-  LucideLink,
-  LucideQrCode,
-  LucideUsersRound,
-} from '@lucide/angular';
+import { LucideIdCard, LucideLink, LucideQrCode, LucideUsersRound } from '@lucide/angular';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { CopyLink } from '../room/copy-link/copy-link';
 import { Glass } from '../glass/glass';
+import { Logo } from '../logo/logo';
 
 @Component({
   imports: [
     CopyLink,
     Glass,
-    LucideHourglass,
+    Logo,
     LucideIdCard,
     LucideLink,
     LucideQrCode,
@@ -32,7 +27,7 @@ import { Glass } from '../glass/glass';
         class="grid size-14 place-items-center rounded-2xl border border-edge bg-glass-strong text-accent-ink"
         aria-hidden="true"
       >
-        <svg lucideHourglass class="size-7"></svg>
+        <svg appLogo class="size-7"></svg>
       </span>
       <div class="flex flex-col gap-2">
         <h1 class="text-2xl font-semibold tracking-tight">{{ 'welcome.title' | transloco }}</h1>

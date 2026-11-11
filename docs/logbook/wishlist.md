@@ -13,10 +13,6 @@ Measure concurrent connections against RAM and latency (e.g. with `k6`) and publ
 ## [WL-010] Liquid glass avatars
 Avatars drawn as small glass lenses instead of flat tinted circles. The WebGL layer draws up to 8 lenses and a room holds 50 people, so it needs another approach (one lens for the list, or CSS glass).
 
-## [WL-011] A logo that says "message"
-The hourglass says ephemeral but not chat; a mark that reads as a message that fades. Tried on `/design` first.
-- **Status:** In progress (2026-11-11)
-
 ## [WL-012] Installable app (PWA)
 A manifest and icons so the app installs to the home screen and opens full screen, without a service worker. Dropped from v0.3: it pays off now that v0.4 keeps several chats in one page, since iOS opens shared links in Safari, not in the installed app.
 

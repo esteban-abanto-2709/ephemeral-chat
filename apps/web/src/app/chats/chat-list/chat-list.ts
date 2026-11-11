@@ -2,7 +2,6 @@ import { Component, computed, inject, input, output, signal } from '@angular/cor
 import { DatePipe } from '@angular/common';
 import {
   LucideCopy,
-  LucideHourglass,
   LucideKeyRound,
   LucidePencil,
   LucidePlus,
@@ -12,6 +11,7 @@ import {
 import { TranslocoPipe } from '@jsverse/transloco';
 import { I18n } from '../../i18n/i18n';
 import { LangToggle } from '../../i18n/lang-toggle/lang-toggle';
+import { Logo } from '../../logo/logo';
 import { Notice } from '../../notice';
 import { CopyLink } from '../../room/copy-link/copy-link';
 import { avatarHue, initials } from '../../room/avatar-hue';
@@ -33,8 +33,8 @@ export function codeIn(text: string): string | null {
     CopyLink,
     DatePipe,
     LangToggle,
+    Logo,
     LucideCopy,
-    LucideHourglass,
     LucideKeyRound,
     LucidePencil,
     LucidePlus,

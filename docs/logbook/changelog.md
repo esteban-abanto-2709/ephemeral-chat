@@ -12,6 +12,9 @@ Summary in ≤2 lines of what was done.
 
 ---
 
+## [WL-011] A logo that says "message" (2026-11-11 11:56)
+A chat bubble whose outline dissolves into fading dots replaces the hourglass in the favicon, chat list and welcome card; the green accent becomes the ink, so people's avatars are the only color.
+
 ## [TD-007] Placeholders that invent an example (2026-11-11 11:30)
 Dropped the name dialog placeholders, which repeated the label or made up "Weekend trip"; instruction placeholders stay.
 
