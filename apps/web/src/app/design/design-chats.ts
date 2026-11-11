@@ -62,10 +62,6 @@ const portrait = `data:image/svg+xml,${encodeURIComponent(
   "<svg xmlns='http://www.w3.org/2000/svg' width='900' height='1600' viewBox='0 0 225 400'><defs><linearGradient id='n' x2='0' y2='1'><stop offset='0' stop-color='#1d3557'/><stop offset='.6' stop-color='#e76f51'/><stop offset='1' stop-color='#f4a261'/></linearGradient></defs><rect width='225' height='400' fill='url(#n)'/><circle cx='150' cy='90' r='3' fill='#fff'/><circle cx='60' cy='60' r='2' fill='#fff'/><circle cx='112' cy='245' r='30' fill='#ffd6a5'/><path d='M0 270 70 210l50 45 50-60 55 50v155H0z' fill='#3f5e4b'/><path d='M0 330l80-40 60 30 85-45v125H0z' fill='#1b2f25'/><rect x='104' y='300' width='16' height='60' fill='#e9c46a'/><path d='M92 300h40l-20-28z' fill='#e76f51'/></svg>",
 )}`;
 
-const sticker = `data:image/svg+xml,${encodeURIComponent(
-  "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><g stroke='#fff' stroke-width='12' stroke-linejoin='round'><path d='M50 70h90v60a45 45 0 0 1-90 0z' fill='#8ecae6'/><path d='M140 85h12a20 20 0 0 1 0 40h-14' fill='none'/></g><path d='M50 70h90v60a45 45 0 0 1-90 0z' fill='#8ecae6'/><path d='M140 85h12a20 20 0 0 1 0 40h-14' fill='none' stroke='#8ecae6' stroke-width='10'/><path d='M75 35c-8 10 8 15 0 25M100 30c-8 10 8 15 0 25M125 35c-8 10 8 15 0 25' fill='none' stroke='#219ebc' stroke-width='6' stroke-linecap='round'/></svg>",
-)}`;
-
 const campsite: Attachment = { kind: 'image', name: 'campsite.jpg', size: 2_400_000, url: photo };
 const lake: Attachment = { ...campsite, name: 'lake.jpg', url: `${photo}#lake` };
 const ridge: Attachment = { kind: 'image', name: 'ridge.jpg', size: 1_900_000, url: portrait };
@@ -117,8 +113,6 @@ const mediaEvents: ChatEvent[] = [
     ...media(sam, true, 8, { ...juanVoice, seconds: 31 }),
     reply: { ...juan, own: false, text: '', file: juanVoice },
   } as ChatEvent,
-  media(ana, false, 9, { kind: 'sticker', name: 'coffee.webp', size: 21_000, url: sticker }),
-  media(sam, true, 9, { kind: 'sticker', name: 'coffee.webp', size: 21_000, url: sticker }),
 ];
 
 const luisEvents: ChatEvent[] = [

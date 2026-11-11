@@ -12,6 +12,9 @@ Summary in ≤2 lines of what was done.
 
 ---
 
+## [TD-009] Sticker code left after dropping stickers (2026-11-11 11:19)
+Removed the `sticker` attachment kind, its message-list branch, quote thumbnail case, translations and design-board samples.
+
 ## [RM-013] Generated names you can change (2026-11-10 16:24)
 Each tab enters with a random noun-and-adjective nickname in its language and can rename itself from its card, at most once every 10 seconds. Every chat it is in sees "A changed their name to B", and nothing is stored.
 

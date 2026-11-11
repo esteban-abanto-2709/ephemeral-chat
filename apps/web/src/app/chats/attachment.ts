@@ -1,7 +1,7 @@
 import { I18n } from '../i18n/i18n';
 
 export interface Attachment {
-  kind: 'image' | 'file' | 'voice' | 'sticker';
+  kind: 'image' | 'file' | 'voice';
   name: string;
   size: number;
   url: string;
@@ -29,8 +29,6 @@ export function describe(file: Attachment, i18n: I18n): string {
       return file.name;
     case 'voice':
       return i18n.t('attachment.voice', { duration: duration(file.seconds ?? 0) });
-    case 'sticker':
-      return i18n.t('attachment.sticker');
   }
 }
 

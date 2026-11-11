@@ -25,7 +25,7 @@ import { avatarHue } from '../avatar-hue';
           : quote().text || ('messages.earlier' | transloco)
       }}</span>
     </span>
-    @if (quote().file?.kind === 'image' || quote().file?.kind === 'sticker') {
+    @if (quote().file?.kind === 'image') {
       <img [src]="quote().file!.url" alt="" class="size-10 shrink-0 rounded-md object-cover" />
     }
   `,

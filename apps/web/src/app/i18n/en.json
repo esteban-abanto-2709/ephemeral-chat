@@ -183,8 +183,7 @@
   },
   "attachment": {
     "photo": "Photo",
-    "voice": "Voice message ({{ duration }})",
-    "sticker": "Sticker"
+    "voice": "Voice message ({{ duration }})"
   },
   "room": {
     "back": "Back to chats",
@@ -238,7 +237,6 @@
     "list": "Messages",
     "you": "You",
     "reply": "Reply",
-    "sticker": "sticker",
     "goTo": "Go to the message from {{ name }}",
     "goToOwn": "Go to your message",
     "earlier": "Earlier message"

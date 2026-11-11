@@ -38,9 +38,3 @@ and is deleted from here.
 - **Suggestion:** keep the track between the two, e.g. a top and bottom margin on the scrollbar track in `scroll-glass`, without losing the messages sliding under the glass.
 - **Date:** 2026-11-10 · **Status:** Open
 
-## [TD-009] Sticker code left after dropping stickers
-- **Location:** `apps/web/src/app/chats/attachment.ts` (the `'sticker'` kind), `apps/web/src/app/i18n/en.json` and `es.json` (`attachment.sticker`), `apps/web/src/app/design/design-chats.ts`
-- **Risk:** 2/10
-- **Problem:** stickers (WL-004) were dropped for good, but the web still has a `'sticker'` attachment kind, its translation and a sample on the design board. The API never sends that kind.
-- **Future impact:** dead branches to keep translating and reading around, and a hint of a feature that will never exist.
-- **Date:** 2026-11-10 · **Status:** Open
