@@ -7,9 +7,6 @@ If an idea is promoted, it's deleted from here and a new `RM` is born.
 
 ---
 
-## [WL-005] End-to-end encryption
-The key travels in the link after `#`, which browsers never send to the server; Web Crypto encrypts in the browser and the API only relays ciphertext. Candidate for a later version.
-
 ## [WL-007] Load test with real numbers
 Measure concurrent connections against RAM and latency (e.g. with `k6`) and publish the result in the README.
 

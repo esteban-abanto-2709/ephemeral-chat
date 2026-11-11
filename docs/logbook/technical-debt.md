@@ -22,14 +22,6 @@ and is deleted from here.
 - **Suggestion:** audit every visible string: drop the ones an icon already says (keeping a translated `aria-label`), shorten the rest, and agree on the list with the user on `/design` before changing anything.
 - **Date:** 2026-11-09 · **Status:** Open
 
-## [TD-007] Placeholders that invent an example
-- **Location:** `apps/web/src/app/room/name-dialog/name-dialog.html` and every `placeholder` in `apps/web/src/app`
-- **Risk:** 2/10
-- **Problem:** some fields show a made-up value as their placeholder ("Ana" for your name, "Weekend trip" for a group), which reads like a prefilled answer and feels unnatural. Placeholders that tell you what to do ("Write a message") are fine.
-- **Future impact:** fields that look already filled in, and odd examples to keep translating.
-- **Suggestion:** review every placeholder and propose to the user which to drop or turn into an instruction; the name dialog may go away with generated names, so check that first.
-- **Date:** 2026-11-09 · **Status:** Open
-
 ## [TD-008] Desktop scrollbar runs behind the header and the composer
 - **Location:** `apps/web/src/app/room/message-list/message-list.html` (the `scroll-glass` scroller)
 - **Risk:** 2/10

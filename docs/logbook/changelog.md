@@ -12,6 +12,9 @@ Summary in ≤2 lines of what was done.
 
 ---
 
+## [TD-007] Placeholders that invent an example (2026-11-11 11:30)
+Dropped the name dialog placeholders, which repeated the label or made up "Weekend trip"; instruction placeholders stay.
+
 ## [TD-009] Sticker code left after dropping stickers (2026-11-11 11:19)
 Removed the `sticker` attachment kind, its message-list branch, quote thumbnail case, translations and design-board samples.
 

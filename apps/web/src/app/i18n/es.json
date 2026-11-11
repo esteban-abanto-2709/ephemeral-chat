@@ -89,14 +89,12 @@
     "name": {
       "heading": "Tu nombre",
       "label": "Nombre",
-      "placeholder": "Tu nombre",
       "hint": "Así te ven en cada chat. Desaparece al cerrar esta pestaña.",
       "action": "Guardar"
     },
     "group": {
       "heading": "Nuevo grupo",
       "label": "Nombre del grupo",
-      "placeholder": "Viaje de fin de semana",
       "hint": "No se puede cambiar después, y el grupo desaparece cuando todos salen.",
       "action": "Crear grupo"
     },

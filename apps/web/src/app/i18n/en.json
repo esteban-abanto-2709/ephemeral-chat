@@ -89,14 +89,12 @@
     "name": {
       "heading": "Your name",
       "label": "Name",
-      "placeholder": "Your name",
       "hint": "Others see it in every chat. It's gone when you close this tab.",
       "action": "Save"
     },
     "group": {
       "heading": "New group",
       "label": "Group name",
-      "placeholder": "Weekend trip",
       "hint": "It can't be changed later, and the group vanishes once everyone leaves.",
       "action": "Create group"
     },
