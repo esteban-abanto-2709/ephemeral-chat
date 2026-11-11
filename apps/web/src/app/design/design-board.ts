@@ -3,7 +3,7 @@ import { RouterLink } from '@angular/router';
 import { Language, languages } from '../i18n/i18n';
 import { DesignDevice } from './design-device';
 import { DesignView, photoViews, qrViews } from './design-chats';
-import { DesignScreen, designScreens } from './design-frame';
+import { DesignAccent, DesignScreen, designAccents, designScreens } from './design-frame';
 
 @Component({
   imports: [DesignDevice, RouterLink],
@@ -26,6 +26,21 @@ import { DesignScreen, designScreens } from './design-frame';
                 [class.font-semibold]="lang() === option"
                 [attr.aria-checked]="lang() === option"
                 (click)="lang.set(option)"
+              >
+                {{ option }}
+              </button>
+            }
+          </div>
+          <div class="flex gap-1.5" role="radiogroup" aria-label="Accent">
+            @for (option of accents; track option) {
+              <button
+                type="button"
+                role="radio"
+                class="rounded-full border border-edge px-4 py-1.5 text-sm capitalize transition"
+                [class.bg-glass-strong]="accent() === option"
+                [class.font-semibold]="accent() === option"
+                [attr.aria-checked]="accent() === option"
+                (click)="accent.set(option)"
               >
                 {{ option }}
               </button>
@@ -101,6 +116,8 @@ export class DesignBoard {
   protected readonly screens = designScreens;
   protected readonly themes = ['light', 'dark'] as const;
   protected readonly languages = languages;
+  protected readonly accents = designAccents;
+  protected readonly accent = signal<DesignAccent>('ink');
   protected readonly lang = signal<Language>('en');
   protected readonly screen = signal<DesignScreen>('chats');
   protected readonly view = signal<DesignView>('chat');
@@ -108,7 +125,8 @@ export class DesignBoard {
     this.screen() === 'photos' ? photoViews : this.screen() === 'qr' ? qrViews : [],
   );
   private readonly query = computed(
-    () => `/design/frame?screen=${this.screen()}&view=${this.view()}&lang=${this.lang()}`,
+    () =>
+      `/design/frame?screen=${this.screen()}&view=${this.view()}&lang=${this.lang()}&accent=${this.accent()}`,
   );
 
   protected pick(screen: DesignScreen): void {
