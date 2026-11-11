@@ -12,6 +12,12 @@ Summary in ≤2 lines of what was done.
 
 ---
 
+## [RM-017] Server ceilings (2026-11-11 14:45)
+The server refuses past 2000 connections and 5000 groups with `503`, times out slow and idle HTTP connections and stops in order on `SIGTERM`. Files in transit are RM-023.
+
+## [TD-013] HTTP server without timeouts or graceful shutdown (2026-11-11 14:45)
+Fixed by RM-017: `ReadHeaderTimeout`, `IdleTimeout` and `Shutdown` on `SIGTERM`; WebSockets are still cut without a close frame, by decision.
+
 ## [TD-012] No cap on connections or rooms (2026-11-11 14:45)
 The registry refuses a new tab past 2000 connections and a new group past 5000 with `503` (RM-017, step 1). Files in transit are a separate debt, TD-020.
 

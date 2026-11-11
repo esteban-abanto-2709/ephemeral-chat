@@ -15,12 +15,6 @@ changelog and is deleted from here.
 
 Each entry is one commit, or a few when it spans both apps; no commit breaks production.
 
-## [RM-017] Server ceilings
-- **Goal:** no number of connections, rooms or slow requests can exhaust the instance, and the server stops in order on a deploy (TD-012, TD-013).
-- **Scope:** decided: a global ceiling of 2000 connections and 5000 rooms that answers `503`; the limit per address is left for later, since it depends on trusting Render's forwarded address. Also `ReadHeaderTimeout` and shutdown on `SIGTERM`. Files in transit are out: they are RM-023.
-- **Done when:** tests show the ceilings refusing with `503`, the server exits cleanly on `SIGTERM`, and TD-012 and TD-013 are closed.
-- **Date:** 2026-11-11 · **Status:** In progress (2026-11-11)
-
 ## [RM-023] A budget for files in transit
 - **Goal:** the memory that files hold between being read and reaching the slowest recipient has a ceiling, whatever the number of connections (TD-020).
 - **Scope:** the API, and the web only for a new error code if one is needed. Depends on RM-017.

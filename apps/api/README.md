@@ -200,6 +200,18 @@ Each room carries a `time.AfterFunc` timer, re-armed when the last member
 leaves. When it fires, the registry drops the room only if it's still empty,
 and marks it closed so a join racing with the drop is refused.
 
+## Timeouts and shutdown
+
+A client has 10 seconds to send its request headers (`readHeaderTimeout`), and
+a connection kept alive with nothing to do is closed after 2 minutes
+(`idleTimeout`). Neither applies to an open WebSocket, which the pings above
+look after.
+
+On `SIGTERM` (every deploy) or Ctrl+C the server stops accepting requests,
+gives the ones in flight up to 10 seconds to finish (`shutdownGrace`) and
+exits. Open WebSockets are cut without a close frame: every chat lives in this
+process and ends with it, and a tab shows Reconnect either way.
+
 ## Code layout
 
 ```

@@ -46,14 +46,6 @@ and is deleted from here.
 - **Suggestion:** an explicit joining state (e.g. a `joining` flag the views render neutrally, re-sent on `ready` by that flag instead of by `kind`); the route already knows `/chat/` from `/room/` if a hint is wanted.
 - **Date:** 2026-11-11 · **Status:** Open
 
-## [TD-013] HTTP server without timeouts or graceful shutdown
-- **Location:** `apps/api/main.go` (`main`)
-- **Risk:** 4/10
-- **Problem:** `http.ListenAndServe` runs the default server: no `ReadHeaderTimeout`, so slow header writers hold connections open, and no handling of `SIGTERM`, so a deploy cuts every WebSocket without a close frame.
-- **Future impact:** connections that never finish their request pile up; on each deploy tabs see a dropped connection instead of a clean close.
-- **Suggestion:** an `http.Server` with `ReadHeaderTimeout`, and `signal.NotifyContext` plus `Shutdown` on `SIGTERM`.
-- **Date:** 2026-11-11 · **Status:** Open
-
 ## [TD-020] No limit on the memory files hold while in transit
 - **Location:** `apps/api/main.go` (`connect`, the read loop) and `apps/api/internal/room/room.go` (`post`, the mailboxes)
 - **Risk:** 7/10

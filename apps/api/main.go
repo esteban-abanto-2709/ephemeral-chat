@@ -3,12 +3,15 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io/fs"
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"path"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/coder/websocket"
@@ -22,7 +25,12 @@ const (
 	frameMaxBytes = 6 << 20
 )
 
-const pingInterval = 30 * time.Second
+const (
+	pingInterval      = 30 * time.Second
+	readHeaderTimeout = 10 * time.Second
+	idleTimeout       = 2 * time.Minute
+	shutdownGrace     = 10 * time.Second
+)
 
 func main() {
 	port := os.Getenv("PORT")
@@ -30,8 +38,30 @@ func main() {
 		port = "8080"
 	}
 
+	server := &http.Server{
+		Addr:              ":" + port,
+		Handler:           newMux(os.Getenv("STATIC_DIR")),
+		ReadHeaderTimeout: readHeaderTimeout,
+		IdleTimeout:       idleTimeout,
+	}
+
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGTERM, os.Interrupt)
+	defer stop()
+	stopped := make(chan struct{})
+	go func() {
+		defer close(stopped)
+		<-ctx.Done()
+		grace, cancel := context.WithTimeout(context.Background(), shutdownGrace)
+		defer cancel()
+		server.Shutdown(grace)
+	}()
+
 	log.Printf("api listening on :%s", port)
-	log.Fatal(http.ListenAndServe(":"+port, newMux(os.Getenv("STATIC_DIR"))))
+	if err := server.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
+		log.Fatal(err)
+	}
+	<-stopped
+	log.Print("api stopped")
 }
 
 func newMux(staticDir string) *http.ServeMux {
