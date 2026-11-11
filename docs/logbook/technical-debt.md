@@ -45,3 +45,68 @@ and is deleted from here.
 - **Future impact:** a visible flicker on every invite link opened on a slow connection; and anyone who "fixes" the placeholder's kind breaks joining before `ready` without a test noticing.
 - **Suggestion:** an explicit joining state (e.g. a `joining` flag the views render neutrally, re-sent on `ready` by that flag instead of by `kind`); the route already knows `/chat/` from `/room/` if a hint is wanted.
 - **Date:** 2026-11-11 · **Status:** Open
+
+## [TD-012] No cap on connections or rooms
+- **Location:** `apps/api/main.go` (`connect`, `createRoom`) and `apps/api/internal/room/registry.go` (`Connect`, `Create`)
+- **Risk:** 7/10
+- **Problem:** every limit is per member or per tab; nothing bounds the total. Anyone can open any number of WebSockets (each may buffer a 6 MiB frame and hold a 32-slot mailbox of files) and `POST /api/rooms` in a loop, with no limit per address or for the whole server.
+- **Numbers (2026-11-11):** measured, an idle connection costs at most 65 KB (three goroutines; the figure includes the test's own client), so about 7,800 fill 512 MB doing nothing. By the read limit, a connection in the middle of an upload holds up to 6 MiB, so about 85 are enough.
+- **Future impact:** a small script exhausts the memory of the free Render instance and restarts it, which ends every chat for everyone; more likely once the link is public.
+- **Suggestion:** a global ceiling on connections and rooms (refuse with `503`) and a small limiter per address on both handlers, reading the proxy's forwarded address.
+- **Date:** 2026-11-11 · **Status:** Open
+
+## [TD-013] HTTP server without timeouts or graceful shutdown
+- **Location:** `apps/api/main.go` (`main`)
+- **Risk:** 4/10
+- **Problem:** `http.ListenAndServe` runs the default server: no `ReadHeaderTimeout`, so slow header writers hold connections open, and no handling of `SIGTERM`, so a deploy cuts every WebSocket without a close frame.
+- **Future impact:** connections that never finish their request pile up; on each deploy tabs see a dropped connection instead of a clean close.
+- **Suggestion:** an `http.Server` with `ReadHeaderTimeout`, and `signal.NotifyContext` plus `Shutdown` on `SIGTERM`.
+- **Date:** 2026-11-11 · **Status:** Open
+
+## [TD-014] A file is copied in memory once per recipient
+- **Location:** `apps/api/main.go` (the writer goroutine in `connect`) and `apps/api/frame.go` (`encodeFrame`)
+- **Risk:** 8/10
+- **Problem:** the mailbox shares one `File` value, but each recipient's writer builds its own frame with `encodeFrame`, a full copy of the bytes, and holds it until the socket takes it. Measured: one 5 MiB file to a group of 50 whose members read slowly holds 245 MiB until the ping timeout (up to a minute).
+- **Future impact:** a full group on phone networks, or 50 tabs that never read, takes the 512 MB instance down with two files; it needs no more than the limits already allow.
+- **Suggestion:** write the prefix, header and bytes through `conn.Writer` without joining them, or build the frame once in `post` and share it.
+- **Date:** 2026-11-11 · **Status:** Open
+
+## [TD-015] A private chat can start with a tab that already left
+- **Location:** `apps/api/internal/room/registry.go` (`reach`, `peer`, `Disconnect`)
+- **Risk:** 5/10
+- **Problem:** `peer` finds the other tab under one lock and `startPrivate` runs under a later one, so a `Disconnect` in between deletes the tab and takes its list of chats before the new chat is added to it. Nobody ever leaves that chat for the tab. A stress test hit it 54 times in 50,000.
+- **Future impact:** the sender sees the other person online and messages with one check forever, until the dead mailbox fills at 33 messages and the chat ends; meanwhile the room keeps the closed tab and up to 32 messages (files included) in memory.
+- **Suggestion:** look the other tab up again inside the lock that calls `startPrivate`, so `Disconnect` runs either before (the message fails with `gone`) or after (`LeaveAll` sees the chat).
+- **Date:** 2026-11-11 · **Status:** Open
+
+## [TD-016] A reopened private chat keeps its old read mark and numbers
+- **Location:** `apps/web/src/app/chats/chat-client.ts` (the private `joined` branch of `receive`, `markRead`, `quote`)
+- **Risk:** 5/10
+- **Problem:** when someone writes again after a private chat ended, the server starts a new chat counting `seq` from 1, but the tab reuses the old one: `read`, `readSent` and the old events stay. New own messages up to the old `read` show two checks before being read, `markRead` sends nothing (or a `seq` the server drops) until the new numbers pass the old ones, and a reply can quote an old message with the same `seq`.
+- **Future impact:** read receipts that lie, the one thing v0.8 added, and quotes of the wrong message.
+- **Suggestion:** on a private `joined` for a chat that had ended, reset `read` and `readSent` and stop matching old events by `seq` (e.g. clear their `seq`).
+- **Date:** 2026-11-11 · **Status:** Open
+
+## [TD-017] Sending more than three files at once loses the rest
+- **Location:** `apps/web/src/app/chats/chat-client.ts` (`sendFiles`, `sendFile`, `sentFiles`)
+- **Risk:** 5/10
+- **Problem:** the send preview takes any number of files and `sendFiles` sends them back to back, but the API allows three and then one every 2 seconds (`FileBurst`, `FileInterval`): the fourth on gets `slow-files` and is never sent again. Each refused file also stays in `sentFiles`, waiting for a receipt that never comes, until the chat is deleted; so does one sent while the socket was closed.
+- **Future impact:** picking five photos sends three and a warning; the lost ones stay in the tab's memory.
+- **Suggestion:** pace the queue in the client to the API's rhythm (or cap the preview at what the burst allows) and drop a file from `sentFiles` when its send is refused.
+- **Date:** 2026-11-11 · **Status:** Open
+
+## [TD-018] A chat removed by an error keeps its files in memory
+- **Location:** `apps/web/src/app/chats/chat-client.ts` (the `error` branch of `receive`)
+- **Risk:** 3/10
+- **Problem:** when the server refuses a chat (`gone` after reconnecting to a group that was dropped, for example) the chat is filtered out of the list without `release`, so its `blob:` URLs are never revoked, and its `sentFiles`, `readSent` and picked files stay. `remove` does all of that; this path does none.
+- **Future impact:** photos and files of a chat that no longer shows stay in the tab's memory until it reloads.
+- **Suggestion:** one private method that drops a chat and cleans up after it, used by both `remove` and the error branch.
+- **Date:** 2026-11-11 · **Status:** Open
+
+## [TD-019] Folders of the web build list their files
+- **Location:** `apps/api/main.go` (`spa`)
+- **Risk:** 2/10
+- **Problem:** `spa` sends to `index.html` only what has no file behind it; a folder exists, so `http.FileServerFS` answers `GET /backdrops/` with a listing of its files.
+- **Future impact:** cosmetic: the files are public anyway, but a listing looks unfinished and shows whatever is ever added to the build.
+- **Suggestion:** treat a directory like a missing file and serve `index.html`.
+- **Date:** 2026-11-11 · **Status:** Open
