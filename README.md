@@ -5,7 +5,7 @@ A real-time chat where **nothing is kept**.
 No accounts, no database, no history. You come in, talk, and when everyone
 leaves, the conversation is gone.
 
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](./LICENSE) [![CI](https://github.com/esteban-abanto-2709/ephemeral-chat/actions/workflows/ci.yml/badge.svg)](https://github.com/esteban-abanto-2709/ephemeral-chat/actions/workflows/ci.yml)
 
 [![Angular](https://img.shields.io/badge/Angular-22-DD0031?logo=angular&logoColor=white)](https://angular.dev)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)

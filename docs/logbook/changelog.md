@@ -12,6 +12,9 @@ Summary in ≤2 lines of what was done.
 
 ---
 
+## [RM-015] Continuous integration (2026-11-11 14:06)
+GitHub Actions checks the API (gofmt, vet, tests with the race detector), the web (format, tests, build) and the Docker image build on every push and pull request to `main`.
+
 ## [WL-014] No "You:" in private chat previews (2026-11-11 13:09)
 A private chat's preview shows your last message with its sent or read check instead of "You:"; groups keep "You:".
 

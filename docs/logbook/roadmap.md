@@ -15,12 +15,6 @@ changelog and is deleted from here.
 
 Each entry is one commit, or a few when it spans both apps; no commit breaks production.
 
-## [RM-015] Continuous integration
-- **Goal:** every push proves that nothing is broken, so "no commit breaks production" is enforced and not only promised.
-- **Scope:** decided: GitHub Actions running `go vet`, `gofmt`, the Go tests with the race detector, the web tests and build, and the Docker image build. Depends on nothing; it guards everything below.
-- **Done when:** a push to `main` runs all of those and the README shows the badge.
-- **Date:** 2026-11-11 · **Status:** Open
-
 ## [RM-016] Files without a copy per recipient
 - **Goal:** a file sent to a group stays in memory once, however many members receive it (TD-014).
 - **Scope:** the API's writer only; the protocol and the web don't change. Depends on nothing.

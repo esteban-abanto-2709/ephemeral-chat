@@ -204,6 +204,7 @@ pnpm run build             # production build to dist/web/browser
 pnpm test                  # Vitest in watch mode
 pnpm test --watch=false    # single run
 pnpm run format            # Prettier over src (.prettierrc); keep it clean
+pnpm run format:check      # what CI runs: fails if anything is unformatted
 ```
 
 Tests run on jsdom, which lacks `<dialog>`'s `showModal()` and `close()`;
