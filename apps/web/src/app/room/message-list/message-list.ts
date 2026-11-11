@@ -12,8 +12,10 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { DatePipe } from '@angular/common';
+import { DatePipe, NgTemplateOutlet } from '@angular/common';
 import {
+  LucideCheck,
+  LucideCheckCheck,
   LucideCopy,
   LucideDownload,
   LucideFileText,
@@ -40,8 +42,11 @@ const stickyDistance = 80;
     DatePipe,
     Glass,
     LinkedText,
+    NgTemplateOutlet,
     QuoteCard,
     VoiceNote,
+    LucideCheck,
+    LucideCheckCheck,
     LucideCopy,
     LucideDownload,
     LucideFileText,
@@ -59,6 +64,7 @@ export class MessageList {
   readonly events = input.required<ChatEvent[]>();
   readonly title = input('');
   readonly code = input('');
+  readonly read = input<number | null>(null);
   readonly viewed = output<ChatMessage>();
   readonly replied = output<ChatMessage>();
 
@@ -70,9 +76,14 @@ export class MessageList {
   protected readonly items = computed(() =>
     this.events().map((event, index, events) => {
       const previous = events[index - 1];
+      const read = this.read();
+      const own = event.type === 'message' && event.own;
+      const check: 'sent' | 'read' | null =
+        own && event.seq && read !== null ? (event.seq <= read ? 'read' : 'sent') : null;
       return {
         event,
-        own: event.type === 'message' && event.own,
+        own,
+        check,
         first: !(
           event.type === 'message' &&
           previous?.type === 'message' &&

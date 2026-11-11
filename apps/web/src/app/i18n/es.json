@@ -237,7 +237,9 @@
     "reply": "Responder",
     "goTo": "Ir al mensaje de {{ name }}",
     "goToOwn": "Ir a tu mensaje",
-    "earlier": "Mensaje anterior"
+    "earlier": "Mensaje anterior",
+    "sent": "Enviado",
+    "read": "Leído"
   },
   "preview": {
     "discard": "Descartar",

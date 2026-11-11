@@ -53,7 +53,12 @@
 </header>
 
 @if (kind() === 'private') {
-  <app-message-list [events]="events()" (viewed)="viewing.set($event)" (replied)="reply($event)">
+  <app-message-list
+    [events]="events()"
+    [read]="read()"
+    (viewed)="viewing.set($event)"
+    (replied)="reply($event)"
+  >
     <section
       appGlass="bubble"
       class="mx-auto flex w-full max-w-sm flex-col items-center gap-3 rounded-3xl px-5 py-6 text-center"

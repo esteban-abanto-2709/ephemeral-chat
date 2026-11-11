@@ -37,6 +37,24 @@
     </section>
   </ng-content>
 
+  <ng-template #check let-check>
+    @if (check === 'read') {
+      <svg
+        lucideCheckCheck
+        class="ml-0.5 inline size-3.5 align-text-bottom text-accent-ink"
+        aria-hidden="true"
+      ></svg>
+      <span class="sr-only">{{ 'messages.read' | transloco }}</span>
+    } @else if (check === 'sent') {
+      <svg
+        lucideCheck
+        class="ml-0.5 inline size-3.5 align-text-bottom text-ink-soft"
+        aria-hidden="true"
+      ></svg>
+      <span class="sr-only">{{ 'messages.sent' | transloco }}</span>
+    }
+  </ng-template>
+
   <ul
     class="flex flex-col gap-1"
     [attr.aria-label]="'messages.list' | transloco"
@@ -113,8 +131,9 @@
                 />
                 <time
                   class="absolute right-1.5 bottom-1.5 rounded-full bg-glass-strong px-1.5 text-[0.6875rem]"
-                  >{{ event.at | date: 'HH:mm' }}</time
-                >
+                  >{{ event.at | date: 'HH:mm'
+                  }}<ng-container *ngTemplateOutlet="check; context: { $implicit: item.check }"
+                /></time>
               </button>
             }
             @case ('file') {
@@ -135,18 +154,22 @@
                 </span>
                 <svg lucideDownload class="size-5 shrink-0 text-ink-soft" aria-hidden="true"></svg>
               </a>
-              <time class="block px-2 pt-0.5 text-right text-[0.6875rem] text-ink-soft">{{
-                event.at | date: 'HH:mm'
-              }}</time>
+              <time class="block px-2 pt-0.5 text-right text-[0.6875rem] text-ink-soft"
+                >{{ event.at | date: 'HH:mm'
+                }}<ng-container *ngTemplateOutlet="check; context: { $implicit: item.check }"
+              /></time>
             }
             @case ('voice') {
-              <app-voice-note [file]="file!" [at]="event.at" />
+              <app-voice-note [file]="file!" [at]="event.at">
+                <ng-container *ngTemplateOutlet="check; context: { $implicit: item.check }" />
+              </app-voice-note>
             }
             @default {
               <app-linked-text class="wrap-anywhere whitespace-pre-wrap" [text]="event.text" />
-              &ngsp;<time class="ml-1.5 align-bottom text-[0.6875rem] text-ink-soft">{{
-                event.at | date: 'HH:mm'
-              }}</time>
+              &ngsp;<time class="ml-1.5 align-bottom text-[0.6875rem] text-ink-soft"
+                >{{ event.at | date: 'HH:mm'
+                }}<ng-container *ngTemplateOutlet="check; context: { $implicit: item.check }"
+              /></time>
             }
           }
           @if (file && event.text) {

@@ -38,7 +38,10 @@ let playing: HTMLAudioElement | null = null;
       </span>
       <span class="flex justify-between text-[0.6875rem] text-ink-soft">
         <span>{{ duration(elapsed() || (file().seconds ?? 0)) }}</span>
-        <time>{{ at() | date: 'HH:mm' }}</time>
+        <span class="flex items-center gap-1">
+          <time>{{ at() | date: 'HH:mm' }}</time>
+          <ng-content />
+        </span>
       </span>
     </span>
   `,

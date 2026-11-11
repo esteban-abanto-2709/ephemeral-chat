@@ -80,6 +80,29 @@ describe('MessageList', () => {
     expect(items[2].textContent).toContain('You:');
   });
 
+  it('marks your messages as sent or read', async () => {
+    const { fixture, list } = await render([
+      { type: 'message', ...juan, own: true, text: 'uno', at, seq: 1 },
+      { type: 'message', ...juan, own: true, text: 'dos', at, seq: 2 },
+      { type: 'message', ...ana, own: false, text: 'tres', at, seq: 3 },
+    ]);
+    fixture.componentRef.setInput('read', 1);
+    await fixture.whenStable();
+    const items = [...list.querySelectorAll('ul[aria-live] li')];
+
+    expect(items[0].textContent).toContain('Read');
+    expect(items[1].textContent).toContain('Sent');
+    expect(items[2].textContent).not.toMatch(/Sent|Read/);
+  });
+
+  it('shows no checks without a read count', async () => {
+    const { list } = await render([
+      { type: 'message', ...juan, own: true, text: 'uno', at, seq: 1 },
+    ]);
+
+    expect(list.textContent).not.toMatch(/Sent|Read/);
+  });
+
   it('hides the keyboard when you drag the messages', async () => {
     const { list } = await render([]);
     const input = document.body.appendChild(document.createElement('input'));

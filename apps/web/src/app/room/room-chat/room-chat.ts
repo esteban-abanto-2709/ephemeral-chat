@@ -94,6 +94,7 @@ export class RoomChat {
   readonly code = input.required<string>();
   readonly link = input.required<string>();
   readonly typing = input<Person[]>([]);
+  readonly read = input(0);
   readonly focus = input(false);
   readonly recording = input<number | null>(null);
   readonly replying = input<Quote | null>(null);

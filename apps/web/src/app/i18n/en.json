@@ -237,7 +237,9 @@
     "reply": "Reply",
     "goTo": "Go to the message from {{ name }}",
     "goToOwn": "Go to your message",
-    "earlier": "Earlier message"
+    "earlier": "Earlier message",
+    "sent": "Sent",
+    "read": "Read"
   },
   "preview": {
     "discard": "Discard",
