@@ -62,11 +62,16 @@ func createRoom(rooms *room.Registry) http.HandlerFunc {
 			http.Error(w, "name must be 1 to 24 characters", http.StatusBadRequest)
 			return
 		}
+		id, err := rooms.Create(name)
+		if err != nil {
+			http.Error(w, "server is full", http.StatusServiceUnavailable)
+			return
+		}
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
 		json.NewEncoder(w).Encode(struct {
 			ID string `json:"id"`
-		}{rooms.Create(name)})
+		}{id})
 	}
 }
 
@@ -78,15 +83,19 @@ func connect(rooms *room.Registry, ping time.Duration) http.HandlerFunc {
 			return
 		}
 
+		client, err := rooms.Connect(name)
+		if err != nil {
+			http.Error(w, "server is full", http.StatusServiceUnavailable)
+			return
+		}
+		defer rooms.Disconnect(client)
+
 		conn, err := websocket.Accept(w, r, nil)
 		if err != nil {
 			return
 		}
 		defer conn.CloseNow()
 		conn.SetReadLimit(frameMaxBytes)
-
-		client := rooms.Connect(name)
-		defer rooms.Disconnect(client)
 
 		go keepAlive(r.Context(), conn, ping)
 

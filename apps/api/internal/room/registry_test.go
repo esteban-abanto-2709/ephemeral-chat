@@ -13,9 +13,27 @@ import (
 
 var urlSafeID = regexp.MustCompile(`^[A-Za-z0-9_-]{22}$`)
 
+func mustConnect(t *testing.T, rooms *Registry, name string) *Client {
+	t.Helper()
+	client, err := rooms.Connect(name)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return client
+}
+
+func mustCreate(t *testing.T, rooms *Registry, name string) string {
+	t.Helper()
+	id, err := rooms.Create(name)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return id
+}
+
 func TestCreateGivesUniqueURLSafeIDs(t *testing.T) {
 	rooms := NewRegistry()
-	first, second := rooms.Create("Trip"), rooms.Create("Trip")
+	first, second := mustCreate(t, rooms, "Trip"), mustCreate(t, rooms, "Trip")
 
 	for _, id := range []string{first, second} {
 		if !urlSafeID.MatchString(id) {
@@ -56,7 +74,7 @@ func assertExists(t *testing.T, rooms *Registry, id string, want bool) {
 func TestEmptyRoomIsDroppedAfterAMinute(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
 		rooms := NewRegistry()
-		id := rooms.Create("Trip")
+		id := mustCreate(t, rooms, "Trip")
 		room, _ := rooms.Get(id)
 
 		time.Sleep(emptyLifetime - time.Second)
@@ -81,7 +99,7 @@ func TestEmptyRoomIsDroppedAfterAMinute(t *testing.T) {
 func TestUnusedRoomIsDroppedAfterAMinute(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
 		rooms := NewRegistry()
-		id := rooms.Create("Trip")
+		id := mustCreate(t, rooms, "Trip")
 
 		time.Sleep(emptyLifetime)
 		assertExists(t, rooms, id, false)
@@ -91,7 +109,7 @@ func TestUnusedRoomIsDroppedAfterAMinute(t *testing.T) {
 func TestRejoiningWithinTheMinuteKeepsTheRoom(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
 		rooms := NewRegistry()
-		id := rooms.Create("Trip")
+		id := mustCreate(t, rooms, "Trip")
 		room, _ := rooms.Get(id)
 
 		room.Leave(join(t, room, "Juan"))
@@ -103,6 +121,36 @@ func TestRejoiningWithinTheMinuteKeepsTheRoom(t *testing.T) {
 		time.Sleep(time.Second)
 		assertExists(t, rooms, id, false)
 	})
+}
+
+func TestCreateRefusesOnceTheServerIsFull(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		rooms := NewRegistry()
+		for range MaxRooms {
+			mustCreate(t, rooms, "Trip")
+		}
+		if _, err := rooms.Create("Trip"); !errors.Is(err, ErrServerFull) {
+			t.Fatalf("creating past the ceiling: error = %v, want ErrServerFull", err)
+		}
+
+		time.Sleep(emptyLifetime)
+		synctest.Wait()
+		mustCreate(t, rooms, "Trip")
+	})
+}
+
+func TestConnectRefusesOnceTheServerIsFull(t *testing.T) {
+	rooms := NewRegistry()
+	first := mustConnect(t, rooms, "Sam")
+	for range MaxConnections - 1 {
+		mustConnect(t, rooms, "Sam")
+	}
+	if _, err := rooms.Connect("Sam"); !errors.Is(err, ErrServerFull) {
+		t.Fatalf("connecting past the ceiling: error = %v, want ErrServerFull", err)
+	}
+
+	rooms.Disconnect(first)
+	mustConnect(t, rooms, "Sam")
 }
 
 func next(t *testing.T, client *Client) Message {
@@ -127,7 +175,7 @@ func assertNothing(t *testing.T, client *Client) {
 
 func TestOpeningSomeonesIDTellsThemNothingUntilTheFirstMessage(t *testing.T) {
 	rooms := NewRegistry()
-	sam, luis := rooms.Connect("Sam"), rooms.Connect("Luis")
+	sam, luis := mustConnect(t, rooms, "Sam"), mustConnect(t, rooms, "Luis")
 	both := []Person{sam.person(), luis.person()}
 
 	rooms.Open(sam, luis.ID)
@@ -161,7 +209,7 @@ func TestOpeningSomeonesIDTellsThemNothingUntilTheFirstMessage(t *testing.T) {
 
 func TestFirstMessageToSomeoneGoneFails(t *testing.T) {
 	rooms := NewRegistry()
-	sam, luis := rooms.Connect("Sam"), rooms.Connect("Luis")
+	sam, luis := mustConnect(t, rooms, "Sam"), mustConnect(t, rooms, "Luis")
 	rooms.Open(sam, luis.ID)
 	next(t, sam)
 
@@ -174,7 +222,7 @@ func TestFirstMessageToSomeoneGoneFails(t *testing.T) {
 
 func TestPrivateChatEndsWhenEitherLeaves(t *testing.T) {
 	rooms := NewRegistry()
-	sam, luis := rooms.Connect("Sam"), rooms.Connect("Luis")
+	sam, luis := mustConnect(t, rooms, "Sam"), mustConnect(t, rooms, "Luis")
 	rooms.Send(sam, luis.ID, "hola", 0)
 	drainClient(sam)
 	drainClient(luis)
@@ -205,9 +253,9 @@ func drainClient(client *Client) {
 
 func TestOpenRefusesWhatCannotBeOpened(t *testing.T) {
 	rooms := NewRegistry()
-	sam, luis := rooms.Connect("Sam"), rooms.Connect("Luis")
+	sam, luis := mustConnect(t, rooms, "Sam"), mustConnect(t, rooms, "Luis")
 	for range MaxChats {
-		rooms.Open(luis, rooms.Create("Group"))
+		rooms.Open(luis, mustCreate(t, rooms, "Group"))
 		next(t, luis)
 	}
 
@@ -221,7 +269,7 @@ func TestOpenRefusesWhatCannotBeOpened(t *testing.T) {
 
 func TestAFileCanStartAPrivateChat(t *testing.T) {
 	rooms := NewRegistry()
-	sam, luis := rooms.Connect("Sam"), rooms.Connect("Luis")
+	sam, luis := mustConnect(t, rooms, "Sam"), mustConnect(t, rooms, "Luis")
 
 	rooms.SendFile(sam, luis.ID, "x.txt", nil, 0, "", 0)
 	assertNothing(t, luis)

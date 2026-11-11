@@ -46,21 +46,20 @@ and is deleted from here.
 - **Suggestion:** an explicit joining state (e.g. a `joining` flag the views render neutrally, re-sent on `ready` by that flag instead of by `kind`); the route already knows `/chat/` from `/room/` if a hint is wanted.
 - **Date:** 2026-11-11 · **Status:** Open
 
-## [TD-012] No cap on connections or rooms
-- **Location:** `apps/api/main.go` (`connect`, `createRoom`) and `apps/api/internal/room/registry.go` (`Connect`, `Create`)
-- **Risk:** 7/10
-- **Problem:** every limit is per member or per tab; nothing bounds the total. Anyone can open any number of WebSockets (each may buffer a 6 MiB frame and hold a 32-slot mailbox of files) and `POST /api/rooms` in a loop, with no limit per address or for the whole server.
-- **Numbers (2026-11-11):** measured, an idle connection costs at most 65 KB (three goroutines; the figure includes the test's own client), so about 7,800 fill 512 MB doing nothing. By the read limit, a connection in the middle of an upload holds up to 6 MiB, so about 85 are enough.
-- **Future impact:** a small script exhausts the memory of the free Render instance and restarts it, which ends every chat for everyone; more likely once the link is public.
-- **Suggestion:** a global ceiling on connections and rooms (refuse with `503`) and a small limiter per address on both handlers, reading the proxy's forwarded address.
-- **Date:** 2026-11-11 · **Status:** Open
-
 ## [TD-013] HTTP server without timeouts or graceful shutdown
 - **Location:** `apps/api/main.go` (`main`)
 - **Risk:** 4/10
 - **Problem:** `http.ListenAndServe` runs the default server: no `ReadHeaderTimeout`, so slow header writers hold connections open, and no handling of `SIGTERM`, so a deploy cuts every WebSocket without a close frame.
 - **Future impact:** connections that never finish their request pile up; on each deploy tabs see a dropped connection instead of a clean close.
 - **Suggestion:** an `http.Server` with `ReadHeaderTimeout`, and `signal.NotifyContext` plus `Shutdown` on `SIGTERM`.
+- **Date:** 2026-11-11 · **Status:** Open
+
+## [TD-020] No limit on the memory files hold while in transit
+- **Location:** `apps/api/main.go` (`connect`, the read loop) and `apps/api/internal/room/room.go` (`post`, the mailboxes)
+- **Risk:** 7/10
+- **Problem:** a file stays in memory from the moment its frame is read until the slowest recipient's socket takes it, and nothing bounds the total: every connection may be reading a 6 MiB frame at once, and a mailbox may hold up to 32 files nobody reads. Measured: 20 connections in pairs, three 5 MiB files each to a peer that never reads, hold about 100 MiB within every existing limit. A ceiling on connections does not cover it.
+- **Future impact:** about a hundred connections take the 512 MB instance down using only what the limits allow, even once connections and rooms are capped (TD-012).
+- **Suggestion:** a global budget of file bytes in transit (count each file once, release it when the last mailbox lets go) that refuses new files with an error code while it is full, and a small pool of slots for reading binary frames.
 - **Date:** 2026-11-11 · **Status:** Open
 
 ## [TD-015] A private chat can start with a tab that already left

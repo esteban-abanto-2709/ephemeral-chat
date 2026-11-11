@@ -55,6 +55,8 @@ The link can reach anyone, so the server protects itself from day one:
 | Name length | 24 characters |
 | People per group | 50 |
 | Chats per tab | 20 |
+| Tabs connected at once | 2000 |
+| Groups at once | 5000 |
 | Grace period for an empty group | 1 minute |
 
 They are tuning values, not product rules: each one lives in one place in the

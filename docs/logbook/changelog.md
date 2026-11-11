@@ -12,6 +12,9 @@ Summary in ≤2 lines of what was done.
 
 ---
 
+## [TD-012] No cap on connections or rooms (2026-11-11 14:45)
+The registry refuses a new tab past 2000 connections and a new group past 5000 with `503` (RM-017, step 1). Files in transit are a separate debt, TD-020.
+
 ## [RM-016] Files without a copy per recipient (2026-11-11 14:19)
 Each tab's writer streams a file's header and shared bytes to its socket instead of building its own frame: a 5 MiB file to 50 slow readers holds about 5 MiB, not 245.
 

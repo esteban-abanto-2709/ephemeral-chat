@@ -16,10 +16,16 @@ changelog and is deleted from here.
 Each entry is one commit, or a few when it spans both apps; no commit breaks production.
 
 ## [RM-017] Server ceilings
-- **Goal:** no number of connections, rooms or slow requests can exhaust the instance, and a deploy closes sockets cleanly (TD-012, TD-013).
-- **Scope:** decided: a global ceiling on connections and rooms that answers `503`; the limit per address is left for later, since it depends on trusting Render's forwarded address. Also `ReadHeaderTimeout` and shutdown on `SIGTERM`. Depends on RM-016, because the ceiling's number comes from the real cost per connection.
-- **Open questions:** the two numbers (connections, rooms), picked from the measured cost when starting.
-- **Done when:** tests show the ceilings refusing with `503` and a clean close on shutdown, and TD-012 and TD-013 are closed.
+- **Goal:** no number of connections, rooms or slow requests can exhaust the instance, and the server stops in order on a deploy (TD-012, TD-013).
+- **Scope:** decided: a global ceiling of 2000 connections and 5000 rooms that answers `503`; the limit per address is left for later, since it depends on trusting Render's forwarded address. Also `ReadHeaderTimeout` and shutdown on `SIGTERM`. Files in transit are out: they are RM-023.
+- **Done when:** tests show the ceilings refusing with `503`, the server exits cleanly on `SIGTERM`, and TD-012 and TD-013 are closed.
+- **Date:** 2026-11-11 · **Status:** In progress (2026-11-11)
+
+## [RM-023] A budget for files in transit
+- **Goal:** the memory that files hold between being read and reaching the slowest recipient has a ceiling, whatever the number of connections (TD-020).
+- **Scope:** the API, and the web only for a new error code if one is needed. Depends on RM-017.
+- **Open questions:** how much memory is reserved for files; what the sender sees when the server is full; whether reading uploads gets its own small pool of slots. Decided when starting.
+- **Done when:** a test with many pairs sending files nobody reads keeps the heap under the agreed budget, and TD-020 is closed.
 - **Date:** 2026-11-11 · **Status:** Open
 
 ## [RM-018] Private chats that never lie
@@ -43,7 +49,7 @@ Each entry is one commit, or a few when it spans both apps; no commit breaks pro
 
 ## [RM-021] Load test with real numbers
 - **Goal:** measure concurrent connections against RAM and latency (e.g. with `k6`) and publish the result in the README. Promoted from WL-007.
-- **Scope:** decided: the test also measures how often a slow member is dropped from a busy group; until then that rule stays as it is, a documented limit. Depends on RM-016 and RM-017, so the published numbers are the corrected ones.
+- **Scope:** decided: the test also measures how often a slow member is dropped from a busy group; until then that rule stays as it is, a documented limit. Depends on RM-017 and RM-023, so the published numbers are the corrected ones.
 - **Done when:** the README shows connections, memory and latency on the production instance size.
 - **Date:** 2026-11-11 · **Status:** Open
 

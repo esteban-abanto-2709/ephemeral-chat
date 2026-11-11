@@ -353,7 +353,7 @@ func TestTypingNeverDisconnectsASlowMember(t *testing.T) {
 func privateChat(t *testing.T) (sam, luis *Client) {
 	t.Helper()
 	rooms := NewRegistry()
-	sam, luis = rooms.Connect("Sam"), rooms.Connect("Luis")
+	sam, luis = mustConnect(t, rooms, "Sam"), mustConnect(t, rooms, "Luis")
 	rooms.Send(sam, luis.ID, "hola", 0)
 	drainClient(sam)
 	drainClient(luis)
@@ -510,7 +510,7 @@ func TestRenameTellsEveryChatTheTabIsIn(t *testing.T) {
 	rooms := NewRegistry()
 	room := newTestRoom()
 	juan, ana := join(t, room, "Juan"), join(t, room, "Ana")
-	luis := rooms.Connect("Luis")
+	luis := mustConnect(t, rooms, "Luis")
 	juan.client.remember(room.ID, room, juan)
 	rooms.Open(juan.client, luis.ID)
 	rooms.Send(juan.client, luis.ID, "hi", 0)

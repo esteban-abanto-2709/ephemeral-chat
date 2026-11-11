@@ -92,6 +92,31 @@ func TestCreateRoom(t *testing.T) {
 	}
 }
 
+func TestAFullServerAnswers503(t *testing.T) {
+	registry := room.NewRegistry()
+	for range room.MaxRooms {
+		if _, err := registry.Create("Trip"); err != nil {
+			t.Fatal(err)
+		}
+	}
+	rec := httptest.NewRecorder()
+	createRoom(registry)(rec, httptest.NewRequest("POST", "/api/rooms", strings.NewReader(`{"name": "Trip"}`)))
+	if rec.Code != http.StatusServiceUnavailable {
+		t.Errorf("POST /api/rooms on a full server = %d, want 503", rec.Code)
+	}
+
+	for range room.MaxConnections {
+		if _, err := registry.Connect("Juan"); err != nil {
+			t.Fatal(err)
+		}
+	}
+	rec = httptest.NewRecorder()
+	connect(registry, pingInterval)(rec, httptest.NewRequest("GET", "/api/ws?name=Juan", nil))
+	if rec.Code != http.StatusServiceUnavailable {
+		t.Errorf("GET /api/ws on a full server = %d, want 503", rec.Code)
+	}
+}
+
 func TestChat(t *testing.T) {
 	server := httptest.NewServer(newMux(""))
 	defer server.Close()

@@ -44,8 +44,8 @@ Every API route lives under `/api/`, so it never collides with a web route.
 | Method | Path          | Response            |
 | ------ | ------------- | ------------------- |
 | `GET`  | `/api/health` | `ok` (health check) |
-| `POST` | `/api/rooms`  | Body `{"name": "…"}`: creates a group in memory, `201` with `{"id": "..."}`; `400` without a name of 1 to 24 characters |
-| `GET`  | `/api/ws?name=…` | WebSocket: the tab's connection, for every chat it holds (see below) |
+| `POST` | `/api/rooms`  | Body `{"name": "…"}`: creates a group in memory, `201` with `{"id": "..."}`; `400` without a name of 1 to 24 characters; `503` once the server holds 5000 groups (`MaxRooms`) |
+| `GET`  | `/api/ws?name=…` | WebSocket: the tab's connection, for every chat it holds (see below); `503` once 2000 tabs are connected (`MaxConnections`) |
 | `GET`  | `/api/*`      | `404` for any other |
 
 A room id is 16 random bytes from `crypto/rand`, base64url-encoded: 22
@@ -58,10 +58,11 @@ default), which holds both in production and behind the `ng serve` proxy.
 
 A browser tab opens one WebSocket, `GET /api/ws?name=…`, and every chat it
 holds travels over it. The name must be 1 to 24 characters once trimmed (`400`
-otherwise). The first frame gives the tab its id: 16 random bytes, like a room
-id, that lives while the connection does and is never stored. Two people may
-share a name; the id tells them apart. Then, as JSON text frames (files as
-binary frames, see below):
+otherwise). A server that already holds 2000 tabs answers `503`
+(`MaxConnections`). The first frame gives the tab its id: 16 random bytes,
+like a room id, that lives while the connection does and is never stored. Two
+people may share a name; the id tells them apart. Then, as JSON text frames
+(files as binary frames, see below):
 
 ```
 client → server:   {"type": "join",    "room": "…"}

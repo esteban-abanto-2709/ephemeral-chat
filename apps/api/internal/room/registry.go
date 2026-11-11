@@ -7,6 +7,13 @@ import (
 	"sync"
 )
 
+const (
+	MaxConnections = 2000
+	MaxRooms       = 5000
+)
+
+var ErrServerFull = errors.New("server is full")
+
 type Registry struct {
 	mu      sync.Mutex
 	rooms   map[string]*Room
@@ -17,12 +24,15 @@ func NewRegistry() *Registry {
 	return &Registry{rooms: make(map[string]*Room), clients: make(map[string]*Client)}
 }
 
-func (r *Registry) Connect(name string) *Client {
-	client := NewClient(name)
+func (r *Registry) Connect(name string) (*Client, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
+	if len(r.clients) >= MaxConnections {
+		return nil, ErrServerFull
+	}
+	client := NewClient(name)
 	r.clients[client.ID] = client
-	return client
+	return client, nil
 }
 
 func (r *Registry) Disconnect(client *Client) {
@@ -109,13 +119,16 @@ func (r *Registry) peer(client *Client, id string) (*Client, string) {
 	return other, ""
 }
 
-func (r *Registry) Create(name string) string {
+func (r *Registry) Create(name string) (string, error) {
 	id := newID()
 
 	r.mu.Lock()
 	defer r.mu.Unlock()
+	if len(r.rooms) >= MaxRooms {
+		return "", ErrServerFull
+	}
 	r.rooms[id] = newRoom(id, name, func() { r.drop(id) })
-	return id
+	return id, nil
 }
 
 func (r *Registry) Get(id string) (*Room, bool) {
