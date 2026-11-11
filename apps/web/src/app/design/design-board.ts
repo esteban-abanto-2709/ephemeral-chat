@@ -1,17 +1,21 @@
 import { Component, computed, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { Language, languages } from '../i18n/i18n';
 import { DesignDevice } from './design-device';
 import { DesignView, photoViews, qrViews } from './design-chats';
 import { DesignScreen, designScreens } from './design-frame';
 
 @Component({
-  imports: [DesignDevice],
+  imports: [DesignDevice, RouterLink],
   selector: 'app-design-board',
   template: `
     <div class="scroll-glass relative h-dvh overflow-y-auto bg-canvas">
       <div class="mx-auto flex max-w-[1600px] flex-col gap-8 p-6">
         <header class="flex flex-wrap items-center gap-4">
           <h1 class="flex-1 text-xl font-semibold">Design</h1>
+          <a routerLink="/design/logos" class="rounded-full border border-edge px-4 py-1.5 text-sm">
+            Logos
+          </a>
           <div class="flex gap-1.5" role="radiogroup" aria-label="Language">
             @for (option of languages; track option) {
               <button
