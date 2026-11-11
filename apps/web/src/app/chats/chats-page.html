@@ -30,6 +30,7 @@
       [code]="active.id"
       [link]="link(active.id)"
       [typing]="active.typing"
+      [read]="active.read"
       [focus]="joined() === active.id"
       (sent)="client.send(active.id, $event.text, $event.reply)"
       [preview]="client.picked()"

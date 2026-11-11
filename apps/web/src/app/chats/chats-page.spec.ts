@@ -52,6 +52,7 @@ describe('ChatsPage', () => {
         members: [juan, ana],
         typing: [],
         unread: 0,
+        read: 0,
         at: 0,
       },
     ]);

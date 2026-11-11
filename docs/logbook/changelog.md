@@ -12,6 +12,9 @@ Summary in ≤2 lines of what was done.
 
 ---
 
+## [WL-015] Read receipts (2026-11-11 12:56)
+Your messages in a private chat show one check when sent and two once the other person has read them; the server relays the reader's last seq and stores nothing. Groups are WL-023.
+
 ## [WL-011] A logo that says "message" (2026-11-11 11:56)
 A chat bubble whose outline dissolves into fading dots replaces the hourglass in the favicon, chat list and welcome card; the green accent becomes the ink, so people's avatars are the only color.
 

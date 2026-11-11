@@ -45,6 +45,7 @@ export interface Chat {
   members: Person[];
   typing: Person[];
   unread: number;
+  read: number;
   at: number;
 }
 
@@ -110,12 +111,24 @@ export class ChatClient implements OnDestroy {
   private readonly http = inject(HttpClient);
   private readonly notice = inject(Notice);
   private readonly i18n = inject(I18n);
-  private readonly location = inject(DOCUMENT).location;
+  private readonly document = inject(DOCUMENT);
+  private readonly location = this.document.location;
   private socket?: WebSocket;
   private ready = false;
   private readonly typingTimers = new Map<string, ReturnType<typeof setTimeout>>();
   private readonly typingSentAt = new Map<string, number>();
   private readonly sentFiles = new Map<string, File[]>();
+  private readonly readSent = new Map<string, number>();
+  private readonly onVisibility = () => {
+    const room = this._active();
+    if (room) {
+      this.markRead(room);
+    }
+  };
+
+  constructor() {
+    this.document.addEventListener('visibilitychange', this.onVisibility);
+  }
 
   connect(name: string): void {
     const scheme = this.location.protocol === 'https:' ? 'wss' : 'ws';
@@ -185,6 +198,7 @@ export class ChatClient implements OnDestroy {
     this.write({ type: 'leave', room: id });
     this.release(this._chats().filter((chat) => chat.id === id));
     this.sentFiles.delete(id);
+    this.readSent.delete(id);
     if (this._picked()?.room === id) {
       this.discardPicked();
     }
@@ -198,6 +212,7 @@ export class ChatClient implements OnDestroy {
     this._active.set(id);
     if (id) {
       this.update(id, (chat) => ({ ...chat, unread: 0 }));
+      this.markRead(id);
     }
   }
 
@@ -294,6 +309,7 @@ export class ChatClient implements OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.document.removeEventListener('visibilitychange', this.onVisibility);
     this.clearTyping();
     this.discardPicked();
     this.release(this._chats());
@@ -303,6 +319,28 @@ export class ChatClient implements OnDestroy {
   private write(frame: Frame): void {
     if (this.socket?.readyState === WebSocket.OPEN) {
       this.socket.send(JSON.stringify(frame));
+    }
+  }
+
+  private markRead(room: string): void {
+    const chat = this._chats().find((candidate) => candidate.id === room);
+    if (
+      !this.ready ||
+      chat?.kind !== 'private' ||
+      chat.ended ||
+      this._active() !== room ||
+      this.document.visibilityState !== 'visible'
+    ) {
+      return;
+    }
+    const seq = chat.events.reduce(
+      (highest, event) =>
+        event.type === 'message' && !event.own ? Math.max(highest, event.seq ?? 0) : highest,
+      0,
+    );
+    if (seq > (this.readSent.get(room) ?? 0)) {
+      this.readSent.set(room, seq);
+      this.write({ type: 'read', room, seq });
     }
   }
 
@@ -316,6 +354,7 @@ export class ChatClient implements OnDestroy {
     if (frame.type === 'ready') {
       this._me.set(frame.id!);
       this.ready = true;
+      this.readSent.clear();
       this._chats.update((chats) =>
         chats.map((chat) =>
           chat.kind === 'private' && !chat.ended ? { ...chat, ended: true } : chat,
@@ -373,6 +412,10 @@ export class ChatClient implements OnDestroy {
       }));
       return;
     }
+    if (frame.type === 'read') {
+      this.update(room, (chat) => ({ ...chat, read: Math.max(chat.read, frame.seq!) }));
+      return;
+    }
     if (frame.type === 'typing') {
       this.startTyping(room, { id: frame.id!, name: frame.name! });
       return;
@@ -409,6 +452,9 @@ export class ChatClient implements OnDestroy {
           ? chat.unread + 1
           : chat.unread,
     }));
+    if (event.type === 'message') {
+      this.markRead(room);
+    }
   }
 
   private attach(room: string, file: NonNullable<Frame['file']>): Attachment | undefined {
@@ -461,6 +507,7 @@ export class ChatClient implements OnDestroy {
       members: [],
       typing: [],
       unread: 0,
+      read: 0,
       at: Date.now(),
     };
   }

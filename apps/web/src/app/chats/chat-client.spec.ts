@@ -451,6 +451,70 @@ describe('ChatClient', () => {
     expect(Array.from(new Uint8Array(await blob.arrayBuffer()))).toEqual(bytesOf('hola'));
   });
 
+  function openPrivate(): void {
+    server.receive({
+      type: 'joined',
+      room: 'l',
+      ...luis,
+      title: 'Luis',
+      private: true,
+      members: [juan, luis],
+    });
+  }
+
+  function reads(): object[] {
+    return server.sent.filter((frame) => (frame as { type: string }).type === 'read');
+  }
+
+  it('tells the other person what you read in an open private chat', () => {
+    vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible');
+    ready();
+    openPrivate();
+    client.open('l');
+    server.receive({ type: 'message', room: 'l', ...luis, text: 'hola', seq: 3 });
+    expect(reads()).toEqual([{ type: 'read', room: 'l', seq: 3 }]);
+
+    server.receive({ type: 'message', room: 'l', ...juan, text: 'hey', seq: 4 });
+    expect(reads()).toHaveLength(1);
+  });
+
+  it('waits until the chat is open and the tab is visible to say it was read', () => {
+    const visibility = vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible');
+    ready();
+    client.join('one');
+    openPrivate();
+    server.receive({ type: 'message', room: 'l', ...luis, text: 'hola', seq: 1 });
+    expect(reads()).toEqual([]);
+
+    client.open('l');
+    expect(reads()).toEqual([{ type: 'read', room: 'l', seq: 1 }]);
+
+    visibility.mockReturnValue('hidden');
+    server.receive({ type: 'message', room: 'l', ...luis, text: 'again', seq: 2 });
+    expect(reads()).toHaveLength(1);
+
+    visibility.mockReturnValue('visible');
+    document.dispatchEvent(new Event('visibilitychange'));
+    expect(reads().at(-1)).toEqual({ type: 'read', room: 'l', seq: 2 });
+  });
+
+  it('never says it read a group', () => {
+    vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible');
+    ready();
+    client.join('one');
+    server.receive({ type: 'message', room: 'one', ...ana, text: 'hola', seq: 1 });
+    expect(reads()).toEqual([]);
+  });
+
+  it('marks your messages read when the other person reads them', () => {
+    ready();
+    openPrivate();
+    server.receive({ type: 'read', room: 'l', id: 'l', seq: 2 });
+    expect(client.chats()[0].read).toBe(2);
+    server.receive({ type: 'read', room: 'l', id: 'l', seq: 1 });
+    expect(client.chats()[0]).toMatchObject({ read: 2, events: [], unread: 0 });
+  });
+
   it('shows your own file from the local copy when the server confirms it', async () => {
     vi.useRealTimers();
     const createObjectURL = vi.fn((blob: Blob) => `blob:${blob.size}`);

@@ -18,6 +18,7 @@ function chat(id: string, title: string, unread = 0): Chat {
     members: [],
     typing: [],
     unread,
+    read: 0,
     at: 0,
   };
 }

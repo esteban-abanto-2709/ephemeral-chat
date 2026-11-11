@@ -144,8 +144,6 @@ const luisEvents: ChatEvent[] = [
   { ...media(sam, true, 4, { ...juanVoice, seconds: 8 }), seq: 5 } as ChatEvent,
 ];
 
-const luisRead = 4;
-
 const luisChat: Chat = {
   id: 'luis',
   kind: 'private',
@@ -155,6 +153,7 @@ const luisChat: Chat = {
   members: [sam, luis],
   typing: [],
   unread: 0,
+  read: 4,
   at: start,
 };
 
@@ -174,6 +173,7 @@ const chats: Chat[] = [
     members: [ana, juan, sam],
     typing: [ana],
     unread: 0,
+    read: 0,
     at: start,
   },
   {
@@ -193,6 +193,7 @@ const chats: Chat[] = [
     members: [eva, sam],
     typing: [],
     unread: 5,
+    read: 0,
     at: start,
   },
   {
@@ -212,6 +213,7 @@ const chats: Chat[] = [
     members: [sam, ana],
     typing: [],
     unread: 2,
+    read: 0,
     at: start,
   },
   {
@@ -225,6 +227,7 @@ const chats: Chat[] = [
     members: [juan, sam],
     typing: [],
     unread: 0,
+    read: 0,
     at: start,
   },
 ];
@@ -259,7 +262,7 @@ const chats: Chat[] = [
           [code]="chat.id"
           [link]="'https://ephemeral.chat/room/' + chat.id"
           [typing]="chat.typing"
-          [read]="luisRead"
+          [read]="chat.read"
         />
       } @else {
         <app-chats-welcome
@@ -290,7 +293,6 @@ const chats: Chat[] = [
 })
 export class DesignChats {
   protected readonly ridgePhoto = ridgePhoto;
-  protected readonly luisRead = luisRead;
   protected readonly replying = { ...ana, own: false, text: 'I can bring the tent' };
   readonly state = input<ChatsState>('chats');
   readonly view = input<DesignView>('chat');
