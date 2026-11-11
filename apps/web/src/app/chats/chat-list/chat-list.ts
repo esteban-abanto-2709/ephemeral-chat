@@ -1,6 +1,8 @@
 import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import {
+  LucideCheck,
+  LucideCheckCheck,
   LucideCopy,
   LucideKeyRound,
   LucidePencil,
@@ -34,6 +36,8 @@ export function codeIn(text: string): string | null {
     DatePipe,
     LangToggle,
     Logo,
+    LucideCheck,
+    LucideCheckCheck,
     LucideCopy,
     LucideKeyRound,
     LucidePencil,
@@ -82,13 +86,21 @@ export class ChatList {
     if (last.type === 'message') {
       const text = last.file ? describe(last.file, this.i18n) : last.text;
       if (last.own) {
-        return this.i18n.t('chatList.own', { text });
+        return chat.kind === 'private' ? text : this.i18n.t('chatList.own', { text });
       }
       return chat.kind === 'private'
         ? text
         : this.i18n.t('chatList.from', { name: last.name, text });
     }
     return this.i18n.t(`events.${last.type}`, last);
+  }
+
+  protected check(chat: Chat): 'sent' | 'read' | null {
+    const last = chat.events.filter((event) => event.type !== 'error').at(-1);
+    if (chat.kind !== 'private' || last?.type !== 'message' || !last.own || !last.seq) {
+      return null;
+    }
+    return last.seq <= chat.read ? 'read' : 'sent';
   }
 
   protected lastAt(chat: Chat): number {

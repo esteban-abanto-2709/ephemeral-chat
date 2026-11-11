@@ -77,7 +77,25 @@
           <span class="truncate font-medium">{{
             chat.title || ('chatList.joining' | transloco)
           }}</span>
-          <span class="truncate text-sm text-ink-soft">{{ preview(chat) }}</span>
+          <span class="truncate text-sm text-ink-soft">
+            @let mark = check(chat);
+            @if (mark === 'read') {
+              <svg
+                lucideCheckCheck
+                class="mr-0.5 inline size-3.5 align-text-bottom text-accent-ink"
+                aria-hidden="true"
+              ></svg>
+              <span class="sr-only">{{ 'messages.read' | transloco }}</span>
+            } @else if (mark === 'sent') {
+              <svg
+                lucideCheck
+                class="mr-0.5 inline size-3.5 align-text-bottom text-ink-soft"
+                aria-hidden="true"
+              ></svg>
+              <span class="sr-only">{{ 'messages.sent' | transloco }}</span>
+            }
+            {{ preview(chat) }}
+          </span>
         </span>
         <span class="flex shrink-0 flex-col items-end gap-1 self-stretch pt-0.5">
           <time

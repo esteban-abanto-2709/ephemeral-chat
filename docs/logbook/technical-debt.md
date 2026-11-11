@@ -37,3 +37,11 @@ and is deleted from here.
 - **Future impact:** private chats end whenever someone locks their phone, which feels like a bug; with read receipts it reads as "read, then left".
 - **Suggestion:** evaluate first; any grace period clashes with "the id lives while the tab is open".
 - **Date:** 2026-11-11 · **Status:** Open
+
+## [TD-011] A chat that is still joining looks like a group
+- **Location:** `apps/web/src/app/chats/chat-client.ts` (`newChat`, `join`, the `ready` branch of `receive`)
+- **Risk:** 4/10
+- **Problem:** `join(id)` adds a placeholder chat with `kind: 'group'` before the server says what the id is, so a private link (`/chat/:id`) shows a group avatar, header and intro until `joined` arrives with `private: true`, then flips. On a slow phone the flip is visible. The `ready` branch also re-sends `join` for every `group`, which is how a placeholder made before the socket is ready gets joined: it works only because the placeholder is mislabeled.
+- **Future impact:** a visible flicker on every invite link opened on a slow connection; and anyone who "fixes" the placeholder's kind breaks joining before `ready` without a test noticing.
+- **Suggestion:** an explicit joining state (e.g. a `joining` flag the views render neutrally, re-sent on `ready` by that flag instead of by `kind`); the route already knows `/chat/` from `/room/` if a hint is wanted.
+- **Date:** 2026-11-11 · **Status:** Open

@@ -12,6 +12,9 @@ Summary in ≤2 lines of what was done.
 
 ---
 
+## [WL-014] No "You:" in private chat previews (2026-11-11 13:09)
+A private chat's preview shows your last message with its sent or read check instead of "You:"; groups keep "You:".
+
 ## [WL-015] Read receipts (2026-11-11 12:56)
 Your messages in a private chat show one check when sent and two once the other person has read them; the server relays the reader's last seq and stores nothing. Groups are WL-023.
 

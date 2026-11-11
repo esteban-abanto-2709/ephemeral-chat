@@ -68,6 +68,46 @@ describe('ChatList', () => {
     expect(row?.textContent).not.toContain('Ana:');
   });
 
+  it('shows a check instead of "You:" in a private chat preview', async () => {
+    const fixture = TestBed.createComponent(ChatList);
+    const mine = (read: number): Chat => ({
+      ...chat('3', 'Ana'),
+      kind: 'private',
+      read,
+      events: [{ type: 'message', id: 'me', name: 'Me', text: 'hey', own: true, seq: 2, at: 0 }],
+    });
+    const row = () =>
+      (fixture.nativeElement as HTMLElement).querySelector('[aria-label="Your chats"] li');
+
+    fixture.componentRef.setInput('chats', [mine(2)]);
+    await fixture.whenStable();
+    expect(row()?.textContent).toContain('Read');
+    expect(row()?.textContent).not.toContain('You:');
+
+    fixture.componentRef.setInput('chats', [mine(1)]);
+    await fixture.whenStable();
+    expect(row()?.textContent).toContain('Sent');
+    expect(row()?.textContent).not.toContain('You:');
+  });
+
+  it('keeps "You:" in group previews without a check', async () => {
+    const fixture = TestBed.createComponent(ChatList);
+    fixture.componentRef.setInput('chats', [
+      {
+        ...chat('3', 'Trip'),
+        read: 2,
+        events: [{ type: 'message', id: 'me', name: 'Me', text: 'hey', own: true, seq: 2, at: 0 }],
+      },
+    ]);
+    await fixture.whenStable();
+    const row = (fixture.nativeElement as HTMLElement).querySelector(
+      '[aria-label="Your chats"] li',
+    );
+    expect(row?.textContent).toContain('You: hey');
+    expect(row?.textContent).not.toContain('Read');
+    expect(row?.textContent).not.toContain('Sent');
+  });
+
   it('previews a rename as the last event', async () => {
     const fixture = TestBed.createComponent(ChatList);
     fixture.componentRef.setInput('chats', [
