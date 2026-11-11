@@ -74,9 +74,10 @@ Each version is a milestone. When all its work is done, it gets a git tag
 | v0.5 | Media | Photos and files, replies, voice messages |
 | v0.6 | Sharing | Clickable links, QR codes, English and Spanish |
 | v0.7 | Names | Generated nicknames you can change, files in binary frames |
+| v0.8 | Seen | Read receipts in private chats, a new logo |
 | Next | Privacy | End-to-end encryption |
 
-Versions after v0.7 are ideas in the [wishlist](./logbook/wishlist.md) until
+Versions after v0.8 are ideas in the [wishlist](./logbook/wishlist.md) until
 they are committed.
 
 **Deploy early.** The app is on Render from the first steps, not at the end,
