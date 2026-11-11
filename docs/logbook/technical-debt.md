@@ -63,14 +63,6 @@ and is deleted from here.
 - **Suggestion:** an `http.Server` with `ReadHeaderTimeout`, and `signal.NotifyContext` plus `Shutdown` on `SIGTERM`.
 - **Date:** 2026-11-11 · **Status:** Open
 
-## [TD-014] A file is copied in memory once per recipient
-- **Location:** `apps/api/main.go` (the writer goroutine in `connect`) and `apps/api/frame.go` (`encodeFrame`)
-- **Risk:** 8/10
-- **Problem:** the mailbox shares one `File` value, but each recipient's writer builds its own frame with `encodeFrame`, a full copy of the bytes, and holds it until the socket takes it. Measured: one 5 MiB file to a group of 50 whose members read slowly holds 245 MiB until the ping timeout (up to a minute).
-- **Future impact:** a full group on phone networks, or 50 tabs that never read, takes the 512 MB instance down with two files; it needs no more than the limits already allow.
-- **Suggestion:** write the prefix, header and bytes through `conn.Writer` without joining them, or build the frame once in `post` and share it.
-- **Date:** 2026-11-11 · **Status:** Open
-
 ## [TD-015] A private chat can start with a tab that already left
 - **Location:** `apps/api/internal/room/registry.go` (`reach`, `peer`, `Disconnect`)
 - **Risk:** 5/10

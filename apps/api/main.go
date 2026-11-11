@@ -99,8 +99,8 @@ func connect(rooms *room.Registry, ping time.Duration) http.HandlerFunc {
 				select {
 				case message := <-client.Messages():
 					if message.File != nil && len(message.File.Data) > 0 {
-						frame, err := encodeFrame(message, message.File.Data)
-						if err != nil || conn.Write(r.Context(), websocket.MessageBinary, frame) != nil {
+						w, err := conn.Writer(r.Context(), websocket.MessageBinary)
+						if err != nil || writeFrame(w, message, message.File.Data) != nil || w.Close() != nil {
 							return
 						}
 					} else if wsjson.Write(r.Context(), conn, message) != nil {

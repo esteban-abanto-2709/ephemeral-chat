@@ -12,6 +12,12 @@ Summary in ≤2 lines of what was done.
 
 ---
 
+## [RM-016] Files without a copy per recipient (2026-11-11 14:19)
+Each tab's writer streams a file's header and shared bytes to its socket instead of building its own frame: a 5 MiB file to 50 slow readers holds about 5 MiB, not 245.
+
+## [TD-014] A file is copied in memory once per recipient (2026-11-11 14:19)
+Fixed by RM-016.
+
 ## [RM-015] Continuous integration (2026-11-11 14:06)
 GitHub Actions checks the API (gofmt, vet, tests with the race detector), the web (format, tests, build) and the Docker image build on every push and pull request to `main`.
 

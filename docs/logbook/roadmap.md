@@ -15,12 +15,6 @@ changelog and is deleted from here.
 
 Each entry is one commit, or a few when it spans both apps; no commit breaks production.
 
-## [RM-016] Files without a copy per recipient
-- **Goal:** a file sent to a group stays in memory once, however many members receive it (TD-014).
-- **Scope:** the API's writer only; the protocol and the web don't change. Depends on nothing.
-- **Done when:** a test with a group of 50 slow readers and a 5 MiB file holds memory near one copy, not 245 MiB, and TD-014 is closed.
-- **Date:** 2026-11-11 · **Status:** Open
-
 ## [RM-017] Server ceilings
 - **Goal:** no number of connections, rooms or slow requests can exhaust the instance, and a deploy closes sockets cleanly (TD-012, TD-013).
 - **Scope:** decided: a global ceiling on connections and rooms that answers `503`; the limit per address is left for later, since it depends on trusting Render's forwarded address. Also `ReadHeaderTimeout` and shutdown on `SIGTERM`. Depends on RM-016, because the ceiling's number comes from the real cost per connection.

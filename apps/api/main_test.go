@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"net/http"
@@ -8,6 +9,8 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -227,11 +230,11 @@ func TestChat(t *testing.T) {
 	expect(joined(luis, juan, luis), juan, luis)
 	sendBinary := func(from tab, header any, data []byte) {
 		t.Helper()
-		frame, err := encodeFrame(header, data)
-		if err != nil {
+		var frame bytes.Buffer
+		if err := writeFrame(&frame, header, data); err != nil {
 			t.Fatal(err)
 		}
-		if err := from.conn.Write(ctx, websocket.MessageBinary, frame); err != nil {
+		if err := from.conn.Write(ctx, websocket.MessageBinary, frame.Bytes()); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -252,6 +255,62 @@ func TestChat(t *testing.T) {
 	expect(room.Message{Type: "renamed", ID: luis.person.ID, Name: "Cráneo Negro"}, luis)
 	renamed := room.Message{Type: "renamed", Room: id, ID: luis.person.ID, Name: "Cráneo Negro"}
 	expect(renamed, luis, juan)
+}
+
+func TestAFileIsHeldOnceForAGroup(t *testing.T) {
+	server := httptest.NewServer(newMux(""))
+	defer server.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	resp, err := http.Post(server.URL+"/api/rooms", "application/json", strings.NewReader(`{"name": "Crowd"}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var created struct{ ID string }
+	json.NewDecoder(resp.Body).Decode(&created)
+	resp.Body.Close()
+
+	conns := make([]*websocket.Conn, room.MaxMembers)
+	for i := range conns {
+		conn, _, err := websocket.Dial(ctx, server.URL+"/api/ws?name=Tab"+strconv.Itoa(i), nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		t.Cleanup(func() { conn.CloseNow() })
+		if err := wsjson.Write(ctx, conn, map[string]string{"type": "join", "room": created.ID}); err != nil {
+			t.Fatal(err)
+		}
+		conns[i] = conn
+	}
+
+	heap := func() uint64 {
+		runtime.GC()
+		var stats runtime.MemStats
+		runtime.ReadMemStats(&stats)
+		return stats.HeapAlloc
+	}
+	time.Sleep(time.Second)
+	before := heap()
+
+	for range 2 {
+		var frame bytes.Buffer
+		header := map[string]string{"type": "file", "room": created.ID, "name": "big.bin"}
+		if err := writeFrame(&frame, header, make([]byte, room.FileMaxBytes)); err != nil {
+			t.Fatal(err)
+		}
+		if err := conns[0].Write(ctx, websocket.MessageBinary, frame.Bytes()); err != nil {
+			t.Fatal(err)
+		}
+		time.Sleep(time.Second)
+	}
+
+	growth := int64(heap()) - int64(before)
+	t.Logf("heap grew by %d MiB", growth>>20)
+	if growth > 64<<20 {
+		t.Errorf("heap grew by %d MiB sending a file to %d slow readers, want at most 64", growth>>20, room.MaxMembers)
+	}
 }
 
 func TestRoomChatRelaysRead(t *testing.T) {

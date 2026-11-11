@@ -143,9 +143,11 @@ The server measures the raw bytes and sniffs the first ones
 `"kind": "file"`, to be downloaded and never opened in the page, so an SVG or
 HTML file can't run script in the app's origin. A file goes to every member
 like a message, as one value shared by every mailbox, so a group of 50 holds
-it in memory once. The sender gets it back without `data`: a receipt in the
-chat's order, so their tab shows its own copy and never downloads what it just
-uploaded.
+it in memory once. Each tab's writer then sends the header and those same
+bytes straight to its socket (`writeFrame`), never a frame of its own, so a
+slow reader costs no copy. The sender gets it back without `data`: a receipt
+in the chat's order, so their tab shows its own copy and never downloads what
+it just uploaded.
 
 A `file` frame with `seconds` is a voice message: 1 to 60 seconds
 (`VoiceMaxSeconds`, as the recording tab measured it) and up to 1 MiB
