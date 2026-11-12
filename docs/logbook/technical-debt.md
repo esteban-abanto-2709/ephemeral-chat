@@ -46,22 +46,6 @@ and is deleted from here.
 - **Suggestion:** an explicit joining state (e.g. a `joining` flag the views render neutrally, re-sent on `ready` by that flag instead of by `kind`); the route already knows `/chat/` from `/room/` if a hint is wanted.
 - **Date:** 2026-11-11 · **Status:** Open
 
-## [TD-015] A private chat can start with a tab that already left
-- **Location:** `apps/api/internal/room/registry.go` (`reach`, `peer`, `Disconnect`)
-- **Risk:** 5/10
-- **Problem:** `peer` finds the other tab under one lock and `startPrivate` runs under a later one, so a `Disconnect` in between deletes the tab and takes its list of chats before the new chat is added to it. Nobody ever leaves that chat for the tab. A stress test hit it 54 times in 50,000.
-- **Future impact:** the sender sees the other person online and messages with one check forever, until the dead mailbox fills at 33 messages and the chat ends; meanwhile the room keeps the closed tab and up to 32 messages (files included) in memory.
-- **Suggestion:** look the other tab up again inside the lock that calls `startPrivate`, so `Disconnect` runs either before (the message fails with `gone`) or after (`LeaveAll` sees the chat).
-- **Date:** 2026-11-11 · **Status:** Open
-
-## [TD-016] A reopened private chat keeps its old read mark and numbers
-- **Location:** `apps/web/src/app/chats/chat-client.ts` (the private `joined` branch of `receive`, `markRead`, `quote`)
-- **Risk:** 5/10
-- **Problem:** when someone writes again after a private chat ended, the server starts a new chat counting `seq` from 1, but the tab reuses the old one: `read`, `readSent` and the old events stay. New own messages up to the old `read` show two checks before being read, `markRead` sends nothing (or a `seq` the server drops) until the new numbers pass the old ones, and a reply can quote an old message with the same `seq`.
-- **Future impact:** read receipts that lie, the one thing v0.8 added, and quotes of the wrong message.
-- **Suggestion:** on a private `joined` for a chat that had ended, reset `read` and `readSent` and stop matching old events by `seq` (e.g. clear their `seq`).
-- **Date:** 2026-11-11 · **Status:** Open
-
 ## [TD-017] Sending more than three files at once loses the rest
 - **Location:** `apps/web/src/app/chats/chat-client.ts` (`sendFiles`, `sendFile`, `sentFiles`)
 - **Risk:** 5/10

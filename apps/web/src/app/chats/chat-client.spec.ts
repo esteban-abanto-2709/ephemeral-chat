@@ -515,6 +515,35 @@ describe('ChatClient', () => {
     expect(client.chats()[0]).toMatchObject({ read: 2, events: [], unread: 0 });
   });
 
+  it('starts a reopened private chat with fresh read receipts and keeps the old messages', () => {
+    vi.spyOn(document, 'visibilityState', 'get').mockReturnValue('visible');
+    ready();
+    openPrivate();
+    client.open('l');
+    server.receive({ type: 'message', room: 'l', ...luis, text: 'one', seq: 1 });
+    server.receive({ type: 'message', room: 'l', ...juan, text: 'two', seq: 2 });
+    server.receive({ type: 'message', room: 'l', ...luis, text: 'three', seq: 3 });
+    server.receive({ type: 'read', room: 'l', id: 'l', seq: 3 });
+    server.receive({ type: 'left', room: 'l', ...luis, members: [juan] });
+    expect(client.chats()[0]).toMatchObject({ ended: true, read: 3 });
+
+    openPrivate();
+    const chat = client.chats()[0];
+    expect(chat).toMatchObject({ ended: false, read: 0 });
+    expect(chat.events.filter((event) => event.type === 'message')).toHaveLength(3);
+    expect(chat.events.some((event) => event.type === 'message' && event.seq)).toBe(false);
+
+    server.receive({ type: 'message', room: 'l', ...juan, text: 'fresh', seq: 1 });
+    expect(client.chats()[0].events.at(-1)).toMatchObject({ text: 'fresh', seq: 1 });
+    expect(client.chats()[0].read).toBe(0);
+
+    server.receive({ type: 'message', room: 'l', ...luis, text: 'back', seq: 2, reply: 1 });
+    expect(reads().at(-1)).toEqual({ type: 'read', room: 'l', seq: 2 });
+    expect(client.chats()[0].events.at(-1)).toMatchObject({
+      reply: { text: 'fresh', seq: 1 },
+    });
+  });
+
   it('shows your own file from the local copy when the server confirms it', async () => {
     vi.useRealTimers();
     const createObjectURL = vi.fn((blob: Blob) => `blob:${blob.size}`);

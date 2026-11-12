@@ -403,8 +403,12 @@ export class ChatClient implements OnDestroy {
       if (!this._chats().some((chat) => chat.id === room)) {
         this._chats.update((chats) => [...chats, this.newChat(room, '')]);
       }
+      const reopened = this._chats().some((chat) => chat.id === room && chat.ended);
+      if (reopened) {
+        this.readSent.delete(room);
+      }
       this.update(room, (chat) => ({
-        ...chat,
+        ...(reopened ? this.withoutReceipts(chat) : chat),
         kind: 'private',
         ended: false,
         title: frame.title!,
@@ -455,6 +459,22 @@ export class ChatClient implements OnDestroy {
     if (event.type === 'message') {
       this.markRead(room);
     }
+  }
+
+  private withoutReceipts(chat: Chat): Chat {
+    return {
+      ...chat,
+      read: 0,
+      events: chat.events.map((event) =>
+        event.type === 'message'
+          ? {
+              ...event,
+              seq: undefined,
+              reply: event.reply && { ...event.reply, seq: undefined },
+            }
+          : event,
+      ),
+    };
   }
 
   private attach(room: string, file: NonNullable<Frame['file']>): Attachment | undefined {

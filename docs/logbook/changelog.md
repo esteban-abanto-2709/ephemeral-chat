@@ -12,6 +12,15 @@ Summary in ≤2 lines of what was done.
 
 ---
 
+## [RM-018] Private chats that never lie (2026-11-12 09:22)
+A private chat no longer starts with a tab that already left, and one that is reopened starts with fresh read receipts while the old messages stay visible without checks.
+
+## [TD-016] A reopened private chat keeps its old read mark and numbers (2026-11-12 09:22)
+Fixed by RM-018: on a private `joined` for an ended chat the web resets `read` and `readSent` and drops the old messages' `seq`.
+
+## [TD-015] A private chat can start with a tab that already left (2026-11-12 09:22)
+Fixed by RM-018: `reach` checks the other tab again under the lock that starts the chat, so a disconnect in between fails with `gone`.
+
 ## [RM-023] A ceiling for files in transit (2026-11-11 20:42)
 Files up to 3 MB, 12 MiB waiting per tab, 128 MiB in transit on the whole server (`slow-server` past it), 16 uploads at once with 60 s each, 64 KiB text frames, and downloads in 32 KiB pieces with 60 s per file. The reasons are in the product vision.
 
