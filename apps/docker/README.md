@@ -82,6 +82,32 @@ Render sets `PORT`; the API reads it. The image sets `GOMEMLIMIT=400MiB` so
 Go collects garbage harder before the 512 MB instance fills. One service means
 web and API sleep and wake together on the free tier.
 
+## Screenshots
+
+`screenshots/capture.mjs` takes the README images from the `/design` board
+(the dev image serves it) with Playwright's Chromium, run inside the official
+Playwright image so nothing is installed on your machine. It fails instead of
+saving frosted-glass fallbacks: it waits for the WebGL `liquid` class.
+
+With the app up on port 3000, from this folder:
+
+```bash
+docker run --rm --add-host=host.docker.internal:host-gateway \
+  -v "$PWD/screenshots:/script:ro" -v "$PWD/../../docs/images:/out" \
+  mcr.microsoft.com/playwright:v1.65.0-noble \
+  sh -c 'mkdir /tmp/pw && cp /script/capture.mjs /tmp/pw/ && cd /tmp/pw && npm i --silent playwright@1.65.0 && node capture.mjs'
+```
+
+| Variable    | Default                            | Meaning                           |
+| ----------- | ---------------------------------- | --------------------------------- |
+| `BASE_URL`  | `http://host.docker.internal:3000` | Where the app answers             |
+| `SHOT_LANG` | `en`                               | Language of the page (`en`, `es`) |
+| `OUT_DIR`   | `/out`                             | Where the PNGs are written        |
+
+For Spanish shots in another folder, add `-e SHOT_LANG=es` and mount a
+different output folder on `/out`, for example
+`-v "$PWD/../../docs/images/es:/out"` (create it first).
+
 ## Commands
 
 ```bash

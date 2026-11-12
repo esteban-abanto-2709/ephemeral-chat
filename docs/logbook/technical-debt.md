@@ -69,3 +69,11 @@ and is deleted from here.
 - **Future impact:** the product's one promise reads as false at the exact moment someone tests it.
 - **Suggestion:** reword once the wording of the promise is decided; no code beyond the two i18n files.
 - **Date:** 2026-11-12 · **Status:** Open
+
+## [TD-024] The chat does not stay at the bottom when a photo loads or a reply is open
+- **Location:** `apps/web/src/app/room/message-list/message-list.ts` (the `ResizeObserver` in the constructor) and `apps/web/src/app/room/message-list/message-list.html` (the `img` of a photo, the scroller's bottom padding)
+- **Risk:** 5/10
+- **Problem:** the list follows new messages by observing the scroller's own box, which does not change when its content grows, and a photo has no height until it loads; so a photo that loads after the list scrolled pushes the latest messages below the fold. The bottom padding is also fixed, so with a reply open the bar above the composer covers the last message. Seen on `/design` (`screen=group`): the four messages after the photo sit under the reply bar and the composer.
+- **Future impact:** after a photo arrives, the newest messages are hidden until the reader scrolls; while replying, the message being answered may be the one covered.
+- **Suggestion:** follow on the content's size (observe the inner content, or scroll on the image's `load`) and let the bottom padding grow with the reply bar.
+- **Date:** 2026-11-12 · **Status:** Open

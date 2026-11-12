@@ -1,19 +1,37 @@
-# Ephemeral Chat
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./docs/images/logo-dark.svg">
+    <img src="./docs/images/logo-light.svg" width="96" alt="Ephemeral Chat logo">
+  </picture>
+</p>
 
-A real-time chat where **nothing is kept**.
+<h1 align="center">Ephemeral Chat</h1>
 
-No accounts, no database, no history. You come in, talk, and when everyone
-leaves, the conversation is gone.
+<p align="center">
+  A real-time chat where <strong>nothing is kept</strong>.<br>
+  No accounts, no database, no history. You come in, talk, and when everyone leaves, the conversation is gone.
+</p>
 
-**Try it:** [ephemeral-chat-9f8t.onrender.com](https://ephemeral-chat-9f8t.onrender.com)
+<p align="center">
+  <strong>Try it:</strong> <a href="https://ephemeral-chat-9f8t.onrender.com">ephemeral-chat-9f8t.onrender.com</a>
+</p>
 
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](./LICENSE) [![CI](https://github.com/esteban-abanto-2709/ephemeral-chat/actions/workflows/ci.yml/badge.svg)](https://github.com/esteban-abanto-2709/ephemeral-chat/actions/workflows/ci.yml)
+<p align="center">
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="License: MIT"></a>
+  <a href="https://github.com/esteban-abanto-2709/ephemeral-chat/actions/workflows/ci.yml"><img src="https://github.com/esteban-abanto-2709/ephemeral-chat/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+</p>
 
-[![Angular](https://img.shields.io/badge/Angular-22-DD0031?logo=angular&logoColor=white)](https://angular.dev)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
-[![Go](https://img.shields.io/badge/Go-1.27-00ADD8?logo=go&logoColor=white)](https://go.dev)
-[![TypeScript](https://img.shields.io/badge/TypeScript-6-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
-[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](./apps/docker/README.md)
+<p align="center">
+  <a href="https://angular.dev"><img src="https://img.shields.io/badge/Angular-22-DD0031?logo=angular&logoColor=white" alt="Angular"></a>
+  <a href="https://tailwindcss.com"><img src="https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white" alt="Tailwind CSS"></a>
+  <a href="https://go.dev"><img src="https://img.shields.io/badge/Go-1.27-00ADD8?logo=go&logoColor=white" alt="Go"></a>
+  <a href="https://www.typescriptlang.org"><img src="https://img.shields.io/badge/TypeScript-6-3178C6?logo=typescript&logoColor=white" alt="TypeScript"></a>
+  <a href="./apps/docker/README.md"><img src="https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white" alt="Docker"></a>
+</p>
+
+<p align="center">
+  <img src="./docs/images/desktop-dark.png" alt="A group chat on desktop, dark theme">
+</p>
 
 ---
 
@@ -41,6 +59,12 @@ The server **never stores a message**: it only passes it on to whoever is in
 the chat at that moment. Join late and you see nothing from before. Reload and
 everything you had is gone.
 
+<p align="center">
+  <img src="./docs/images/mobile-light.png" width="260" alt="The same group on a phone, light theme">
+  &nbsp;&nbsp;
+  <img src="./docs/images/mobile-dark.png" width="260" alt="Your invite QR on a phone, dark theme">
+</p>
+
 ## What it is NOT
 
 - **Not a public chat.** There's no global room: every conversation happens
@@ -54,7 +78,8 @@ you can change, then groups and private chats in one page, with photos, files,
 voice messages and replies, clickable links, QR codes and the whole page in
 English and Spanish, over a glass design in light and dark. In a private chat
 your messages show one check when sent and two once read. End-to-end
-encryption is an idea for a later version.
+encryption is an idea for a later version. It is a demo, so expect rough
+edges: today, locking your phone ends your chats.
 
 The detail and the order are in the [roadmap](./docs/logbook/roadmap.md).
 
