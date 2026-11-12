@@ -127,7 +127,13 @@ order of arrival, so a client never has to work it out. Nothing is stored:
 whoever joins later sees only what comes after. Blank messages and messages
 over 1000 characters (`MessageMaxLength`) are dropped; the web never sends
 those. Any frame over 4 MiB closes the connection with `1009` before it is
-even read, so no client can make the server buffer a huge message.
+even read, so no client can make the server buffer a huge message. A text frame
+over 64 KiB (`textFrameMaxBytes`) also closes the connection, so nobody skips
+the queue below by sending bytes as text. The server reads at most 16 binary
+frames at once across all tabs (`uploadSlots`); the rest wait their turn and
+TCP pauses their senders. Each one has 60 seconds (`uploadTimeout`) from the
+moment it gets its slot, or the connection is cut. A tab that waits a long time
+for a slot may be cut by the ping, since nothing reads its pongs meanwhile.
 
 A file travels only as a binary WebSocket frame, in both directions: 4 bytes
 with the header length (uint32, big-endian), then the JSON header, then the raw

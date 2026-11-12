@@ -52,6 +52,7 @@ The link can reach anyone, so the server protects itself from day one:
 | File size | 3 MB |
 | Files waiting for one tab | 12 MB |
 | Files in transit, whole server | 128 MB |
+| Uploads at once, whole server | 16, 60 seconds each |
 | Files per person | 3 at once, then one every 2 seconds |
 | Voice message | 60 seconds, 1 MB |
 | Name length | 24 characters |
@@ -99,6 +100,16 @@ keeps flowing and the server stays up. The image also sets
 `GOMEMLIMIT=400MiB`, so Go collects garbage harder before it nears the
 instance's 512 MB: a delivered file only frees its memory when the garbage
 collector runs.
+
+**At most 16 uploads at once, 60 seconds each.** A file also takes memory
+while it arrives, before anyone can receive it, and the budget above only
+counts files that have arrived. So the server reads at most 16 files at a time
+(64 MB at most) and the 17th waits its turn without an error: the network
+simply pauses its sender. Each upload has 60 seconds to arrive once its turn
+comes, enough for 3 MB over a slow 3G connection; one that takes longer is
+cut, so nobody keeps a slot by sending a byte at a time. Text messages are
+small, so a text frame over 64 KB closes the connection: otherwise anyone
+could skip the line by sending a file as text.
 
 Decided against: storing files on disk or in an external store while they
 travel (it breaks "nothing is stored"); relaying a file while it is still

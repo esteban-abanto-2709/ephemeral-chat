@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -111,7 +112,7 @@ func TestAFullServerAnswers503(t *testing.T) {
 		}
 	}
 	rec = httptest.NewRecorder()
-	connect(registry, pingInterval)(rec, httptest.NewRequest("GET", "/api/ws?name=Juan", nil))
+	connect(registry, newUploads(uploadSlots, uploadTimeout), pingInterval)(rec, httptest.NewRequest("GET", "/api/ws?name=Juan", nil))
 	if rec.Code != http.StatusServiceUnavailable {
 		t.Errorf("GET /api/ws on a full server = %d, want 503", rec.Code)
 	}
@@ -239,7 +240,7 @@ func TestChat(t *testing.T) {
 	flooder := open("Flooder")
 	send(flooder, map[string]string{"type": "join", "room": id})
 	expect(joined(flooder, juan, flooder), juan, flooder)
-	send(flooder, map[string]string{"text": strings.Repeat("x", frameMaxBytes)})
+	flooder.conn.Write(ctx, websocket.MessageBinary, make([]byte, frameMaxBytes+1))
 	if _, _, err := flooder.conn.Read(ctx); websocket.CloseStatus(err) != websocket.StatusMessageTooBig {
 		t.Errorf("sending a frame over %d bytes closed with %v, want %d", frameMaxBytes, err, websocket.StatusMessageTooBig)
 	}
@@ -403,7 +404,7 @@ func TestAPIOnlyWithoutStaticDir(t *testing.T) {
 
 func TestKeepAlive(t *testing.T) {
 	ping := 50 * time.Millisecond
-	server := httptest.NewServer(connect(room.NewRegistry(), ping))
+	server := httptest.NewServer(connect(room.NewRegistry(), newUploads(uploadSlots, uploadTimeout), ping))
 	defer server.Close()
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
@@ -438,4 +439,143 @@ func TestKeepAlive(t *testing.T) {
 	if _, _, err := dead.Read(ctx); err == nil || ctx.Err() != nil {
 		t.Errorf("a tab that never answers pings stayed connected: %v", err)
 	}
+}
+
+type uploadTabs struct {
+	t      *testing.T
+	ctx    context.Context
+	server *httptest.Server
+}
+
+func newUploadTabs(t *testing.T, slots int, timeout time.Duration) *uploadTabs {
+	server := httptest.NewServer(connect(room.NewRegistry(), newUploads(slots, timeout), pingInterval))
+	t.Cleanup(server.Close)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	t.Cleanup(cancel)
+	return &uploadTabs{t, ctx, server}
+}
+
+func (u *uploadTabs) open(name string) (*websocket.Conn, string) {
+	u.t.Helper()
+	conn, _, err := websocket.Dial(u.ctx, "ws"+strings.TrimPrefix(u.server.URL, "http")+"?name="+name, nil)
+	if err != nil {
+		u.t.Fatal(err)
+	}
+	u.t.Cleanup(func() { conn.CloseNow() })
+	var ready room.Message
+	if err := wsjson.Read(u.ctx, conn, &ready); err != nil {
+		u.t.Fatal(err)
+	}
+	return conn, ready.ID
+}
+
+func (u *uploadTabs) frames(conn *websocket.Conn) <-chan websocket.MessageType {
+	got := make(chan websocket.MessageType, 16)
+	go func() {
+		for {
+			kind, _, err := conn.Read(u.ctx)
+			if err != nil {
+				return
+			}
+			if kind == websocket.MessageBinary {
+				got <- kind
+			}
+		}
+	}()
+	return got
+}
+
+func (u *uploadTabs) file(to string) []byte {
+	var frame bytes.Buffer
+	if err := writeFrame(&frame, map[string]string{"type": "file", "room": to, "name": "a.txt"}, []byte("hola")); err != nil {
+		u.t.Fatal(err)
+	}
+	return frame.Bytes()
+}
+
+func (u *uploadTabs) startUpload(conn *websocket.Conn) io.WriteCloser {
+	w, err := conn.Writer(u.ctx, websocket.MessageBinary)
+	if err != nil {
+		u.t.Fatal(err)
+	}
+	if _, err := w.Write(make([]byte, 64<<10)); err != nil {
+		u.t.Fatal(err)
+	}
+	return w
+}
+
+func (u *uploadTabs) waitForBinary(got <-chan websocket.MessageType) {
+	u.t.Helper()
+	timeout := time.After(3 * time.Second)
+	for {
+		select {
+		case kind := <-got:
+			if kind == websocket.MessageBinary {
+				return
+			}
+		case <-timeout:
+			u.t.Fatal("the file never arrived")
+		}
+	}
+}
+
+func TestAnUploadWaitsForAFreeSlot(t *testing.T) {
+	u := newUploadTabs(t, 1, 10*time.Second)
+	a, _ := u.open("Ana")
+	b, _ := u.open("Beto")
+	c, cID := u.open("Carla")
+	got := u.frames(c)
+
+	slow := u.startUpload(a)
+	if err := b.Write(u.ctx, websocket.MessageBinary, u.file(cID)); err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case <-got:
+		t.Fatal("a file arrived while the only slot was taken")
+	case <-time.After(100 * time.Millisecond):
+	}
+
+	if err := slow.Close(); err != nil {
+		t.Fatal(err)
+	}
+	u.waitForBinary(got)
+}
+
+func TestAStalledUploadIsCut(t *testing.T) {
+	u := newUploadTabs(t, 1, 100*time.Millisecond)
+	a, _ := u.open("Ana")
+	b, _ := u.open("Beto")
+	c, cID := u.open("Carla")
+	got := u.frames(c)
+
+	u.startUpload(a)
+	if _, _, err := a.Read(u.ctx); err == nil {
+		t.Fatal("a stalled upload was not cut")
+	}
+
+	if err := b.Write(u.ctx, websocket.MessageBinary, u.file(cID)); err != nil {
+		t.Fatal(err)
+	}
+	u.waitForBinary(got)
+}
+
+func TestATextFrameOverTheLimitClosesTheConnection(t *testing.T) {
+	u := newUploadTabs(t, 1, 10*time.Second)
+	a, _ := u.open("Ana")
+	b, _ := u.open("Beto")
+	c, cID := u.open("Carla")
+	got := u.frames(c)
+
+	if err := a.Write(u.ctx, websocket.MessageText, bytes.Repeat([]byte("x"), textFrameMaxBytes+1)); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := a.Read(u.ctx); err == nil {
+		t.Fatal("a text frame over the limit left the connection open")
+	}
+
+	if err := b.Write(u.ctx, websocket.MessageBinary, u.file(cID)); err != nil {
+		t.Fatal(err)
+	}
+	u.waitForBinary(got)
 }

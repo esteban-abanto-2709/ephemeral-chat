@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"io"
 	"io/fs"
 	"log"
 	"net/http"
@@ -21,11 +22,14 @@ import (
 )
 
 const (
-	bodyMaxBytes  = 8 << 10
-	frameMaxBytes = 4 << 20
+	bodyMaxBytes      = 8 << 10
+	frameMaxBytes     = 4 << 20
+	textFrameMaxBytes = 64 << 10
 )
 
 const (
+	uploadSlots       = 16
+	uploadTimeout     = 60 * time.Second
 	pingInterval      = 30 * time.Second
 	readHeaderTimeout = 10 * time.Second
 	idleTimeout       = 2 * time.Minute
@@ -72,7 +76,7 @@ func newMux(staticDir string) *http.ServeMux {
 		w.Write([]byte("ok"))
 	})
 	mux.HandleFunc("POST /api/rooms", createRoom(rooms))
-	mux.HandleFunc("GET /api/ws", connect(rooms, pingInterval))
+	mux.HandleFunc("GET /api/ws", connect(rooms, newUploads(uploadSlots, uploadTimeout), pingInterval))
 	mux.HandleFunc("GET /api/", http.NotFound)
 
 	if staticDir != "" {
@@ -105,7 +109,28 @@ func createRoom(rooms *room.Registry) http.HandlerFunc {
 	}
 }
 
-func connect(rooms *room.Registry, ping time.Duration) http.HandlerFunc {
+type uploads struct {
+	slots   chan struct{}
+	timeout time.Duration
+}
+
+func newUploads(n int, timeout time.Duration) *uploads {
+	return &uploads{slots: make(chan struct{}, n), timeout: timeout}
+}
+
+func (u *uploads) read(ctx context.Context, conn *websocket.Conn, r io.Reader) ([]byte, error) {
+	select {
+	case u.slots <- struct{}{}:
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	}
+	defer func() { <-u.slots }()
+	timer := time.AfterFunc(u.timeout, func() { conn.CloseNow() })
+	defer timer.Stop()
+	return io.ReadAll(r)
+}
+
+func connect(rooms *room.Registry, uploads *uploads, ping time.Duration) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		name := strings.TrimSpace(r.URL.Query().Get("name"))
 		if !room.ValidName(name) {
@@ -166,7 +191,19 @@ func connect(rooms *room.Registry, ping time.Duration) http.HandlerFunc {
 				Seconds int    `json:"seconds"`
 				Seq     int    `json:"seq"`
 			}
-			kind, payload, err := conn.Read(r.Context())
+			kind, reader, err := conn.Reader(r.Context())
+			if err != nil {
+				return
+			}
+			var payload []byte
+			if kind == websocket.MessageBinary {
+				payload, err = uploads.read(r.Context(), conn, reader)
+			} else {
+				payload, err = io.ReadAll(io.LimitReader(reader, textFrameMaxBytes+1))
+				if len(payload) > textFrameMaxBytes {
+					return
+				}
+			}
 			if err != nil {
 				return
 			}
