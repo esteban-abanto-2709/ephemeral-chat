@@ -49,7 +49,7 @@ The link can reach anyone, so the server protects itself from day one:
 |---|---|
 | Message length | 1000 characters |
 | Messages per person | 5 per second |
-| File size | 5 MB |
+| File size | 3 MB |
 | Files per person | 3 at once, then one every 2 seconds |
 | Voice message | 60 seconds, 1 MB |
 | Name length | 24 characters |
@@ -61,6 +61,30 @@ The link can reach anyone, so the server protects itself from day one:
 
 They are tuning values, not product rules: each one lives in one place in the
 API and can change as the product gets polished.
+
+### Why files have ceilings
+
+Files are what can take the server down: a text message is at most a few KB,
+a file is thousands of times more, and it stays in memory from the moment it
+starts arriving until the slowest recipient has received it. The server runs
+on a free instance with 512 MB of RAM, so every limit on files follows two
+rules, in this order:
+
+1. **The server survives.** No mix of users, honest or not, may take it down,
+   even if that means refusing files to everyone for a moment.
+2. **Good connections don't suffer.** When someone falls far behind, they pay
+   for it, not the people chatting normally.
+
+**Files up to 3 MB** (it was 5 MB). Photos are compressed in the browser to a
+few hundred KB and voice messages stay at 1 MB, so this mostly limits loose
+files; 3 MB still fits documents and small archives, and it lowers every
+number below by 40%.
+
+Decided against: storing files on disk or in an external store while they
+travel (it breaks "nothing is stored"); relaying a file while it is still
+arriving, without holding it whole (the slowest reader would set everyone's
+pace); and only lowering numbers, such as group size, which shrinks the
+problem without putting a ceiling on it.
 
 ## Versions
 

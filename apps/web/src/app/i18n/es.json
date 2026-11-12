@@ -174,8 +174,9 @@
     "slow-messages": "Más despacio: hasta 5 mensajes por segundo.",
     "slow-files": "Más despacio: un archivo cada 2 segundos.",
     "slow-renames": "Más despacio: un cambio de nombre cada 10 segundos.",
+    "slow-server": "El servidor está ocupado. Es una demo gratuita: inténtalo en un momento.",
     "groupFailed": "No se pudo crear el grupo. Inténtalo de nuevo.",
-    "fileTooBig": "Archivos de hasta 5 MB.",
+    "fileTooBig": "Archivos de hasta 3 MB.",
     "voiceTooBig": "Mensajes de voz de hasta 1 MB.",
     "microphone": "Permite el micrófono para grabar un mensaje de voz."
   },
@@ -215,9 +216,9 @@
     },
     "drop": {
       "title": "Suelta para enviar",
-      "hint": "Fotos y archivos de hasta 5 MB"
+      "hint": "Fotos y archivos de hasta 3 MB"
     },
-    "disconnected": "Estás desconectado.",
+    "disconnected": "Te desconectaste: tu red falló o iba muy lenta.",
     "reconnect": "Reconectar",
     "ended": "{{ name }} salió. Aún puedes leer este chat.",
     "delete": "Borrar chat",

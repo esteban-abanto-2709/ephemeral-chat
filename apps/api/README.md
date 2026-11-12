@@ -126,14 +126,14 @@ when it was created. `joined` and `left` carry the full list of who is in, in
 order of arrival, so a client never has to work it out. Nothing is stored:
 whoever joins later sees only what comes after. Blank messages and messages
 over 1000 characters (`MessageMaxLength`) are dropped; the web never sends
-those. Any frame over 6 MiB closes the connection with `1009` before it is
+those. Any frame over 4 MiB closes the connection with `1009` before it is
 even read, so no client can make the server buffer a huge message.
 
 A file travels only as a binary WebSocket frame, in both directions: 4 bytes
 with the header length (uint32, big-endian), then the JSON header, then the raw
 bytes of the file. Incoming, the header is the `file` frame without `"data"`;
 outgoing, it is the `message` event whose `file` has no `"data"`. A file is up
-to 5 MiB (`FileMaxBytes`), with a name of 1 to 120 characters and an optional
+to 3 MiB (`FileMaxBytes`), with a name of 1 to 120 characters and an optional
 caption in `text`, held to the same rules as a message; anything else is
 dropped. A binary frame that can't be parsed, or whose type isn't `file`, is
 ignored, and so is a `file` sent as a text frame. The sender's receipt stays

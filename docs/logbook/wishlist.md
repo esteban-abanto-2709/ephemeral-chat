@@ -24,3 +24,6 @@ A Content-Security-Policy, `X-Content-Type-Options: nosniff` and a rule against 
 
 ## [WL-025] Names without invisible characters
 Refuse or strip zero-width and control characters in nicknames and group names, so nobody enters with a name that looks blank or imitates another.
+
+## [WL-026] Slow tabs keep chatting
+Instead of dropping a tab that falls far behind on files, stop sending it files and keep the text, telling it a file wasn't delivered because of its connection. Kinder than RM-023's drop, but the server must tell slow from fast and the web must show what it missed.

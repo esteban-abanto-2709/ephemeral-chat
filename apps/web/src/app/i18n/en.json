@@ -174,8 +174,9 @@
     "slow-messages": "Slow down: up to 5 messages per second.",
     "slow-files": "Slow down: one file every 2 seconds.",
     "slow-renames": "Slow down: one name change every 10 seconds.",
+    "slow-server": "The server is busy. This is a free demo: try again in a moment.",
     "groupFailed": "Couldn't create the group. Try again.",
-    "fileTooBig": "Files up to 5 MB.",
+    "fileTooBig": "Files up to 3 MB.",
     "voiceTooBig": "Voice messages up to 1 MB.",
     "microphone": "Allow the microphone to record a voice message."
   },
@@ -215,9 +216,9 @@
     },
     "drop": {
       "title": "Drop to send",
-      "hint": "Photos and files up to 5 MB"
+      "hint": "Photos and files up to 3 MB"
     },
-    "disconnected": "You're disconnected.",
+    "disconnected": "You're disconnected: your network failed or was too slow.",
     "reconnect": "Reconnect",
     "ended": "{{ name }} left. You can still read this chat.",
     "delete": "Delete chat",

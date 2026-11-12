@@ -18,7 +18,7 @@ const (
 	MessagesPerSecond = 5
 	MaxMembers        = 50
 	TypingInterval    = 2 * time.Second
-	FileMaxBytes      = 5 << 20
+	FileMaxBytes      = 3 << 20
 	FileNameMaxLength = 120
 	FileInterval      = 2 * time.Second
 	FileBurst         = 3

@@ -73,7 +73,7 @@ interface Frame {
 }
 
 export const maxChats = 20;
-export const fileMaxBytes = 5 * 1024 * 1024;
+export const fileMaxBytes = 3 * 1024 * 1024;
 export const voiceMaxBytes = 1024 * 1024;
 const fileNameMaxLength = 120;
 const shownTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];

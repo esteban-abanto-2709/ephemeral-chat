@@ -33,7 +33,7 @@ clever shortcuts.
   by link or code, and private chats opened by someone's id or invite link,
   which reach them only with your first message and end when either leaves.
   Chats carry photos (compressed in the browser, reviewed before sending,
-  opened in the page), files up to 5 MB, voice messages up to a minute and
+  opened in the page), files up to 3 MB, voice messages up to a minute and
   replies; the server relays them as binary frames and keeps none. In a
   private chat your messages show one check when sent and two once the other
   person has read them, in the chat and in its preview. v0.8 brought those

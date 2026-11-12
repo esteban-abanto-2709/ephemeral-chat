@@ -307,7 +307,7 @@ describe('ChatClient', () => {
     expect(server.sent.at(-1)).toEqual({ type: 'typing', room: 'one' });
   });
 
-  it('sends files in binary frames and refuses the ones over 5 MB', async () => {
+  it('sends files in binary frames and refuses the ones over 3 MB', async () => {
     vi.useRealTimers();
     ready();
     client.join('one');
@@ -319,7 +319,7 @@ describe('ChatClient', () => {
       { file: new File(['hola'], 'notes.txt'), caption: '' },
       { file: big, caption: '' },
     ]);
-    expect(TestBed.inject(Notice).text()).toBe('Files up to 5 MB.');
+    expect(TestBed.inject(Notice).text()).toBe('Files up to 3 MB.');
     expect(server.binary).toHaveLength(1);
     expect(await lastFile()).toEqual({
       header: { type: 'file', room: 'one', name: 'notes.txt' },

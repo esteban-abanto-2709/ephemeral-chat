@@ -22,7 +22,7 @@ import (
 
 const (
 	bodyMaxBytes  = 8 << 10
-	frameMaxBytes = 6 << 20
+	frameMaxBytes = 4 << 20
 )
 
 const (
