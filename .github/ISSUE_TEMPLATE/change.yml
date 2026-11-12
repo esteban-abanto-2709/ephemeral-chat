@@ -1,0 +1,31 @@
+name: Small change
+description: A specific change that fits the four principles. Ideas go to Discussions first.
+labels: [change]
+body:
+  - type: markdown
+    attributes:
+      value: For a change that fits the [principles](https://github.com/esteban-abanto-2709/ephemeral-chat/blob/main/docs/product-vision.md#principles). If it changes one, start a [discussion](https://github.com/esteban-abanto-2709/ephemeral-chat/discussions) instead. In English, please.
+  - type: textarea
+    id: what
+    attributes:
+      label: What should change
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why
+    validations:
+      required: true
+  - type: input
+    id: discussion
+    attributes:
+      label: Discussion where it was talked about
+      placeholder: https://github.com/esteban-abanto-2709/ephemeral-chat/discussions/...
+  - type: checkboxes
+    id: pr
+    attributes:
+      label: Pull request
+      options:
+        - label: I would like to open a pull request for this once we agree on it.
+          required: false

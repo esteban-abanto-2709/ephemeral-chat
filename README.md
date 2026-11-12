@@ -113,6 +113,13 @@ Then open `http://localhost:3000`.
   what was decided against.
 - [Logbook](./docs/logbook/): roadmap, ideas, technical debt and changelog.
 
+## Contributing
+
+Ideas and questions go to [Discussions](https://github.com/esteban-abanto-2709/ephemeral-chat/discussions),
+where everything is open to debate. Bugs go to issues, and a pull request
+needs an issue where we agreed on the change first: see
+[CONTRIBUTING.md](./CONTRIBUTING.md).
+
 ## License
 
 [MIT](./LICENSE) © Esteban Abanto
