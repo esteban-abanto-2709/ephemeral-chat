@@ -112,7 +112,7 @@ func TestAFullServerAnswers503(t *testing.T) {
 		}
 	}
 	rec = httptest.NewRecorder()
-	connect(registry, newUploads(uploadSlots, uploadTimeout), pingInterval)(rec, httptest.NewRequest("GET", "/api/ws?name=Juan", nil))
+	connect(registry, newUploads(uploadSlots, uploadTimeout), pingInterval, downloadTimeout)(rec, httptest.NewRequest("GET", "/api/ws?name=Juan", nil))
 	if rec.Code != http.StatusServiceUnavailable {
 		t.Errorf("GET /api/ws on a full server = %d, want 503", rec.Code)
 	}
@@ -404,7 +404,7 @@ func TestAPIOnlyWithoutStaticDir(t *testing.T) {
 
 func TestKeepAlive(t *testing.T) {
 	ping := 50 * time.Millisecond
-	server := httptest.NewServer(connect(room.NewRegistry(), newUploads(uploadSlots, uploadTimeout), ping))
+	server := httptest.NewServer(connect(room.NewRegistry(), newUploads(uploadSlots, uploadTimeout), ping, downloadTimeout))
 	defer server.Close()
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
@@ -448,7 +448,7 @@ type uploadTabs struct {
 }
 
 func newUploadTabs(t *testing.T, slots int, timeout time.Duration) *uploadTabs {
-	server := httptest.NewServer(connect(room.NewRegistry(), newUploads(slots, timeout), pingInterval))
+	server := httptest.NewServer(connect(room.NewRegistry(), newUploads(slots, timeout), pingInterval, downloadTimeout))
 	t.Cleanup(server.Close)
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	t.Cleanup(cancel)
@@ -558,6 +558,48 @@ func TestAStalledUploadIsCut(t *testing.T) {
 		t.Fatal(err)
 	}
 	u.waitForBinary(got)
+}
+
+func TestAStalledDownloadIsCut(t *testing.T) {
+	server := httptest.NewServer(connect(room.NewRegistry(), newUploads(uploadSlots, uploadTimeout), pingInterval, 300*time.Millisecond))
+	t.Cleanup(server.Close)
+	u := &uploadTabs{t, nil, server}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	t.Cleanup(cancel)
+	u.ctx = ctx
+
+	_, readerID := u.open("Reader")
+	var frame bytes.Buffer
+	header := map[string]string{"type": "file", "room": readerID, "name": "big.bin"}
+	if err := writeFrame(&frame, header, make([]byte, room.FileMaxBytes)); err != nil {
+		t.Fatal(err)
+	}
+	left := make(chan struct{}, 2)
+	for _, name := range []string{"Ana", "Beto"} {
+		sender, _ := u.open(name)
+		for range 2 {
+			if err := sender.Write(ctx, websocket.MessageBinary, frame.Bytes()); err != nil {
+				t.Fatal(err)
+			}
+		}
+		go func() {
+			for {
+				var m room.Message
+				if wsjson.Read(ctx, sender, &m) != nil {
+					return
+				}
+				if m.Type == "left" && m.Room == readerID {
+					left <- struct{}{}
+					return
+				}
+			}
+		}()
+	}
+	select {
+	case <-left:
+	case <-ctx.Done():
+		t.Fatal("a reader that never reads was not cut")
+	}
 }
 
 func TestATextFrameOverTheLimitClosesTheConnection(t *testing.T) {

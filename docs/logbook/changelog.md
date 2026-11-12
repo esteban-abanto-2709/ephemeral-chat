@@ -12,6 +12,12 @@ Summary in ≤2 lines of what was done.
 
 ---
 
+## [RM-023] A ceiling for files in transit (2026-11-11 20:42)
+Files up to 3 MB, 12 MiB waiting per tab, 128 MiB in transit on the whole server (`slow-server` past it), 16 uploads at once with 60 s each, 64 KiB text frames, and downloads in 32 KiB pieces with 60 s per file. The reasons are in the product vision.
+
+## [TD-020] No limit on the memory files hold while in transit (2026-11-11 20:42)
+Fixed by RM-023: every file is bounded from the moment it starts arriving until the last tab has it.
+
 ## [RM-017] Server ceilings (2026-11-11 14:45)
 The server refuses past 2000 connections and 5000 groups with `503`, times out slow and idle HTTP connections and stops in order on `SIGTERM`. Files in transit are RM-023.
 

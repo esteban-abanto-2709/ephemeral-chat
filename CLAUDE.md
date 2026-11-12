@@ -43,9 +43,9 @@ clever shortcuts.
   in English and Spanish (Transloco), following the browser with a switch.
   Earlier versions brought the glass design (WebGL liquid glass with a frosted
   fallback, light and dark themes), the layout kept above the phone keyboard,
-  a typing indicator, and limits on message length, rate, group size and
-  chats per tab. Groups vanish a minute after they empty. The protocol is in the
-  [API README](./apps/api/README.md#room-chat), the look in the
+  a typing indicator, limits on message length, rate, group size and chats
+  per tab, and a ceiling on files in transit. Groups vanish a minute after
+  they empty. The protocol is in the [API README](./apps/api/README.md#room-chat), the look in the
   [web README](./apps/web/README.md#look-and-feel).
 - Next versions are ideas in `docs/logbook/wishlist.md` until committed to
   `docs/logbook/roadmap.md`.

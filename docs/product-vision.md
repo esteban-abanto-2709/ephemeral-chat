@@ -53,6 +53,7 @@ The link can reach anyone, so the server protects itself from day one:
 | Files waiting for one tab | 12 MB |
 | Files in transit, whole server | 128 MB |
 | Uploads at once, whole server | 16, 60 seconds each |
+| Time to deliver one file | 60 seconds |
 | Files per person | 3 at once, then one every 2 seconds |
 | Voice message | 60 seconds, 1 MB |
 | Name length | 24 characters |
@@ -110,6 +111,14 @@ comes, enough for 3 MB over a slow 3G connection; one that takes longer is
 cut, so nobody keeps a slot by sending a byte at a time. Text messages are
 small, so a text frame over 64 KB closes the connection: otherwise anyone
 could skip the line by sending a file as text.
+
+**60 seconds to deliver each file.** The same rule as uploads, on the way
+out: a tab that takes longer than 60 seconds to receive one file, 3 MB at
+about 50 KB/s, is cut, so a file nobody receives doesn't hold memory for long.
+Files go out in 32 KB pieces so the server's "are you still there?" ping can
+pass between them. Before, a long download held the line, the ping gave up
+after 5 seconds, and slow but honest tabs were cut much sooner than any of
+these limits.
 
 Decided against: storing files on disk or in an external store while they
 travel (it breaks "nothing is stored"); relaying a file while it is still

@@ -44,6 +44,28 @@ func TestWriteFrameNeverCopiesTheData(t *testing.T) {
 	}
 }
 
+func TestWriteFrameSendsDataInPieces(t *testing.T) {
+	data := make([]byte, 100<<10)
+	for i := range data {
+		data[i] = byte(i)
+	}
+	w := &recordingWriter{}
+	if err := writeFrame(w, map[string]string{"type": "file"}, data); err != nil {
+		t.Fatal(err)
+	}
+	var all []byte
+	for i, write := range w.writes {
+		if i > 0 && len(write) > frameChunkBytes {
+			t.Errorf("write %d has %d bytes, want at most %d", i, len(write), frameChunkBytes)
+		}
+		all = append(all, write...)
+	}
+	header, got, ok := decodeFrame(all)
+	if !ok || string(header) != `{"type":"file"}` || !bytes.Equal(got, data) {
+		t.Error("the pieces don't decode to the same header and data")
+	}
+}
+
 func TestDecodeFrameRejectsBrokenFrames(t *testing.T) {
 	cases := map[string][]byte{
 		"empty":        nil,

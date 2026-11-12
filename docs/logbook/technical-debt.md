@@ -46,14 +46,6 @@ and is deleted from here.
 - **Suggestion:** an explicit joining state (e.g. a `joining` flag the views render neutrally, re-sent on `ready` by that flag instead of by `kind`); the route already knows `/chat/` from `/room/` if a hint is wanted.
 - **Date:** 2026-11-11 · **Status:** Open
 
-## [TD-020] No limit on the memory files hold while in transit
-- **Location:** `apps/api/main.go` (`connect`, the read loop) and `apps/api/internal/room/room.go` (`post`, the mailboxes)
-- **Risk:** 7/10
-- **Problem:** a file stays in memory from the moment its frame is read until the slowest recipient's socket takes it, and nothing bounds the total: every connection may be reading a 6 MiB frame at once, and a mailbox may hold up to 32 files nobody reads. Measured: 20 connections in pairs, three 5 MiB files each to a peer that never reads, hold about 100 MiB within every existing limit. A ceiling on connections does not cover it.
-- **Future impact:** about a hundred connections take the 512 MB instance down using only what the limits allow, even once connections and rooms are capped (TD-012).
-- **Suggestion:** a global budget of file bytes in transit (count each file once, release it when the last mailbox lets go) that refuses new files with an error code while it is full, and a small pool of slots for reading binary frames.
-- **Date:** 2026-11-11 · **Status:** Open
-
 ## [TD-015] A private chat can start with a tab that already left
 - **Location:** `apps/api/internal/room/registry.go` (`reach`, `peer`, `Disconnect`)
 - **Risk:** 5/10

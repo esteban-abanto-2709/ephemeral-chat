@@ -15,12 +15,6 @@ changelog and is deleted from here.
 
 Each entry is one commit, or a few when it spans both apps; no commit breaks production.
 
-## [RM-023] A ceiling for files in transit
-- **Goal:** the memory that files hold, while arriving and until the slowest recipient has them, has a ceiling whatever the number of connections (TD-020).
-- **Scope:** decided, in five steps: files up to 3 MB in both apps; each tab may have at most 12 MiB of files waiting for it, or it is dropped as too slow; a global budget of 128 MiB of files in transit, past which new files are refused with `slow-server`; at most 16 uploads at once, each with 60 s to arrive, and text frames up to 64 KiB; downloads written in 32 KiB pieces so the ping isn't starved, each file with 60 s to leave. `GOMEMLIMIT=400MiB` in the image. The reasons live in `docs/product-vision.md` ("Why files have ceilings"). A softer penalty for slow tabs is WL-026.
-- **Done when:** tests show each ceiling holding (a tab past 12 MiB is dropped, a full budget refuses with `slow-server`, a 17th upload waits, a stalled upload or download is cut), TD-020 is closed, and the vision explains every limit.
-- **Date:** 2026-11-11 · **Status:** In progress (2026-11-11)
-
 ## [RM-018] Private chats that never lie
 - **Goal:** a private chat never starts with a tab that already left (TD-015), and one that is reopened starts clean, with no old read mark or message numbers (TD-016).
 - **Scope:** `internal/room` in the API, then `chat-client.ts` in the web. Depends on nothing above.

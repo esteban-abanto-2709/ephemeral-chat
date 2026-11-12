@@ -30,6 +30,7 @@ const (
 const (
 	uploadSlots       = 16
 	uploadTimeout     = 60 * time.Second
+	downloadTimeout   = 60 * time.Second
 	pingInterval      = 30 * time.Second
 	readHeaderTimeout = 10 * time.Second
 	idleTimeout       = 2 * time.Minute
@@ -76,7 +77,7 @@ func newMux(staticDir string) *http.ServeMux {
 		w.Write([]byte("ok"))
 	})
 	mux.HandleFunc("POST /api/rooms", createRoom(rooms))
-	mux.HandleFunc("GET /api/ws", connect(rooms, newUploads(uploadSlots, uploadTimeout), pingInterval))
+	mux.HandleFunc("GET /api/ws", connect(rooms, newUploads(uploadSlots, uploadTimeout), pingInterval, downloadTimeout))
 	mux.HandleFunc("GET /api/", http.NotFound)
 
 	if staticDir != "" {
@@ -130,7 +131,20 @@ func (u *uploads) read(ctx context.Context, conn *websocket.Conn, r io.Reader) (
 	return io.ReadAll(r)
 }
 
-func connect(rooms *room.Registry, uploads *uploads, ping time.Duration) http.HandlerFunc {
+func sendFile(ctx context.Context, conn *websocket.Conn, message room.Message, timeout time.Duration) error {
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+	w, err := conn.Writer(ctx, websocket.MessageBinary)
+	if err != nil {
+		return err
+	}
+	if err := writeFrame(w, message, message.File.Data); err != nil {
+		return err
+	}
+	return w.Close()
+}
+
+func connect(rooms *room.Registry, uploads *uploads, ping, download time.Duration) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		name := strings.TrimSpace(r.URL.Query().Get("name"))
 		if !room.ValidName(name) {
@@ -163,12 +177,11 @@ func connect(rooms *room.Registry, uploads *uploads, ping time.Duration) http.Ha
 				select {
 				case message := <-client.Messages():
 					if message.File != nil && len(message.File.Data) > 0 {
-						w, err := conn.Writer(r.Context(), websocket.MessageBinary)
-						if err != nil || writeFrame(w, message, message.File.Data) != nil || w.Close() != nil {
-							client.Done(message)
+						err := sendFile(r.Context(), conn, message, download)
+						client.Done(message)
+						if err != nil {
 							return
 						}
-						client.Done(message)
 					} else if wsjson.Write(r.Context(), conn, message) != nil {
 						return
 					}

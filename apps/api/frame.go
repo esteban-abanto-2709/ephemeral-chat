@@ -6,7 +6,10 @@ import (
 	"io"
 )
 
-const frameHeaderPrefix = 4
+const (
+	frameHeaderPrefix = 4
+	frameChunkBytes   = 32 << 10
+)
 
 func writeFrame(w io.Writer, header any, data []byte) error {
 	head, err := json.Marshal(header)
@@ -18,8 +21,14 @@ func writeFrame(w io.Writer, header any, data []byte) error {
 	if _, err := w.Write(append(prefix, head...)); err != nil {
 		return err
 	}
-	_, err = w.Write(data)
-	return err
+	for len(data) > 0 {
+		n := min(len(data), frameChunkBytes)
+		if _, err := w.Write(data[:n]); err != nil {
+			return err
+		}
+		data = data[n:]
+	}
+	return nil
 }
 
 func decodeFrame(frame []byte) (header, data []byte, ok bool) {
