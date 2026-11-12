@@ -45,3 +45,27 @@ and is deleted from here.
 - **Future impact:** a visible flicker on every invite link opened on a slow connection; and anyone who "fixes" the placeholder's kind breaks joining before `ready` without a test noticing.
 - **Suggestion:** an explicit joining state (e.g. a `joining` flag the views render neutrally, re-sent on `ready` by that flag instead of by `kind`); the route already knows `/chat/` from `/room/` if a hint is wanted.
 - **Date:** 2026-11-11 · **Status:** Open
+
+## [TD-021] A phone's first screen says nothing about the product
+- **Location:** `apps/web/src/app/chats/chats-page.html` (where `chats/chats-welcome` is shown)
+- **Risk:** 5/10
+- **Problem:** at phone width with no chat open only the list shows, so a first visit gets an empty list: no "Talk, then let it go", no "Nothing is stored", and Invite with link and My QR only as two unlabeled icons beside the name. The welcome exists on desktop only.
+- **Future impact:** someone arriving from a shared link on a phone never reads the promise or finds how to invite, which is the main use.
+- **Suggestion:** show the welcome's promise and labeled actions in the empty list at phone width; try it on `/design` first.
+- **Date:** 2026-11-12 · **Status:** Open
+
+## [TD-022] No way to leave a group or end a private chat
+- **Location:** `apps/web/src/app/room/room-chat/room-chat.html` (`deleted` is offered only when `ended()`) and `apps/web/src/app/chats/chat-client.ts` (`remove`)
+- **Risk:** 5/10
+- **Problem:** `ChatClient.remove` sends `leave`, but the only control wired to it is Delete chat on a private chat the other person already left. A live group or private chat can only be left by closing or reloading the tab, which drops every other chat too.
+- **Future impact:** chats pile up toward the 20 per tab limit, and the product's own rule ("when everyone leaves, nothing is left") has no button to trigger it.
+- **Suggestion:** a Leave action in the chat header for groups and live private chats, with the same confirmation tone as discarding files.
+- **Date:** 2026-11-12 · **Status:** Open
+
+## [TD-023] Some texts say what the app does not do
+- **Location:** `apps/web/src/app/i18n/en.json`, `apps/web/src/app/i18n/es.json` (`room.private.note`, `room.group.note`, `room.disconnected`)
+- **Risk:** 4/10
+- **Problem:** the private card says "Messages vanish when one of you leaves" while the bar under it says "Luis left. You can still read this chat."; the group card says messages vanish when everyone leaves, yet each tab keeps its copy until it closes. After a server restart the page says "your network failed or was too slow", and Reconnect then drops every group with its history under "Nothing to open".
+- **Future impact:** the product's one promise reads as false at the exact moment someone tests it.
+- **Suggestion:** reword once the wording of the promise is decided; no code beyond the two i18n files.
+- **Date:** 2026-11-12 · **Status:** Open

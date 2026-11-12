@@ -251,6 +251,9 @@ Icons come from `@lucide/angular`, the font is Inter (`@fontsource-variable/inte
 Backgrounds in `public/backdrops`, free under the Unsplash License:
 [dark](https://unsplash.com/photos/qmUKOInkOL8) by Andrew Kliatskyi,
 [light](https://unsplash.com/photos/yKVBAM-gKJo) by Pawel Czerwinski.
+The sample photo in `public/samples`, also under the Unsplash License:
+[party](https://unsplash.com/photos/a-group-of-people-laying-on-top-of-a-couch-HEUQyYnB08c)
+by Vitaly Gariev.
 
 ## Design board
 
@@ -259,11 +262,11 @@ desktop (1280 × 800, scaled to fit) and mobile (390 × 844), each in light and
 dark, with a switch for the language and one for the screen (start, chats,
 group, media, photos, qr, left); photos has its own switch for the chat, the
 send preview with a wide or a tall photo, and the photo viewer. Each
-frame is an `iframe` of `/design/frame?screen=…&theme=…&lang=…`, so it has its own
+frame is an `iframe` of `/design/frame?screen=…&view=…&theme=…&lang=…`, so it has its own
 theme, its own liquid glass and a real viewport width. Visual changes are
 tried here first and moved into the app once approved; screens are the app's
 own components fed with sample chats (`design/design-chats.ts`), so the board
-never drifts from the app.
+never drifts from the app. The sample chats follow the frame's language.
 
 It exists only in development: the `DESIGN` build constant (`define` in
 `angular.json`) is `true` in the development configuration and `false`

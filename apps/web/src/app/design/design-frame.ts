@@ -9,7 +9,7 @@ export type DesignScreen = ChatsState;
 @Component({
   imports: [DesignChats],
   selector: 'app-design-frame',
-  template: `<app-design-chats [state]="screen()" [view]="view()" />`,
+  template: `<app-design-chats [state]="screen()" [view]="view()" [lang]="lang()" />`,
 })
 export class DesignFrame {
   readonly screen = input<DesignScreen>('chats');
