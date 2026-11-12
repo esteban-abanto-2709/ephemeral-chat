@@ -284,3 +284,140 @@ func TestAFileCanStartAPrivateChat(t *testing.T) {
 		t.Errorf("Luis got %+v, want notes.txt from Sam", got)
 	}
 }
+
+const fullFiles = TransitMaxBytes / FileMaxBytes
+
+func sendBlob(rooms *Registry, from *Client, label string) {
+	rooms.SendFile(from, label, "blob.bin", make([]byte, FileMaxBytes), 0, "", 0)
+}
+
+func fillTransit(t *testing.T, rooms *Registry, files int) []*Client {
+	t.Helper()
+	readers := make([]*Client, files)
+	for i := range files {
+		sender := mustConnect(t, rooms, "Sender")
+		readers[i] = mustConnect(t, rooms, "Reader")
+		sendBlob(rooms, sender, readers[i].ID)
+	}
+	return readers
+}
+
+func taken(client *Client) []Message {
+	var messages []Message
+	for {
+		select {
+		case message := <-client.Messages():
+			messages = append(messages, message)
+		default:
+			return messages
+		}
+	}
+}
+
+func finish(readers []*Client) {
+	for _, reader := range readers {
+		for _, message := range taken(reader) {
+			reader.Done(message)
+		}
+	}
+}
+
+func assertUsed(t *testing.T, rooms *Registry, want int) {
+	t.Helper()
+	if got := rooms.transit.used; got != want {
+		t.Errorf("transit used = %d, want %d", got, want)
+	}
+}
+
+func TestAFileCountsOnceForAGroup(t *testing.T) {
+	rooms := NewRegistry()
+	id := mustCreate(t, rooms, "Group")
+	sender := mustConnect(t, rooms, "Sender")
+	clients := []*Client{sender}
+	for range 4 {
+		clients = append(clients, mustConnect(t, rooms, "Reader"))
+	}
+	for _, client := range clients {
+		rooms.Open(client, id)
+	}
+	for _, client := range clients {
+		drainClient(client)
+	}
+
+	sendBlob(rooms, sender, id)
+	assertUsed(t, rooms, FileMaxBytes)
+
+	finish(clients)
+	assertUsed(t, rooms, 0)
+}
+
+func TestAFullBudgetRefusesFilesWithSlowServer(t *testing.T) {
+	rooms := NewRegistry()
+	fillTransit(t, rooms, fullFiles)
+	assertUsed(t, rooms, fullFiles*FileMaxBytes)
+
+	sender, reader := mustConnect(t, rooms, "Sender"), mustConnect(t, rooms, "Reader")
+	sendBlob(rooms, sender, reader.ID)
+
+	next(t, sender)
+	want := Message{Type: "error", Room: reader.ID, Code: "slow-server"}
+	if got := next(t, sender); !reflect.DeepEqual(got, want) {
+		t.Errorf("sender got %+v, want %+v", got, want)
+	}
+	for _, message := range taken(reader) {
+		if message.File != nil {
+			t.Errorf("reader got a file past the budget: %+v", message)
+		}
+	}
+	select {
+	case <-sender.Gone():
+		t.Error("sender was disconnected")
+	default:
+	}
+	if _, ok := sender.chat(reader.ID); !ok {
+		t.Error("sender lost the chat")
+	}
+	assertUsed(t, rooms, fullFiles*FileMaxBytes)
+}
+
+func TestBudgetComesBackWhenReadersCatchUp(t *testing.T) {
+	rooms := NewRegistry()
+	readers := fillTransit(t, rooms, fullFiles)
+
+	finish(readers)
+	assertUsed(t, rooms, 0)
+
+	sender, reader := mustConnect(t, rooms, "Sender"), mustConnect(t, rooms, "Reader")
+	sendBlob(rooms, sender, reader.ID)
+	assertUsed(t, rooms, FileMaxBytes)
+}
+
+func TestBudgetComesBackWhenAReaderLeaves(t *testing.T) {
+	rooms := NewRegistry()
+	readers := fillTransit(t, rooms, 2)
+	assertUsed(t, rooms, 2*FileMaxBytes)
+
+	rooms.Disconnect(readers[0])
+	rooms.Disconnect(readers[1])
+	assertUsed(t, rooms, 0)
+}
+
+func TestAClosedClientTakesNoMessages(t *testing.T) {
+	client := NewClient("Sam")
+	client.close()
+
+	if client.push(Message{Type: "typing"}) {
+		t.Error("push to a closed client succeeded")
+	}
+	assertNothing(t, client)
+}
+
+func TestASenderAloneGivesTheBudgetBack(t *testing.T) {
+	rooms := NewRegistry()
+	id := mustCreate(t, rooms, "Group")
+	sender := mustConnect(t, rooms, "Sender")
+	rooms.Open(sender, id)
+
+	sendBlob(rooms, sender, id)
+	assertUsed(t, rooms, 0)
+}

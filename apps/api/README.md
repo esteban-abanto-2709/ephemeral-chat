@@ -83,7 +83,7 @@ server → room:     {"type": "message", "room": "…", "id": "…", "name": "Ju
                    {"type": "renamed", "room": "…", "id": "…", "name": "Cráneo Negro"}
 server → others:   {"type": "typing",  "room": "…", "id": "…", "name": "Juan"}
 server → other:    {"type": "read",    "room": "…", "id": "…", "seq": 3}
-server → sender:   {"type": "error",   "room": "…", "code": "slow-messages" | "slow-files"}
+server → sender:   {"type": "error",   "room": "…", "code": "slow-messages" | "slow-files" | "slow-server"}
                    {"type": "error",   "room": "…", "code": "gone" | "full" | "limit" | "self" | "busy"}
 ```
 
@@ -161,6 +161,10 @@ seconds (`FileBurst`, `FileInterval`, a bucket apart from messages); over that
 only the sender gets an `error` with code `slow-files`. A file also
 starts a private chat, like a first message.
 
+The server counts every file once in a budget of 128 MiB (`TransitMaxBytes`),
+from the moment it is accepted until the last mailbox lets go of it; past it,
+only the sender gets an `error` with code `slow-server`.
+
 Every message and file gets a `seq`, counting up from 1 in each chat: the
 server keeps only the counter, never the messages. A message or file may carry
 `reply`, the `seq` of an earlier one in the same chat (from 1 up to the last
@@ -236,6 +240,10 @@ How a room relays messages:
 - The mailbox also holds at most 12 MiB of files (`PendingMaxBytes`). A tab
   past it is treated like one whose mailbox is full. The writer releases each
   file's weight with `Client.Done` once it has written it (or failed).
+- Each mailbox holding a file holds one reference to it; the file's bytes go
+  back to the server budget when the last reference is released. `Done` and
+  `Client.close` (called when the tab disconnects, which also empties the
+  mailbox) release them, and a closed client takes no messages.
 - Each WebSocket runs two goroutines: the handler **reads** frames and hands
   them to the client, which keeps its chats in a map by the name the tab uses
   (a room id, or the other person's id), guarded by its own mutex since a

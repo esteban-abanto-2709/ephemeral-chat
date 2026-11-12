@@ -51,6 +51,7 @@ The link can reach anyone, so the server protects itself from day one:
 | Messages per person | 5 per second |
 | File size | 3 MB |
 | Files waiting for one tab | 12 MB |
+| Files in transit, whole server | 128 MB |
 | Files per person | 3 at once, then one every 2 seconds |
 | Voice message | 60 seconds, 1 MB |
 | Name length | 24 characters |
@@ -87,6 +88,17 @@ number below by 40%.
 receives slower than files reach it is the one dropped, as with a full
 mailbox, and the memory its files held goes back; someone on 4G never gets
 near it.
+
+**At most 128 MB of files in transit on the whole server.** The per-tab limit
+stops one slow tab, not many at once: a few dozen tabs that never read could
+still fill the instance. So the server counts every file once, from the moment
+it is accepted until the last recipient has it, and past 128 MB, a quarter of
+the RAM, it refuses new files with "the server is busy". Here the first rule
+wins over the second: during an attack everyone's files wait a moment, but text
+keeps flowing and the server stays up. The image also sets
+`GOMEMLIMIT=400MiB`, so Go collects garbage harder before it nears the
+instance's 512 MB: a delivered file only frees its memory when the garbage
+collector runs.
 
 Decided against: storing files on disk or in an external store while they
 travel (it breaks "nothing is stored"); relaying a file while it is still

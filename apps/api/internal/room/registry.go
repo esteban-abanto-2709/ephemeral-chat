@@ -18,6 +18,7 @@ type Registry struct {
 	mu      sync.Mutex
 	rooms   map[string]*Room
 	clients map[string]*Client
+	transit transit
 }
 
 func NewRegistry() *Registry {
@@ -40,6 +41,7 @@ func (r *Registry) Disconnect(client *Client) {
 	delete(r.clients, client.ID)
 	r.mu.Unlock()
 	client.LeaveAll()
+	client.close()
 }
 
 func (r *Registry) Open(client *Client, code string) {
@@ -80,9 +82,18 @@ func (r *Registry) Send(client *Client, label, text string, reply int) {
 }
 
 func (r *Registry) SendFile(client *Client, label, name string, data []byte, seconds int, caption string, reply int) {
-	if file, ok := NewFile(name, data, seconds); ok && validCaption(caption) && r.reach(client, label) {
-		client.SendFile(label, file, caption, reply)
+	file, ok := NewFile(name, data, seconds)
+	if !ok || !validCaption(caption) || !r.reach(client, label) {
+		return
 	}
+	if !r.transit.take(file.Size) {
+		client.Notify(Message{Type: "error", Room: label, Code: "slow-server"})
+		return
+	}
+	file.hold = &hold{budget: &r.transit, size: file.Size}
+	file.hold.refs.Store(1)
+	client.SendFile(label, file, caption, reply)
+	file.release()
 }
 
 func (r *Registry) reach(client *Client, label string) bool {

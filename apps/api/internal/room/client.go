@@ -31,6 +31,8 @@ type Client struct {
 	chats   map[string]chat
 	renames *rate.Limiter
 	pending atomic.Int64
+	sendMu  sync.Mutex
+	closed  bool
 }
 
 func NewClient(name string) *Client {
@@ -159,22 +161,50 @@ func (c *Client) person() Person {
 }
 
 func (c *Client) push(message Message) bool {
-	size := weight(message)
-	if size > 0 && c.pending.Add(size) > PendingMaxBytes {
-		c.pending.Add(-size)
+	c.sendMu.Lock()
+	defer c.sendMu.Unlock()
+	if c.closed {
 		return false
+	}
+	size := weight(message)
+	if size > 0 {
+		if c.pending.Add(size) > PendingMaxBytes {
+			c.pending.Add(-size)
+			return false
+		}
+		message.File.retain()
 	}
 	select {
 	case c.mailbox <- message:
 		return true
 	default:
-		c.pending.Add(-size)
+		if size > 0 {
+			c.pending.Add(-size)
+			message.File.release()
+		}
 		return false
 	}
 }
 
 func (c *Client) Done(message Message) {
-	c.pending.Add(-weight(message))
+	if size := weight(message); size > 0 {
+		c.pending.Add(-size)
+		message.File.release()
+	}
+}
+
+func (c *Client) close() {
+	c.sendMu.Lock()
+	c.closed = true
+	c.sendMu.Unlock()
+	for {
+		select {
+		case message := <-c.mailbox:
+			c.Done(message)
+		default:
+			return
+		}
+	}
 }
 
 func weight(message Message) int64 {

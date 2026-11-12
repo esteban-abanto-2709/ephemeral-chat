@@ -78,8 +78,9 @@ One free **Web Service**, Docker runtime, deployed on every push to `main`:
 | Build context     | repository root          |
 | Health Check Path | `/api/health`            |
 
-Render sets `PORT`; the API reads it. One service means web and API sleep and
-wake together on the free tier.
+Render sets `PORT`; the API reads it. The image sets `GOMEMLIMIT=400MiB` so
+Go collects garbage harder before the 512 MB instance fills. One service means
+web and API sleep and wake together on the free tier.
 
 ## Commands
 
