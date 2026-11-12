@@ -275,7 +275,7 @@ func spa(files fs.FS) http.Handler {
 		if name == "" {
 			name = "."
 		}
-		if _, err := fs.Stat(files, name); err != nil || name == "." {
+		if info, err := fs.Stat(files, name); err != nil || info.IsDir() {
 			w.Header().Set("Cache-Control", "no-cache")
 			http.ServeFileFS(w, r, files, "index.html")
 			return

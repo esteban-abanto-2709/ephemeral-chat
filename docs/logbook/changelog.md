@@ -12,6 +12,9 @@ Summary in ≤2 lines of what was done.
 
 ---
 
+## [TD-019] Folders of the web build list their files (2026-11-12 09:54)
+Fixed by RM-022: `spa` serves `index.html` for a folder as it does for a missing file.
+
 ## [RM-019] Sending many files (2026-11-12 09:43)
 Files leave each chat through a queue paced to the server (three at once, then one every 2 seconds), a file refused for going too fast is sent again, and a chat that goes away releases everything it held.
 

@@ -32,7 +32,7 @@ Each entry is one commit, or a few when it spans both apps; no commit breaks pro
 - **Goal:** folders of the web build stop listing their files (TD-019) and a chat that is still joining stops looking like a group (TD-011).
 - **Scope:** two unrelated small fixes, one commit each. Depends on nothing.
 - **Done when:** TD-019 and TD-011 are closed.
-- **Date:** 2026-11-11 · **Status:** Open
+- **Date:** 2026-11-11 · **Status:** In progress (2026-11-12)
 
 ## [RM-014] End-to-end encryption
 - **Goal:** the server relays only ciphertext; the key travels in the link after `#`, which browsers never send, and Web Crypto encrypts in the browser.

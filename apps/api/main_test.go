@@ -26,6 +26,8 @@ func TestRouting(t *testing.T) {
 	dir := t.TempDir()
 	os.WriteFile(filepath.Join(dir, "index.html"), []byte("<app-root>"), 0o644)
 	os.WriteFile(filepath.Join(dir, "main.js"), []byte("console.log"), 0o644)
+	os.Mkdir(filepath.Join(dir, "backdrops"), 0o755)
+	os.WriteFile(filepath.Join(dir, "backdrops", "dark.webp"), []byte("webp"), 0o644)
 	mux := newMux(dir)
 
 	cases := []struct {
@@ -43,6 +45,9 @@ func TestRouting(t *testing.T) {
 		{"GET", "/", 200, "<app-root>"},
 		{"GET", "/main.js", 200, "console.log"},
 		{"GET", "/room/abc", 200, "<app-root>"},
+		{"GET", "/backdrops/", 200, "<app-root>"},
+		{"GET", "/backdrops", 200, "<app-root>"},
+		{"GET", "/backdrops/dark.webp", 200, "webp"},
 		{"GET", "/../main.js", 307, "/main.js"},
 	}
 	for _, c := range cases {
@@ -58,9 +63,11 @@ func TestIndexIsNeverCached(t *testing.T) {
 	dir := t.TempDir()
 	os.WriteFile(filepath.Join(dir, "index.html"), []byte("<app-root>"), 0o644)
 	os.WriteFile(filepath.Join(dir, "main.js"), []byte("console.log"), 0o644)
+	os.Mkdir(filepath.Join(dir, "backdrops"), 0o755)
+	os.WriteFile(filepath.Join(dir, "backdrops", "dark.webp"), []byte("webp"), 0o644)
 	mux := newMux(dir)
 
-	for path, want := range map[string]string{"/": "no-cache", "/room/abc": "no-cache", "/main.js": ""} {
+	for path, want := range map[string]string{"/": "no-cache", "/room/abc": "no-cache", "/main.js": "", "/backdrops/": "no-cache"} {
 		rec := httptest.NewRecorder()
 		mux.ServeHTTP(rec, httptest.NewRequest("GET", path, nil))
 		if got := rec.Header().Get("Cache-Control"); got != want {
