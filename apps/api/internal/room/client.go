@@ -3,15 +3,17 @@ package room
 import (
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"golang.org/x/time/rate"
 )
 
 const (
-	MaxChats       = 20
-	mailboxSize    = 32
-	RenameInterval = 10 * time.Second
+	MaxChats        = 20
+	mailboxSize     = 32
+	PendingMaxBytes = 12 << 20
+	RenameInterval  = 10 * time.Second
 )
 
 type chat struct {
@@ -28,6 +30,7 @@ type Client struct {
 	mu      sync.Mutex
 	chats   map[string]chat
 	renames *rate.Limiter
+	pending atomic.Int64
 }
 
 func NewClient(name string) *Client {
@@ -156,12 +159,29 @@ func (c *Client) person() Person {
 }
 
 func (c *Client) push(message Message) bool {
+	size := weight(message)
+	if size > 0 && c.pending.Add(size) > PendingMaxBytes {
+		c.pending.Add(-size)
+		return false
+	}
 	select {
 	case c.mailbox <- message:
 		return true
 	default:
+		c.pending.Add(-size)
 		return false
 	}
+}
+
+func (c *Client) Done(message Message) {
+	c.pending.Add(-weight(message))
+}
+
+func weight(message Message) int64 {
+	if message.File == nil {
+		return 0
+	}
+	return int64(len(message.File.Data))
 }
 
 func (c *Client) disconnect() {

@@ -233,6 +233,9 @@ How a room relays messages:
   room (and announced as `left`) and disconnected, so one slow connection
   never holds up a room. The mailbox is never closed, since other rooms may
   still be writing to it; the client's `Gone()` channel is closed instead.
+- The mailbox also holds at most 12 MiB of files (`PendingMaxBytes`). A tab
+  past it is treated like one whose mailbox is full. The writer releases each
+  file's weight with `Client.Done` once it has written it (or failed).
 - Each WebSocket runs two goroutines: the handler **reads** frames and hands
   them to the client, which keeps its chats in a map by the name the tab uses
   (a room id, or the other person's id), guarded by its own mutex since a

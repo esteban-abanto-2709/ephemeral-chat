@@ -50,6 +50,7 @@ The link can reach anyone, so the server protects itself from day one:
 | Message length | 1000 characters |
 | Messages per person | 5 per second |
 | File size | 3 MB |
+| Files waiting for one tab | 12 MB |
 | Files per person | 3 at once, then one every 2 seconds |
 | Voice message | 60 seconds, 1 MB |
 | Name length | 24 characters |
@@ -79,6 +80,13 @@ rules, in this order:
 few hundred KB and voice messages stay at 1 MB, so this mostly limits loose
 files; 3 MB still fits documents and small archives, and it lowers every
 number below by 40%.
+
+**At most 12 MB of files waiting for one tab.** A tab's mailbox holds up to
+32 messages, but counting messages says nothing about weight: 32 files are
+96 MB. So each tab also has a weight limit, four large files. A tab that
+receives slower than files reach it is the one dropped, as with a full
+mailbox, and the memory its files held goes back; someone on 4G never gets
+near it.
 
 Decided against: storing files on disk or in an external store while they
 travel (it breaks "nothing is stored"); relaying a file while it is still

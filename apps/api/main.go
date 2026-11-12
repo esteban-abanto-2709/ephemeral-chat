@@ -140,8 +140,10 @@ func connect(rooms *room.Registry, ping time.Duration) http.HandlerFunc {
 					if message.File != nil && len(message.File.Data) > 0 {
 						w, err := conn.Writer(r.Context(), websocket.MessageBinary)
 						if err != nil || writeFrame(w, message, message.File.Data) != nil || w.Close() != nil {
+							client.Done(message)
 							return
 						}
+						client.Done(message)
 					} else if wsjson.Write(r.Context(), conn, message) != nil {
 						return
 					}

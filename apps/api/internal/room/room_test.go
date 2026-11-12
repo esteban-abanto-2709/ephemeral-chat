@@ -486,6 +486,56 @@ func TestFilesReachEveryoneWithinTheirOwnLimit(t *testing.T) {
 	})
 }
 
+func TestMemberFallingBehindOnFilesIsDropped(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		room := newTestRoom()
+		sender, reader := join(t, room, "Sender"), join(t, room, "Reader")
+		drain(sender)
+		drain(reader)
+		file, _ := NewFile("big.bin", make([]byte, FileMaxBytes), 0)
+
+		for range PendingMaxBytes / FileMaxBytes {
+			room.SendFile(sender, file, "", 0)
+			drain(sender)
+			time.Sleep(FileInterval)
+		}
+		assertConnected(t, reader, true)
+		if got := sender.client.pending.Load(); got != 0 {
+			t.Errorf("sender pending = %d, want 0: receipts weigh nothing", got)
+		}
+
+		room.SendFile(sender, file, "", 0)
+		receive(t, sender)
+		expect(t, sender, left(reader, sender))
+		assertConnected(t, reader, false)
+		assertConnected(t, sender, true)
+		if got := reader.client.pending.Load(); got != PendingMaxBytes {
+			t.Errorf("reader pending = %d, want %d", got, PendingMaxBytes)
+		}
+	})
+}
+
+func TestDoneFreesRoomForMoreFiles(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		room := newTestRoom()
+		sender, reader := join(t, room, "Sender"), join(t, room, "Reader")
+		drain(sender)
+		drain(reader)
+		file, _ := NewFile("big.bin", make([]byte, FileMaxBytes), 0)
+
+		for range 3 * PendingMaxBytes / FileMaxBytes {
+			room.SendFile(sender, file, "", 0)
+			drain(sender)
+			reader.client.Done(receive(t, reader))
+			time.Sleep(FileInterval)
+		}
+		assertConnected(t, reader, true)
+		if got := reader.client.pending.Load(); got != 0 {
+			t.Errorf("reader pending = %d, want 0", got)
+		}
+	})
+}
+
 func TestACaptionTravelsWithItsFile(t *testing.T) {
 	room := newTestRoom()
 	juan, ana := join(t, room, "Juan"), join(t, room, "Ana")
