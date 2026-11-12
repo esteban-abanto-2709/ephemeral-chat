@@ -19,7 +19,7 @@ Each entry is one commit, or a few when it spans both apps; no commit breaks pro
 - **Goal:** every file picked is sent, however many, and a chat that goes away leaves nothing in the tab's memory (TD-017, TD-018).
 - **Scope:** decided: a queue in the web paced to the API's rhythm (three at once, then one every 2 seconds); the preview keeps taking any number and the API's limits don't change. Depends on nothing above.
 - **Done when:** tests send five files and all arrive, a refused chat releases its files, and TD-017 and TD-018 are closed.
-- **Date:** 2026-11-11 · **Status:** Open
+- **Date:** 2026-11-11 · **Status:** In progress (2026-11-12)
 
 ## [RM-020] Locking the phone keeps your chats
 - **Goal:** locking the screen or switching apps for a moment doesn't end your private chats (TD-010).

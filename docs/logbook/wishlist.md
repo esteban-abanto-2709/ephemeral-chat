@@ -27,3 +27,6 @@ Refuse or strip zero-width and control characters in nicknames and group names, 
 
 ## [WL-026] Slow tabs keep chatting
 Instead of dropping a tab that falls far behind on files, stop sending it files and keep the text, telling it a file wasn't delivered because of its connection. Kinder than RM-023's drop, but the server must tell slow from fast and the web must show what it missed.
+
+## [WL-027] Files waiting to send
+Show that picked files are still queued (e.g. "3 files waiting") while RM-019's queue paces them at one every 2 seconds, so ten photos don't look stuck. Tried on `/design` first.

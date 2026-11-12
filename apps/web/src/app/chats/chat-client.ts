@@ -196,16 +196,7 @@ export class ChatClient implements OnDestroy {
 
   remove(id: string): void {
     this.write({ type: 'leave', room: id });
-    this.release(this._chats().filter((chat) => chat.id === id));
-    this.sentFiles.delete(id);
-    this.readSent.delete(id);
-    if (this._picked()?.room === id) {
-      this.discardPicked();
-    }
-    this._chats.update((chats) => chats.filter((chat) => chat.id !== id));
-    if (this._active() === id) {
-      this._active.set(null);
-    }
+    this.drop(id);
   }
 
   open(id: string | null): void {
@@ -393,10 +384,7 @@ export class ChatClient implements OnDestroy {
     }
     if (frame.type === 'error' && !frame.code?.startsWith('slow-')) {
       this.fail(failures.includes(frame.code ?? '') ? frame.code! : 'gone');
-      this._chats.update((chats) => chats.filter((chat) => chat.id !== room));
-      if (this._active() === room) {
-        this._active.set(null);
-      }
+      this.drop(room);
       return;
     }
     if (frame.type === 'joined' && frame.private) {
@@ -507,6 +495,19 @@ export class ChatClient implements OnDestroy {
 
   private fail(code: string): void {
     this.notice.show(this.i18n.t(`errors.${code}`, { max: maxChats }));
+  }
+
+  private drop(id: string): void {
+    this.release(this._chats().filter((chat) => chat.id === id));
+    this.sentFiles.delete(id);
+    this.readSent.delete(id);
+    if (this._picked()?.room === id) {
+      this.discardPicked();
+    }
+    this._chats.update((chats) => chats.filter((chat) => chat.id !== id));
+    if (this._active() === id) {
+      this._active.set(null);
+    }
   }
 
   private release(chats: Chat[]): void {

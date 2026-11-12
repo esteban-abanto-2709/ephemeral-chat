@@ -427,6 +427,28 @@ describe('ChatClient', () => {
     expect(revokeObjectURL).toHaveBeenCalledWith('blob:photo');
   });
 
+  it('lets go of the files of a chat the server refuses', async () => {
+    vi.useRealTimers();
+    const createObjectURL = vi.fn(() => 'blob:photo');
+    const revokeObjectURL = vi.fn();
+    vi.stubGlobal('URL', Object.assign(URL, { createObjectURL, revokeObjectURL }));
+    ready();
+    client.join('one');
+    await server.receiveBinary(
+      {
+        type: 'message',
+        room: 'one',
+        ...ana,
+        file: { kind: 'image', name: 'a.png', mime: 'image/png', size: 4 },
+      },
+      new TextEncoder().encode('hola'),
+    );
+
+    server.receive({ type: 'error', room: 'one', code: 'gone' });
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:photo');
+    expect(client.chats()).toEqual([]);
+  });
+
   it('shows a file received in a binary frame', async () => {
     vi.useRealTimers();
     const createObjectURL = vi.fn(() => 'blob:bin');
