@@ -12,6 +12,15 @@ Summary in ≤2 lines of what was done.
 
 ---
 
+## [RM-019] Sending many files (2026-11-12 09:43)
+Files leave each chat through a queue paced to the server (three at once, then one every 2 seconds), a file refused for going too fast is sent again, and a chat that goes away releases everything it held.
+
+## [TD-018] A chat removed by an error keeps its files in memory (2026-11-12 09:43)
+Fixed by RM-019: `remove` and a refused chat share one `drop` that releases the chat's files.
+
+## [TD-017] Sending more than three files at once loses the rest (2026-11-12 09:43)
+Fixed by RM-019: a per-chat queue mirrors the server's limit, retries a `slow-files` refusal and is dropped with the socket or the chat.
+
 ## [RM-018] Private chats that never lie (2026-11-12 09:22)
 A private chat no longer starts with a tab that already left, and one that is reopened starts with fresh read receipts while the old messages stay visible without checks.
 

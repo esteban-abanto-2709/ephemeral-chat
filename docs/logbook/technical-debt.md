@@ -46,22 +46,6 @@ and is deleted from here.
 - **Suggestion:** an explicit joining state (e.g. a `joining` flag the views render neutrally, re-sent on `ready` by that flag instead of by `kind`); the route already knows `/chat/` from `/room/` if a hint is wanted.
 - **Date:** 2026-11-11 · **Status:** Open
 
-## [TD-017] Sending more than three files at once loses the rest
-- **Location:** `apps/web/src/app/chats/chat-client.ts` (`sendFiles`, `sendFile`, `sentFiles`)
-- **Risk:** 5/10
-- **Problem:** the send preview takes any number of files and `sendFiles` sends them back to back, but the API allows three and then one every 2 seconds (`FileBurst`, `FileInterval`): the fourth on gets `slow-files` and is never sent again. Each refused file also stays in `sentFiles`, waiting for a receipt that never comes, until the chat is deleted; so does one sent while the socket was closed.
-- **Future impact:** picking five photos sends three and a warning; the lost ones stay in the tab's memory.
-- **Suggestion:** pace the queue in the client to the API's rhythm (or cap the preview at what the burst allows) and drop a file from `sentFiles` when its send is refused.
-- **Date:** 2026-11-11 · **Status:** Open
-
-## [TD-018] A chat removed by an error keeps its files in memory
-- **Location:** `apps/web/src/app/chats/chat-client.ts` (the `error` branch of `receive`)
-- **Risk:** 3/10
-- **Problem:** when the server refuses a chat (`gone` after reconnecting to a group that was dropped, for example) the chat is filtered out of the list without `release`, so its `blob:` URLs are never revoked, and its `sentFiles`, `readSent` and picked files stay. `remove` does all of that; this path does none.
-- **Future impact:** photos and files of a chat that no longer shows stay in the tab's memory until it reloads.
-- **Suggestion:** one private method that drops a chat and cleans up after it, used by both `remove` and the error branch.
-- **Date:** 2026-11-11 · **Status:** Open
-
 ## [TD-019] Folders of the web build list their files
 - **Location:** `apps/api/main.go` (`spa`)
 - **Risk:** 2/10

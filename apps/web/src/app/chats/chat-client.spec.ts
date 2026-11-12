@@ -566,6 +566,77 @@ describe('ChatClient', () => {
     });
   });
 
+  const filesNamed = (names: string[]) =>
+    client.sendFiles(
+      'one',
+      names.map((name) => ({ file: new File([name], name), caption: '' })),
+      true,
+    );
+
+  const sentNames = async (): Promise<string[]> =>
+    Promise.all(
+      server.binary.map(async (blob) => {
+        const { header } = decodeFrame(await blob.arrayBuffer());
+        return (header as { name: string }).name;
+      }),
+    );
+
+  it('sends many files three at once, then one every 2 seconds', async () => {
+    ready();
+    client.join('one');
+    await filesNamed(['1', '2', '3', '4', '5']);
+    expect(server.binary).toHaveLength(3);
+
+    vi.advanceTimersByTime(2000);
+    expect(server.binary).toHaveLength(4);
+    vi.advanceTimersByTime(2000);
+    expect(server.binary).toHaveLength(5);
+    expect(await sentNames()).toEqual(['1', '2', '3', '4', '5']);
+  });
+
+  it('sends again a file the server refused for going too fast', async () => {
+    const createObjectURL = vi.fn((blob: Blob) => `blob:${blob.size}`);
+    vi.stubGlobal('URL', Object.assign(URL, { createObjectURL, revokeObjectURL: vi.fn() }));
+    ready();
+    client.join('one');
+    await filesNamed(['notes.txt']);
+    expect(server.binary).toHaveLength(1);
+
+    server.receive({ type: 'error', room: 'one', code: 'slow-files' });
+    expect(client.active()!.events).toEqual([]);
+    expect(server.binary).toHaveLength(1);
+
+    vi.advanceTimersByTime(2000);
+    expect(await sentNames()).toEqual(['notes.txt', 'notes.txt']);
+
+    server.receive({
+      type: 'message',
+      room: 'one',
+      ...juan,
+      file: { kind: 'file', name: 'notes.txt', size: 9 },
+    });
+    expect(client.active()!.events.at(-1)).toMatchObject({
+      own: true,
+      file: { name: 'notes.txt', url: 'blob:9' },
+    });
+  });
+
+  it('forgets the files waiting for a chat that goes away', async () => {
+    ready();
+    client.join('one');
+    await filesNamed(['1', '2', '3', '4', '5']);
+    client.remove('one');
+    vi.advanceTimersByTime(10000);
+    expect(server.binary).toHaveLength(3);
+
+    client.join('one');
+    await filesNamed(['1', '2', '3', '4', '5']);
+    expect(server.binary).toHaveLength(6);
+    server.onclose?.();
+    vi.advanceTimersByTime(10000);
+    expect(server.binary).toHaveLength(6);
+  });
+
   it('shows your own file from the local copy when the server confirms it', async () => {
     vi.useRealTimers();
     const createObjectURL = vi.fn((blob: Blob) => `blob:${blob.size}`);

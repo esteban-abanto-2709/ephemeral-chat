@@ -79,6 +79,13 @@ const fileNameMaxLength = 120;
 const shownTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'];
 const typingShownFor = 3000;
 const typingSentEvery = 2000;
+const filesAtOnce = 3;
+const fileEvery = 2000;
+
+interface Outbound {
+  file: File;
+  extra: Partial<Frame>;
+}
 
 const failures = ['gone', 'self', 'busy', 'full', 'limit'];
 
@@ -117,7 +124,10 @@ export class ChatClient implements OnDestroy {
   private ready = false;
   private readonly typingTimers = new Map<string, ReturnType<typeof setTimeout>>();
   private readonly typingSentAt = new Map<string, number>();
-  private readonly sentFiles = new Map<string, File[]>();
+  private readonly sentFiles = new Map<string, Outbound[]>();
+  private readonly outbox = new Map<string, Outbound[]>();
+  private readonly fileTokens = new Map<string, { tokens: number; at: number }>();
+  private readonly outboxTimers = new Map<string, ReturnType<typeof setTimeout>>();
   private readonly readSent = new Map<string, number>();
   private readonly onVisibility = () => {
     const room = this._active();
@@ -143,6 +153,7 @@ export class ChatClient implements OnDestroy {
     socket.onclose = () => {
       this._status.set('closed');
       this.ready = false;
+      this.dropFiles();
     };
     socket.binaryType = 'arraybuffer';
     socket.onmessage = (message: MessageEvent<string | ArrayBuffer>) => {
@@ -286,8 +297,51 @@ export class ChatClient implements OnDestroy {
       .slice(-fileNameMaxLength)
       .join('')
       .trim();
-    this.sentFiles.set(room, [...(this.sentFiles.get(room) ?? []), new File([file], name)]);
-    this.sendBinary(encodeFrame({ type: 'file', room, name, ...extra }, file));
+    this.outbox.set(room, [
+      ...(this.outbox.get(room) ?? []),
+      { file: new File([file], name), extra },
+    ]);
+    this.drain(room);
+  }
+
+  private drain(room: string): void {
+    if (this.outboxTimers.has(room)) {
+      return;
+    }
+    const queue = this.outbox.get(room) ?? [];
+    const now = Date.now();
+    const bucket = this.fileTokens.get(room) ?? { tokens: filesAtOnce, at: now };
+    bucket.tokens = Math.min(filesAtOnce, bucket.tokens + (now - bucket.at) / fileEvery);
+    bucket.at = now;
+    this.fileTokens.set(room, bucket);
+    while (queue.length && this.socket?.readyState === WebSocket.OPEN && bucket.tokens >= 1) {
+      bucket.tokens--;
+      const item = queue.shift()!;
+      this.sentFiles.set(room, [...(this.sentFiles.get(room) ?? []), item]);
+      this.sendBinary(
+        encodeFrame({ type: 'file', room, name: item.file.name, ...item.extra }, item.file),
+      );
+    }
+    if (queue.length && this.socket?.readyState === WebSocket.OPEN) {
+      this.outboxTimers.set(
+        room,
+        setTimeout(
+          () => {
+            this.outboxTimers.delete(room);
+            this.drain(room);
+          },
+          (1 - bucket.tokens) * fileEvery,
+        ),
+      );
+    }
+  }
+
+  private dropFiles(): void {
+    this.outboxTimers.forEach((timer) => clearTimeout(timer));
+    this.outboxTimers.clear();
+    this.outbox.clear();
+    this.sentFiles.clear();
+    this.fileTokens.clear();
   }
 
   sendTyping(room: string): void {
@@ -302,6 +356,7 @@ export class ChatClient implements OnDestroy {
   ngOnDestroy(): void {
     this.document.removeEventListener('visibilitychange', this.onVisibility);
     this.clearTyping();
+    this.dropFiles();
     this.discardPicked();
     this.release(this._chats());
     this.socket?.close();
@@ -381,6 +436,18 @@ export class ChatClient implements OnDestroy {
         };
       });
       return;
+    }
+    if (frame.type === 'error' && frame.code === 'slow-files') {
+      const refused = this.sentFiles.get(room)?.shift();
+      if (refused) {
+        this.outbox.set(room, [refused, ...(this.outbox.get(room) ?? [])]);
+        this.fileTokens.set(room, { tokens: 0, at: Date.now() });
+        this.drain(room);
+        return;
+      }
+    }
+    if (frame.type === 'error' && frame.code === 'slow-server') {
+      this.sentFiles.get(room)?.shift();
     }
     if (frame.type === 'error' && !frame.code?.startsWith('slow-')) {
       this.fail(failures.includes(frame.code ?? '') ? frame.code! : 'gone');
@@ -489,8 +556,8 @@ export class ChatClient implements OnDestroy {
 
   private takeSent(room: string, name: string, size: number): File | undefined {
     const sent = this.sentFiles.get(room) ?? [];
-    const index = sent.findIndex((file) => file.name === name && file.size === size);
-    return index < 0 ? undefined : sent.splice(index, 1)[0];
+    const index = sent.findIndex(({ file }) => file.name === name && file.size === size);
+    return index < 0 ? undefined : sent.splice(index, 1)[0].file;
   }
 
   private fail(code: string): void {
@@ -500,6 +567,10 @@ export class ChatClient implements OnDestroy {
   private drop(id: string): void {
     this.release(this._chats().filter((chat) => chat.id === id));
     this.sentFiles.delete(id);
+    this.outbox.delete(id);
+    this.fileTokens.delete(id);
+    clearTimeout(this.outboxTimers.get(id));
+    this.outboxTimers.delete(id);
     this.readSent.delete(id);
     if (this._picked()?.room === id) {
       this.discardPicked();
