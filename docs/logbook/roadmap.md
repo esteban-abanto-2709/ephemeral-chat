@@ -19,7 +19,7 @@ Each entry is one commit, or a few when it spans both apps; no commit breaks pro
 - **Goal:** a private chat never starts with a tab that already left (TD-015), and one that is reopened starts clean, with no old read mark or message numbers (TD-016).
 - **Scope:** `internal/room` in the API, then `chat-client.ts` in the web. Depends on nothing above.
 - **Done when:** a stress test of a first message against a disconnect leaves no chat behind, a web test reopens an ended chat and shows one check on new messages, and TD-015 and TD-016 are closed.
-- **Date:** 2026-11-11 · **Status:** Open
+- **Date:** 2026-11-11 · **Status:** In progress (2026-11-12)
 
 ## [RM-019] Sending many files
 - **Goal:** every file picked is sent, however many, and a chat that goes away leaves nothing in the tab's memory (TD-017, TD-018).

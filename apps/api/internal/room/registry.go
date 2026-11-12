@@ -106,6 +106,11 @@ func (r *Registry) reach(client *Client, label string) bool {
 		return false
 	}
 	r.mu.Lock()
+	if r.clients[other.ID] != other {
+		r.mu.Unlock()
+		client.Notify(Message{Type: "error", Room: label, Code: "gone"})
+		return false
+	}
 	if _, ok := client.chat(label); !ok {
 		startPrivate(client, other)
 	}

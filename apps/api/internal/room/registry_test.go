@@ -421,3 +421,27 @@ func TestASenderAloneGivesTheBudgetBack(t *testing.T) {
 	sendBlob(rooms, sender, id)
 	assertUsed(t, rooms, 0)
 }
+
+func TestAPrivateChatNeverStartsWithATabThatLeft(t *testing.T) {
+	for i := range 10000 {
+		rooms := NewRegistry()
+		sam, luis := mustConnect(t, rooms, "Sam"), mustConnect(t, rooms, "Luis")
+		var wg sync.WaitGroup
+		wg.Add(2)
+		go func() {
+			defer wg.Done()
+			rooms.Send(sam, luis.ID, "hola", 0)
+		}()
+		go func() {
+			defer wg.Done()
+			rooms.Disconnect(luis)
+		}()
+		wg.Wait()
+		if luis.count() != 0 {
+			t.Fatalf("iteration %d: the tab that left still has %d chats", i, luis.count())
+		}
+		if _, ok := sam.chat(luis.ID); ok {
+			t.Fatalf("iteration %d: a private chat survived with the tab that left", i)
+		}
+	}
+}
